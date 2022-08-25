@@ -12,12 +12,6 @@ namespace Immense.RemoteControl.Server.Extensions
     {
         public static void AddRemoteControlServer(this IServiceCollection services)
         {
-            var pub = new HubEventPublisher();
-            pub.OnEvent<Models.RestartScreenCasterRequiredModel>(model =>
-            {
-
-                return Task.CompletedTask;
-            });
             services.AddSingleton<IHubEventPublisher, HubEventPublisher>();
         }
     }
