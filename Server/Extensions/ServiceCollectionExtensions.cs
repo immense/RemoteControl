@@ -10,9 +10,11 @@ namespace Immense.RemoteControl.Server.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddRemoteControlServer(this IServiceCollection services)
+        public static void AddRemoteControlServer(this IServiceCollection services, Action<IRemoteControlServerBuilder> configure)
         {
-            services.AddSingleton<IHubEventPublisher, HubEventPublisher>();
+            var builder = new RemoteControlServerBuilder(services);
+            configure(builder);
+            builder.Validate();
         }
     }
 }
