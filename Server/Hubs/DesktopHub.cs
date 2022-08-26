@@ -66,7 +66,7 @@ namespace Immense.RemoteControl.Server.Hubs
             var random = new Random();
             var sessionId = "";
 
-            while (string.IsNullOrWhiteSpace(sessionId) || _sessionCache.ContainsKey(sessionId))
+            while (string.IsNullOrWhiteSpace(sessionId) || _sessionCache.Sessions.ContainsKey(sessionId))
             {
                 for (var i = 0; i < 3; i++)
                 {
@@ -74,7 +74,7 @@ namespace Immense.RemoteControl.Server.Hubs
                 }
             }
 
-            if (!_sessionCache.TryGet(Context.ConnectionId, out var session))
+            if (!_sessionCache.Sessions.TryGetValue(Context.ConnectionId, out var session))
             {
                 _logger.LogError("Connection not found in cache.");
                 return string.Empty;
@@ -88,7 +88,7 @@ namespace Immense.RemoteControl.Server.Hubs
         {
             using var scope = _logger.BeginScope(nameof(NotifyRequesterUnattendedReady));
 
-            if (!_sessionCache.TryGet(Context.ConnectionId, out var session))
+            if (!_sessionCache.Sessions.TryGetValue(Context.ConnectionId, out var session))
             {
                 _logger.LogError("Connection not found in cache.");
                 return;
@@ -106,14 +106,14 @@ namespace Immense.RemoteControl.Server.Hubs
         {
             SessionInfo.CasterConnectionId = Context.ConnectionId;
             SessionInfo.StartTime = DateTimeOffset.Now;
-            _sessionCache.AddOrUpdate(Context.ConnectionId, SessionInfo, (id, si) => SessionInfo);
+            _sessionCache.Sessions.AddOrUpdate(Context.ConnectionId, SessionInfo, (id, si) => SessionInfo);
 
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            _sessionCache.TryRemove(Context.ConnectionId, out _);
+            _sessionCache.Sessions.TryRemove(Context.ConnectionId, out _);
 
             if (SessionInfo.Mode == RemoteControlMode.Attended)
             {

@@ -18,17 +18,23 @@ namespace Immense.RemoteControl.Server.Hubs
     {
         private readonly IHubEventHandler _hubEvents;
         private readonly IDesktopHubSessionCache _desktopSessionCache;
+        private readonly IServiceHubSessionCache _serviceSessionCache;
+        private readonly IViewerHubDataProvider _viewerHubDataProvider;
         private readonly IHubContext<DesktopHub> _desktopHub;
         private readonly ILogger<ViewerHub> _logger;
 
         public ViewerHub(
             IHubEventHandler hubEvents,
             IDesktopHubSessionCache desktopSessionCache,
+            IServiceHubSessionCache serviceSessionCache,
+            IViewerHubDataProvider viewerHubDataProvider,
             IHubContext<DesktopHub> desktopHub,
             ILogger<ViewerHub> logger)
         {
             _hubEvents = hubEvents;
             _desktopSessionCache = desktopSessionCache;
+            _serviceSessionCache = serviceSessionCache;
+            _viewerHubDataProvider = viewerHubDataProvider;
             _desktopHub = desktopHub;
             _logger = logger;
         }
@@ -141,16 +147,16 @@ namespace Immense.RemoteControl.Server.Hubs
 
             if ((RemoteControlMode)remoteControlMode == RemoteControlMode.Attended)
             {
-                if (!_desktopSessionCache.Sessions.Any(x => x.AttendedSessionID == screenCasterID))
+                if (!_desktopSessionCache.Sessions.Values.Any(x => x.AttendedSessionID == screenCasterID))
                 {
                     await Clients.Caller.SendAsync("SessionIDNotFound");
                     return;
                 }
 
-                screenCasterID = _desktopSessionCache.Sessions.First(x => x.AttendedSessionID == screenCasterID).CasterConnectionId;
+                screenCasterID = _desktopSessionCache.Sessions.Values.First(x => x.AttendedSessionID == screenCasterID).CasterConnectionId;
             }
 
-            if (!_desktopSessionCache.TryGet(screenCasterID, out var sessionInfo))
+            if (!_desktopSessionCache.Sessions.TryGetValue(screenCasterID, out var sessionInfo))
             {
                 await Clients.Caller.SendAsync("SessionIDNotFound");
                 return;
@@ -163,22 +169,23 @@ namespace Immense.RemoteControl.Server.Hubs
 
             string orgId = string.Empty;
 
-            if (Context?.User?.Identity?.IsAuthenticated == true)
+            if (Context.User?.Identity?.IsAuthenticated == true)
             {
-                var user = DataService.GetUserByID(Context.UserIdentifier);
 
-                if (string.IsNullOrWhiteSpace(RequesterName))
+                if (!string.IsNullOrWhiteSpace(Context.UserIdentifier))
                 {
-                    RequesterName = user.UserOptions.DisplayName ?? user.UserName;
+                    RequesterName = _viewerHubDataProvider.GetRequesterDisplayName(Context.UserIdentifier);
                 }
-                orgId = user.OrganizationID;
 
-                var currentUsers = _desktopSessionCache.Sessions.Count(x =>
+                orgId = _viewerHubDataProvider.GetRequesterOrganizationId(Context.UserIdentifier);
+
+                var currentUsers = _desktopSessionCache.Sessions.Values.Count(x =>
                     x.CasterConnectionId != screenCasterID &&
                     x.OrganizationID == orgId &&
                     x.ViewerList.Any());
 
-                if (currentUsers >= AppConfig.RemoteControlSessionLimit)
+                var sessionLimit = _viewerHubDataProvider.GetConcurrentSessionLimit();
+                if (currentUsers >= sessionLimit)
                 {
                     await Clients.Caller.SendAsync("ShowMessage", "Max number of concurrent sessions reached.");
                     Context.Abort();
@@ -190,40 +197,36 @@ namespace Immense.RemoteControl.Server.Hubs
             }
 
             var logMessage = $"Remote control session requested.  " +
-                                $"Login ID (if logged in): {Context?.User?.Identity?.Name}.  " +
+                                $"Login ID (if logged in): {Context.User?.Identity?.Name}.  " +
                                 $"Machine Name: {SessionInfo.MachineName}.  " +
                                 $"Requester Name (if specified): {RequesterName}.  " +
-                                $"Connection ID: {Context?.ConnectionId}. User ID: {Context?.UserIdentifier}.  " +
+                                $"Connection ID: {Context.ConnectionId}. User ID: {Context.UserIdentifier}.  " +
                                 $"Screen Caster ID: {screenCasterID}.  " +
                                 $"Mode: {(RemoteControlMode)remoteControlMode}.  " +
-                                $"Requester IP Address: {Context?.GetHttpContext()?.Connection?.RemoteIpAddress}"
+                                $"Requester IP Address: {Context.GetHttpContext()?.Connection?.RemoteIpAddress}";
 
             _hubEvents.LogRemoteControlStarted(logMessage, orgId);
 
             if (Mode == RemoteControlMode.Unattended)
             {
-                var targetDevice = AgentHub.ServiceConnections[SessionInfo.ServiceID];
-
-                var useWebRtc = targetDevice.WebRtcSetting == WebRtcSetting.Default ?
-                            AppConfig.UseWebRtc :
-                            targetDevice.WebRtcSetting == WebRtcSetting.Enabled;
-
+                if (!_serviceSessionCache.Sessions.TryGetValue(SessionInfo.ServiceID, out var targetDeviceId))
+                {
+                    _logger.LogError("Target service ID (id) not found in cache.", SessionInfo.ServiceID);
+                    return;
+                }
 
                 SessionInfo.Mode = RemoteControlMode.Unattended;
 
-                if ((!string.IsNullOrWhiteSpace(otp) &&
-                        RemoteControlFilterAttribute.OtpMatchesDevice(otp, targetDevice.ID))
+                if ((!string.IsNullOrWhiteSpace(otp) && _viewerHubDataProvider.OtpMatchesDevice(otp, targetDeviceId))
                     ||
-                    (Context.User.Identity.IsAuthenticated &&
-                        DataService.DoesUserHaveAccessToDevice(targetDevice.ID, Context.UserIdentifier)))
+                    (Context.User?.Identity?.IsAuthenticated == true && _viewerHubDataProvider.DoesUserHaveAccessToDevice(targetDeviceId, Context.UserIdentifier)))
                 {
-                    var orgName = DataService.GetOrganizationNameById(orgId);
-                    await CasterHubContext.Clients.Client(screenCasterID).SendAsync("GetScreenCast",
+                    var orgName = _viewerHubDataProvider.GetOrganizationNameById(orgId);
+                    await _desktopHub.Clients.Client(screenCasterID).SendAsync("GetScreenCast",
                         Context.ConnectionId,
                         RequesterName,
-                        AppConfig.RemoteControlNotifyUser,
-                        AppConfig.EnforceAttendedAccess,
-                        useWebRtc,
+                        _viewerHubDataProvider.RemoteControlNotifyUser,
+                        _viewerHubDataProvider.EnforceAttendedAccess,
                         orgName);
                 }
                 else
@@ -233,9 +236,9 @@ namespace Immense.RemoteControl.Server.Hubs
             }
             else
             {
-                SessionInfo.Mode = RemoteControlMode.Normal;
+                SessionInfo.Mode = RemoteControlMode.Attended;
                 await Clients.Caller.SendAsync("RequestingScreenCast");
-                await CasterHubContext.Clients.Client(screenCasterID).SendAsync("RequestScreenCast", Context.ConnectionId, RequesterName, AppConfig.RemoteControlNotifyUser, AppConfig.UseWebRtc);
+                await _desktopHub.Clients.Client(screenCasterID).SendAsync("RequestScreenCast", Context.ConnectionId, RequesterName, _viewerHubDataProvider.RemoteControlNotifyUser);
             }
         }
 
