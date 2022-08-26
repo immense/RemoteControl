@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Server.Abstractions
 {
-    public interface IThemeUrlProvider
+    public interface IViewerPageDataProvider
     {
         string GetThemeUrl(PageModel pageModel);
+        string GetUserDisplayName(PageModel pageModel);
     }
 }

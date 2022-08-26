@@ -8,18 +8,20 @@ namespace Immense.RemoteControl.Server.Areas.RemoteControl.Pages
     [ServiceFilter(typeof(ViewerFilterAttribute))]
     public class ViewerModel : PageModel
     {
-        private readonly IThemeUrlProvider _themeUrlProvider;
+        private readonly IViewerPageDataProvider _viewerDataProvider;
 
-        public ViewerModel(IThemeUrlProvider themeUrlProvider)
+        public ViewerModel(IViewerPageDataProvider viewerDataProvider)
         {
-            _themeUrlProvider = themeUrlProvider;
+            _viewerDataProvider = viewerDataProvider;
         }
 
         public string ThemeUrl { get; private set; } = string.Empty;
+        public string UserDisplayName { get; private set; } = string.Empty;
 
         public void OnGet()
         {
-            ThemeUrl = _themeUrlProvider.GetThemeUrl(this);
+            ThemeUrl = _viewerDataProvider.GetThemeUrl(this);
+            UserDisplayName = _viewerDataProvider.GetUserDisplayName(this);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Immense.RemoteControl.Server.Models
         public static RemoteControlSession Empty { get; } = new();
 
         public string AttendedSessionID { get; set; } = string.Empty;
-        public string CasterSocketID { get; set; } = string.Empty;
+        public string CasterConnectionId { get; set; } = string.Empty;
         public string DeviceID { get; set; } = string.Empty;
         public string MachineName { get; set; } = string.Empty;
         public RemoteControlMode Mode { get; set; }

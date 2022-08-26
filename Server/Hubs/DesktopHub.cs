@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Server.Models;
+﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -9,22 +10,16 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Server.Hubs
 {
-    public interface IDesktopHub
+    public class DesktopHub : Hub
     {
-     
-    }
-
-    internal class DesktopHub : Hub, IDesktopHub
-    {
+        private readonly IHubEventHandler _hubEvents;
+        private readonly ILogger<DesktopHub> _logger;
         private readonly IDesktopHubSessionCache _sessionCache;
         private readonly IHubContext<ViewerHub> _viewerHub;
-        private readonly IHubEventPublisher _hubEvents;
-        private readonly ILogger<DesktopHub> _logger;
-
         public DesktopHub(
             IDesktopHubSessionCache sessionCache,
             IHubContext<ViewerHub> viewerHubContext,
-            IHubEventPublisher hubEvents,
+            IHubEventHandler hubEvents,
             ILogger<DesktopHub> logger)
         {
             _sessionCache = sessionCache;
@@ -39,14 +34,14 @@ namespace Immense.RemoteControl.Server.Hubs
         {
             get
             {
-                if (Context.Items.TryGetValue("SessionInfo", out var result) &&
+                if (Context.Items.TryGetValue(nameof(SessionInfo), out var result) &&
                     result is RemoteControlSession session)
                 {
                     return session;
                 }
 
                 var newSession = new RemoteControlSession();
-                Context.Items["SessionInfo"] = newSession;
+                Context.Items[nameof(SessionInfo)] = newSession;
                 return newSession;
             }
         }
@@ -79,8 +74,6 @@ namespace Immense.RemoteControl.Server.Hubs
                 }
             }
 
-            Context.Items["SessionID"] = sessionId;
-
             if (!_sessionCache.TryGet(Context.ConnectionId, out var session))
             {
                 _logger.LogError("Connection not found in cache.");
@@ -91,7 +84,7 @@ namespace Immense.RemoteControl.Server.Hubs
             return sessionId;
         }
 
-        public async Task NotifyRequesterUnattendedReady(string browserHubConnectionID)
+        public async Task NotifyRequesterUnattendedReady(string userConnectionId)
         {
             using var scope = _logger.BeginScope(nameof(NotifyRequesterUnattendedReady));
 
@@ -101,13 +94,7 @@ namespace Immense.RemoteControl.Server.Hubs
                 return;
             }
 
-            await _hubEvents.InvokeUnattendedSessionReady(new UnattendedSessionReadyModel()
-            {
-                BrowserConnectionId = browserHubConnectionID,
-                DesktopConnectionId = Context.ConnectionId,
-                DeviceId = session.DeviceID
-            });
-
+            await _hubEvents.NotifyUnattendedSessionReady(userConnectionId, Context.ConnectionId, session.DeviceID);
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
@@ -117,7 +104,7 @@ namespace Immense.RemoteControl.Server.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            SessionInfo.CasterSocketID = Context.ConnectionId;
+            SessionInfo.CasterConnectionId = Context.ConnectionId;
             SessionInfo.StartTime = DateTimeOffset.Now;
             _sessionCache.AddOrUpdate(Context.ConnectionId, SessionInfo, (id, si) => SessionInfo);
 
@@ -137,12 +124,7 @@ namespace Immense.RemoteControl.Server.Hubs
                 if (ViewerList.Count > 0)
                 {
                     await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
-                    await _hubEvents.InvokeRestartScreenCasterRequired(new RestartScreenCasterRequiredModel()
-                    {
-                        DesktopConnectionId = Context.ConnectionId,
-                        ServiceConnectionId = SessionInfo.ServiceID,
-                        ViewerList = ViewerList
-                    });
+                    await _hubEvents.RestartScreenCaster(Context.ConnectionId, SessionInfo.ServiceID, ViewerList);
                 }
             }
 
@@ -167,11 +149,6 @@ namespace Immense.RemoteControl.Server.Hubs
             return _viewerHub.Clients.Client(viewerID).SendAsync("ConnectionRequestDenied");
         }
 
-        public Task SendMessageToViewer(string viewerId, string message)
-        {
-            return _viewerHub.Clients.Client(viewerId).SendAsync("ShowMessage", message);
-        }
-
         public Task SendCtrlAltDelToAgent()
         {
             return _viewerHub.Clients.Client(SessionInfo.ServiceID).SendAsync("CtrlAltDel");
@@ -182,6 +159,10 @@ namespace Immense.RemoteControl.Server.Hubs
             return _viewerHub.Clients.Client(viewerId).SendAsync("SendDtoToBrowser", dto);
         }
 
+        public Task SendMessageToViewer(string viewerId, string message)
+        {
+            return _viewerHub.Clients.Client(viewerId).SendAsync("ShowMessage", message);
+        }
         public Task ViewerConnected(string viewerConnectionId)
         {
             ViewerList.Add(viewerConnectionId);
