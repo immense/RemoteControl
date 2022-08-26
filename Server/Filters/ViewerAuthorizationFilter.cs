@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Immense.RemoteControl.Server.Filters
 {
-    internal class ViewerFilterAttribute : ActionFilterAttribute, IAuthorizationFilter
+    internal class ViewerAuthorizationFilter :  IAuthorizationFilter
     {
         private readonly IViewerAuthorizer _authorizer;
 
-        public ViewerFilterAttribute(IViewerAuthorizer authorizer)
+        public ViewerAuthorizationFilter(IViewerAuthorizer authorizer)
         {
             _authorizer = authorizer;
         }

@@ -56,13 +56,13 @@ namespace Immense.RemoteControl.Server.Extensions
         public void AddViewerHubDataProvider<T>() 
             where T : class, IViewerHubDataProvider
         {
-            _services.AddSingleton<IViewerHubDataProvider, T>();
+            _services.AddScoped<IViewerHubDataProvider, T>();
         }
 
         public void AddViewerPageDataProvider<T>() 
             where T : class, IViewerPageDataProvider
         {
-            _services.AddSingleton<IViewerPageDataProvider, T>();
+            _services.AddScoped<IViewerPageDataProvider, T>();
         }
 
         internal void Validate()

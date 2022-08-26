@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Server.Hubs
 {
-    [ServiceFilter(typeof(ViewerFilterAttribute))]
+    [ServiceFilter(typeof(ViewerAuthorizationFilter))]
     public class ViewerHub : Hub
     {
         private readonly IHubEventHandler _hubEvents;

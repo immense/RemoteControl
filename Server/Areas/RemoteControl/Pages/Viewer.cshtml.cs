@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Immense.RemoteControl.Server.Areas.RemoteControl.Pages
 {
-    [ServiceFilter(typeof(ViewerFilterAttribute))]
+    [ServiceFilter(typeof(ViewerAuthorizationFilter))]
     public class ViewerModel : PageModel
     {
         private readonly IViewerPageDataProvider _viewerDataProvider;
