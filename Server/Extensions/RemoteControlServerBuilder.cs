@@ -50,7 +50,7 @@ namespace Immense.RemoteControl.Server.Extensions
         public void AddViewerAuthorizer<T>() 
             where T : class, IViewerAuthorizer
         {
-            _services.AddSingleton<IViewerAuthorizer, T>();
+            _services.AddScoped<IViewerAuthorizer, T>();
         }
 
         public void AddViewerHubDataProvider<T>() 
