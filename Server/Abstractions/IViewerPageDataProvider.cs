@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Immense.RemoteControl.Server.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Immense.RemoteControl.Server.Abstractions
 {
     public interface IViewerPageDataProvider
     {
-        string GetThemeUrl(PageModel pageModel);
+        ViewerPageTheme GetTheme(PageModel pageModel);
         string GetUserDisplayName(PageModel pageModel);
     }
 }

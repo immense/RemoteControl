@@ -5,7 +5,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services.AddRemoteControlServer();
+builder.Services.AddRemoteControlServer(config =>
+{
+
+});
 
 var app = builder.Build();
 

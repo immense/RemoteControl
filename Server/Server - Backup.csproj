@@ -8,8 +8,7 @@
     <RootNamespace>Immense.RemoteControl.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <AssemblyName>Immense.RemoteControl.$(MSBuildProjectName)</AssemblyName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.5.8</Version>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <Version>0.5.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,6 +50,14 @@
     <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.ttf" />
     <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.woff" />
     <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.woff2" />
+    <None Include="wwwroot\lib\microsoft-signalr\signalr.js" />
+    <None Include="wwwroot\lib\microsoft-signalr\signalr.min.js" />
+    <None Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\browser\signalr-protocol-msgpack.js" />
+    <None Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\browser\signalr-protocol-msgpack.js.map" />
+    <None Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\browser\signalr-protocol-msgpack.min.js" />
+    <None Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\browser\signalr-protocol-msgpack.min.js.map" />
+    <None Include="wwwroot\lib\msgpack5\msgpack5.js" />
+    <None Include="wwwroot\lib\msgpack5\msgpack5.min.js" />
     <None Include="wwwroot\src\App.js" />
     <None Include="wwwroot\src\App.js.map" />
     <None Include="wwwroot\src\App.ts" />
@@ -114,6 +121,9 @@
     <None Include="wwwroot\src\Models\WindowsSession.js" />
     <None Include="wwwroot\src\Models\WindowsSession.js.map" />
     <None Include="wwwroot\src\Models\WindowsSession.ts" />
+    <None Include="wwwroot\src\RtcSession.js" />
+    <None Include="wwwroot\src\RtcSession.js.map" />
+    <None Include="wwwroot\src\RtcSession.ts" />
     <None Include="wwwroot\src\SessionRecorder.js" />
     <None Include="wwwroot\src\SessionRecorder.js.map" />
     <None Include="wwwroot\src\SessionRecorder.ts" />
@@ -138,16 +148,12 @@
     <PackageReference Include="ConcurrentList" Version="1.4.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\" />
-  </ItemGroup>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; xcopy &quot;$(ProjectDir)bin\$(Configuration)&quot; &quot;$(SolutionDir)dist&quot; /Y" />
+    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; xcopy &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; &quot;$(SolutionDir)dist&quot; /Y" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; xcopy &quot;$(ProjectDir)bin\$(Configuration)&quot; &quot;$(SolutionDir)dist&quot; /Y" />
+    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; xcopy &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; &quot;$(SolutionDir)dist&quot; /Y" />
   </Target>
 
 
