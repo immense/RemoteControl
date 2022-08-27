@@ -63,8 +63,6 @@
     <None Include="wwwroot\src\DtoMessageHandler.js" />
     <None Include="wwwroot\src\DtoMessageHandler.js.map" />
     <None Include="wwwroot\src\DtoMessageHandler.ts" />
-    <None Include="wwwroot\src\Enums\BaseDtoType.js" />
-    <None Include="wwwroot\src\Enums\BaseDtoType.js.map" />
     <None Include="wwwroot\src\Enums\BaseDtoType.ts" />
     <None Include="wwwroot\src\Enums\RemoteControlMode.js" />
     <None Include="wwwroot\src\Enums\RemoteControlMode.js.map" />
@@ -78,8 +76,6 @@
     <None Include="wwwroot\src\InputEventHandlers.js" />
     <None Include="wwwroot\src\InputEventHandlers.js.map" />
     <None Include="wwwroot\src\InputEventHandlers.ts" />
-    <None Include="wwwroot\src\Interfaces\BaseDto.js" />
-    <None Include="wwwroot\src\Interfaces\BaseDto.js.map" />
     <None Include="wwwroot\src\Interfaces\BaseDto.ts" />
     <None Include="wwwroot\src\Interfaces\Dtos.js" />
     <None Include="wwwroot\src\Interfaces\Dtos.js.map" />
@@ -136,6 +132,10 @@
 
   <ItemGroup>
     <PackageReference Include="ConcurrentList" Version="1.4.0" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.8.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -143,11 +143,11 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell.exe -f &quot;$(SolutionDir).build\Post-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
+    <Exec Command="REM powershell.exe -f &quot;$(SolutionDir).build\Post-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="powershell.exe -f &quot;$(SolutionDir).build\Pre-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
+    <Exec Command="REM powershell.exe -f &quot;$(SolutionDir).build\Pre-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
   </Target>
 
 

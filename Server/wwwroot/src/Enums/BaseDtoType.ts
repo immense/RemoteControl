@@ -22,6 +22,5 @@
     WindowsSessions = 23,
     SetKeyStatesUp = 24,
     FrameReceived = 25,
-    ToggleWebRtcVideo = 26,
     OpenFileTransferWindow = 27
 }
