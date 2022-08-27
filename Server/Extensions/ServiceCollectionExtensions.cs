@@ -19,7 +19,10 @@ namespace Immense.RemoteControl.Server.Extensions
             configure(builder);
             builder.Validate();
 
-            services.AddRazorPages();
+            services
+                .AddRazorPages()
+                .AddApplicationPart(typeof(ServiceCollectionExtensions).Assembly);
+
             services.AddSingleton<IDesktopHubSessionCache, DesktopHubSessionCache>();
             services.AddScoped<ViewerAuthorizationFilter>();
 
