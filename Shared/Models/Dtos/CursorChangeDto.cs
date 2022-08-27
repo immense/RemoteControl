@@ -3,7 +3,7 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class CursorChangeDto : BaseDto
+    public class CursorChangeDto
     {
         public CursorChangeDto(byte[] imageBytes, int hotSpotX, int hotSpotY, string cssOverride)
         {
@@ -15,9 +15,6 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 
         [DataMember(Name = "CssOverride")]
         public string CssOverride { get; }
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.CursorChange;
 
         [DataMember(Name = "HotSpotX")]
         public int HotSpotX { get; }

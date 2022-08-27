@@ -3,11 +3,8 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class MouseMoveDto : BaseDto
+    public class MouseMoveDto
     {
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.MouseMove;
 
         [DataMember(Name = "PercentX")]
         public double PercentX { get; set; }

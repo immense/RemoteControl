@@ -3,7 +3,7 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class AudioSampleDto : BaseDto
+    public class AudioSampleDto
     {
         public AudioSampleDto(byte[] buffer)
         {
@@ -12,10 +12,5 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 
         [DataMember(Name = "Buffer")]
         public byte[] Buffer { get; }
-
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.AudioSample;
-
     }
 }

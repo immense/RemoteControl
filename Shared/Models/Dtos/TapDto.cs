@@ -3,11 +3,8 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class TapDto : BaseDto
+    public class TapDto
     {
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.Tap;
 
         [DataMember(Name = "PercentX")]
         public double PercentX { get; set; }

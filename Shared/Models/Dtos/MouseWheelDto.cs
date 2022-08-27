@@ -3,11 +3,8 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class MouseWheelDto : BaseDto
+    public class MouseWheelDto
     {
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.MouseWheel;
 
         [DataMember(Name = "DeltaX")]
         public double DeltaX { get; set; }

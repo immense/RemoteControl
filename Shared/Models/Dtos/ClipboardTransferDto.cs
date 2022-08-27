@@ -3,7 +3,7 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class ClipboardTransferDto : BaseDto
+    public class ClipboardTransferDto
     {
 
         [DataMember(Name = "Text")]
@@ -11,9 +11,5 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 
         [DataMember(Name = "TypeText")]
         public bool TypeText { get; set; }
-
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.ClipboardTransfer;
     }
 }

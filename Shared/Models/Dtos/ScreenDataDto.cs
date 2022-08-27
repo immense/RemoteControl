@@ -4,14 +4,10 @@ using System.Runtime.Serialization;
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class ScreenDataDto : BaseDto
+    public class ScreenDataDto
     {
         [DataMember(Name = "DisplayNames")]
         public IEnumerable<string> DisplayNames { get; init; } = Enumerable.Empty<string>();
-
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.ScreenData;
 
         [DataMember(Name = "SelectedDisplay")]
         public string SelectedDisplay { get; init; } = string.Empty;

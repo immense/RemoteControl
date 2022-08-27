@@ -3,12 +3,9 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class ToggleBlockInputDto : BaseDto
+    public class ToggleBlockInputDto
     {
         [DataMember(Name = "ToggleOn")]
         public bool ToggleOn { get; set; }
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.ToggleBlockInput;
     }
 }

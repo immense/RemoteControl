@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class WindowsSessionsDto : BaseDto
+    public class WindowsSessionsDto
     {
         public WindowsSessionsDto(List<WindowsSession> windowsSessions)
         {
@@ -14,9 +14,5 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 
         [DataMember(Name = "WindowsSessions")]
         public List<WindowsSession> WindowsSessions { get; set; }
-
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.WindowsSessions;
     }
 }

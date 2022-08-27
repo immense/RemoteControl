@@ -3,7 +3,7 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class ClipboardTextDto : BaseDto
+    public class ClipboardTextDto
     {
         public ClipboardTextDto(string clipboardText)
         {
@@ -12,9 +12,5 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 
         [DataMember(Name = "ClipboardText")]
         public string ClipboardText { get; }
-
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.ClipboardText;
     }
 }

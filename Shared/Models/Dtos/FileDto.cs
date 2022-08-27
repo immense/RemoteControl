@@ -4,7 +4,7 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 {
 
     [DataContract]
-    public class FileDto : BaseDto
+    public class FileDto
     {
         [DataMember(Name = "Buffer")]
         public byte[] Buffer { get; set; } = Array.Empty<byte>();
@@ -20,8 +20,5 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
 
         [DataMember(Name = "StartOfFile")]
         public bool StartOfFile { get; set; }
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.File;
     }
 }

@@ -3,12 +3,9 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class KeyPressDto : BaseDto
+    public class KeyPressDto
     {
         [DataMember(Name = "Key")]
         public string Key { get; set; } = string.Empty;
-
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.KeyPress;
     }
 }

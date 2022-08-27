@@ -4,10 +4,8 @@ using System.Runtime.Serialization;
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class CaptureFrameDto : BaseDto
+    public class CaptureFrameDto
     {
-        [DataMember(Name = "DtoType")]
-        public override DtoType DtoType { get; init; } = DtoType.CaptureFrame;
 
         [DataMember(Name = "EndOfFrame")]
         public bool EndOfFrame { get; init; }
