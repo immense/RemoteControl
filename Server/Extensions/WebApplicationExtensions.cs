@@ -10,17 +10,14 @@ namespace Immense.RemoteControl.Server.Extensions
 {
     public static class WebApplicationExtensions
     {
-        public static WebApplication UseRemoteControlServer(
-            this WebApplication app,
-            string desktopHubEndpoint = "/hubs/desktop",
-            string viewerHubEndpoint = "/hubs/viewer")
+        public static WebApplication UseRemoteControlServer(this WebApplication app)
         {
             app.MapRazorPages();
 
             app.UseEndpoints(config =>
             {
-                config.MapHub<DesktopHub>(desktopHubEndpoint);
-                config.MapHub<ViewerHub>(viewerHubEndpoint);
+                config.MapHub<DesktopHub>("/hubs/desktop");
+                config.MapHub<ViewerHub>("/hubs/viewer");
             });
 
             return app;
