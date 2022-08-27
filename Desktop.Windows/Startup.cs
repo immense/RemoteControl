@@ -1,4 +1,5 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Win32;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -64,7 +65,8 @@ namespace Desktop.Windows
                 rootCommand.SetHandler(
                     async (
                         string? host, 
-                        bool? elevate, 
+                        bool? elevate,
+                        AppMode mode,
                         string? requesterId, 
                         string? serviceId, 
                         string? deviceId, 
@@ -97,18 +99,18 @@ namespace Desktop.Windows
 
         private static void RelaunchElevated()
         {
-            //var commandLine = Win32Interop.GetCommandLine().Replace(" -elevate", "");
+            var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "").Replace(" -e", "");
 
-            //Logger.Write($"Elevating process {commandLine}.");
-            //var result = Win32Interop.OpenInteractiveProcess(
-            //    commandLine,
-            //    -1,
-            //    false,
-            //    "default",
-            //    true,
-            //    out var procInfo);
-            //Logger.Write($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
-            //Environment.Exit(0);
+            Console.WriteLine($"Elevating process {commandLine}.");
+            var result = Win32Interop.OpenInteractiveProcess(
+                commandLine,
+                -1,
+                false,
+                "default",
+                true,
+                out var procInfo);
+            Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
+            Environment.Exit(0);
         }
     }
 }

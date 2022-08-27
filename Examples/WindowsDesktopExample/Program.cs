@@ -13,4 +13,5 @@ return await Startup.Run(ex =>
     {
         Console.WriteLine($"Error: {ex.Message}");
     },
+    "https://localhost:7024",
     cts.Token);
