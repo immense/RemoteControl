@@ -10,8 +10,8 @@ namespace Immense.RemoteControl.Server.Abstractions
     {
         bool EnforceAttendedAccess { get; }
         bool RemoteControlNotifyUser { get; }
+        int RemoteControlSessionLimit { get; }
         bool DoesUserHaveAccessToDevice(string targetDeviceId, string? userIdentifier);
-        int GetConcurrentSessionLimit();
         string GetOrganizationNameById(string orgId);
         string GetRequesterDisplayName(string? userIdentifier);
         string GetRequesterOrganizationId(string? userIdentifier);

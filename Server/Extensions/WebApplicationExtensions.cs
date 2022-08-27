@@ -15,6 +15,8 @@ namespace Immense.RemoteControl.Server.Extensions
             string desktopHubEndpoint = "/hubs/desktop",
             string viewerHubEndpoint = "/hubs/viewer")
         {
+            app.MapRazorPages();
+
             app.UseEndpoints(config =>
             {
                 config.MapHub<DesktopHub>(desktopHubEndpoint);

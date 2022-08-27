@@ -184,8 +184,7 @@ namespace Immense.RemoteControl.Server.Hubs
                     x.OrganizationID == orgId &&
                     x.ViewerList.Any());
 
-                var sessionLimit = _viewerHubDataProvider.GetConcurrentSessionLimit();
-                if (currentUsers >= sessionLimit)
+                if (currentUsers >= _viewerHubDataProvider.RemoteControlSessionLimit)
                 {
                     await Clients.Caller.SendAsync("ShowMessage", "Max number of concurrent sessions reached.");
                     Context.Abort();
