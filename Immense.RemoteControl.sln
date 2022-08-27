@@ -11,6 +11,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{EE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerExample", "Examples\ServerExample\ServerExample.csproj", "{3F08DAE6-07BB-4853-95F6-319F920C4B5E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{23D18BF9-6983-44F4-BE35-ECA8CDB141BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{D6A3461E-51A7-4498-9ADD-B283A193457C}"
+	ProjectSection(SolutionItems) = preProject
+		.build\Post-Build.ps1 = .build\Post-Build.ps1
+		.build\Pre-Build.ps1 = .build\Pre-Build.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +43,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3F08DAE6-07BB-4853-95F6-319F920C4B5E} = {EEAA61A2-1231-472B-B272-018EB0998EA4}
+		{D6A3461E-51A7-4498-9ADD-B283A193457C} = {23D18BF9-6983-44F4-BE35-ECA8CDB141BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9FF6EA83-9252-44BF-8D31-E14BF13C3A8B}

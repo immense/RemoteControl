@@ -8,7 +8,7 @@
     <RootNamespace>Immense.RemoteControl.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <AssemblyName>Immense.RemoteControl.$(MSBuildProjectName)</AssemblyName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>0.5.8</Version>
+    <Version>0.5.9</Version>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
 
@@ -143,11 +143,11 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; xcopy &quot;$(ProjectDir)bin\$(Configuration)&quot; &quot;$(SolutionDir)dist&quot; /Y" />
+    <Exec Command="powershell.exe -f &quot;$(SolutionDir).build\Post-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; xcopy &quot;$(ProjectDir)bin\$(Configuration)&quot; &quot;$(SolutionDir)dist&quot; /Y" />
+    <Exec Command="powershell.exe -f &quot;$(SolutionDir).build\Pre-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
   </Target>
 
 
