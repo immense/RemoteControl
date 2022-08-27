@@ -13,5 +13,5 @@ while (!$Files) {
     $Files = Get-ChildItem -Path $SolutionDir -Recurse -Filter "*.nupkg"
 }
 Get-ChildItem -Path $SolutionDir -Recurse -Filter "*.nupkg" | ForEach-Object {
-    Copy-Item -Path $_.FullName -Destination $DistPath
+    Copy-Item -Path $_.FullName -Destination $DistPath -Force
 }
