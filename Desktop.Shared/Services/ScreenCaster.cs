@@ -77,7 +77,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
                 _appState.Viewers.AddOrUpdate(viewer.ViewerConnectionID, viewer, (id, v) => viewer);
 
-                if (_appState.Mode == AppMode.Normal)
+                if (_appState.Mode == AppMode.Attended)
                 {
                     _appState.InvokeViewerAdded(viewer);
                 }

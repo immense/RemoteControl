@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.Win32.SystemEvents" Version="6.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Desktop.Windows\Desktop.Windows.csproj" />
+  </ItemGroup>
+
 </Project>

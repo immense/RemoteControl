@@ -108,7 +108,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
             else
             {
-                Mode = AppMode.Normal;
+                Mode = AppMode.Attended;
             }
 
             if (ArgDict.TryGetValue("host", out var host))

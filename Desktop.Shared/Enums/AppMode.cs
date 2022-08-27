@@ -3,7 +3,7 @@
     public enum AppMode
     {
         Unattended,
-        Normal,
+        Attended,
         Chat
     }
 }

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WindowsDesktopExample": {
+      "commandName": "Project",
+      "commandLineArgs": "-s https://localhost"
+    }
+  }
+}

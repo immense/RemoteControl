@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Desktop.Windows;
+using Microsoft.Win32;
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (s, e) =>
@@ -6,15 +7,10 @@ Console.CancelKeyPress += (s, e) =>
     cts.Cancel();
 };
 
-SystemEvents.SessionSwitch += (s, e) =>
-{
-    Console.WriteLine($"Session changed.  Reason: {e.Reason}");
-};
+Console.WriteLine("Press Ctrl + C to exit.");
 
-SystemEvents.SessionEnding += (s, e) =>
-{
-    Console.WriteLine($"Session ending.  Reason: {e.Reason}");
-};
-
-Console.WriteLine("Press Ctrl + C to quit.");
-await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token);
+return await Startup.Run(ex => 
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+    },
+    cts.Token);
