@@ -1,69 +1,117 @@
 import * as UI from "./UI.js";
-import { BaseDtoType } from "./Enums/BaseDtoType.js";
+import { DtoType } from "./Enums/BaseDtoType.js";
 import { ViewerApp } from "./App.js";
 import { Sound } from "./Sound.js";
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
+const Chunks = {};
 export class DtoMessageHandler {
     constructor() {
         this.MessagePack = window['msgpack5']();
     }
     ParseBinaryMessage(data) {
-        var model = this.MessagePack.decode(data);
-        switch (model.DtoType) {
-            case BaseDtoType.AudioSample:
-                this.HandleAudioSample(model);
+        var wrapper = this.MessagePack.decode(data);
+        switch (wrapper.DtoType) {
+            case DtoType.AudioSample:
+                this.HandleAudioSample(wrapper);
                 break;
-            case BaseDtoType.CaptureFrame:
-                this.HandleCaptureFrame(model);
+            case DtoType.CaptureFrame:
+                this.HandleCaptureFrame(wrapper);
                 break;
-            case BaseDtoType.ClipboardText:
-                this.HandleClipboardText(model);
+            case DtoType.ClipboardText:
+                this.HandleClipboardText(wrapper);
                 break;
-            case BaseDtoType.CursorChange:
-                this.HandleCursorChange(model);
+            case DtoType.CursorChange:
+                this.HandleCursorChange(wrapper);
                 break;
-            case BaseDtoType.ScreenData:
-                this.HandleScreenData(model);
+            case DtoType.ScreenData:
+                this.HandleScreenData(wrapper);
                 break;
-            case BaseDtoType.ScreenSize:
-                this.HandleScreenSize(model);
+            case DtoType.ScreenSize:
+                this.HandleScreenSize(wrapper);
                 break;
-            case BaseDtoType.WindowsSessions:
-                this.HandleWindowsSessions(model);
+            case DtoType.WindowsSessions:
+                this.HandleWindowsSessions(wrapper);
                 break;
-            case BaseDtoType.File:
-                this.HandleFile(model);
+            case DtoType.File:
+                this.HandleFile(wrapper);
             default:
                 break;
         }
     }
-    HandleAudioSample(audioSample) {
+    HandleAudioSample(wrapper) {
+        let audioSample = this.TryComplete(wrapper);
+        if (!audioSample) {
+            return;
+        }
         Sound.Play(audioSample.Buffer);
     }
-    HandleCaptureFrame(captureFrame) {
+    HandleCaptureFrame(wrapper) {
+        let captureFrame = this.TryComplete(wrapper);
+        if (!captureFrame) {
+            return;
+        }
         HandleCaptureReceived(captureFrame);
     }
-    HandleClipboardText(clipboardText) {
+    HandleClipboardText(wrapper) {
+        let clipboardText = this.TryComplete(wrapper);
+        if (!clipboardText) {
+            return;
+        }
         ViewerApp.ClipboardWatcher.SetClipboardText(clipboardText.ClipboardText);
     }
-    HandleCursorChange(cursorChange) {
+    HandleCursorChange(wrapper) {
+        let cursorChange = this.TryComplete(wrapper);
+        if (!cursorChange) {
+            return;
+        }
         UI.UpdateCursor(cursorChange.ImageBytes, cursorChange.HotSpotX, cursorChange.HotSpotY, cursorChange.CssOverride);
     }
-    HandleFile(file) {
+    HandleFile(wrapper) {
+        let file = this.TryComplete(wrapper);
+        if (!file) {
+            return;
+        }
         ReceiveFile(file);
     }
-    HandleScreenData(screenDataDto) {
+    HandleScreenData(wrapper) {
+        let screenDataDto = this.TryComplete(wrapper);
+        if (!screenDataDto) {
+            return;
+        }
         document.title = `${screenDataDto.MachineName} - Remotely Session`;
         UI.ToggleConnectUI(false);
         UI.SetScreenSize(screenDataDto.ScreenWidth, screenDataDto.ScreenHeight);
         UI.UpdateDisplays(screenDataDto.SelectedDisplay, screenDataDto.DisplayNames);
     }
-    HandleScreenSize(screenSizeDto) {
+    HandleScreenSize(wrapper) {
+        let screenSizeDto = this.TryComplete(wrapper);
+        if (!screenSizeDto) {
+            return;
+        }
         UI.SetScreenSize(screenSizeDto.Width, screenSizeDto.Height);
     }
-    HandleWindowsSessions(windowsSessionsDto) {
+    HandleWindowsSessions(wrapper) {
+        let windowsSessionsDto = this.TryComplete(wrapper);
+        if (!windowsSessionsDto) {
+            return;
+        }
         UI.UpdateWindowsSessions(windowsSessionsDto.WindowsSessions);
+    }
+    TryComplete(wrapper) {
+        if (!Chunks[wrapper.InstanceId]) {
+            Chunks[wrapper.InstanceId] = [];
+        }
+        Chunks[wrapper.InstanceId].push(wrapper);
+        if (!wrapper.IsLastChunk) {
+            return;
+        }
+        const buffers = Chunks[wrapper.InstanceId]
+            .sort((a, b) => a.SequenceId - b.SequenceId)
+            .map(x => x.DtoChunk)
+            .reduce(x => x);
+        delete Chunks[wrapper.InstanceId];
+        return this.MessagePack.decode(buffers);
     }
 }
 //# sourceMappingURL=DtoMessageHandler.js.map

@@ -19,7 +19,7 @@ import {
 } from "./Interfaces/Dtos.js";
 import { CreateGUID, When } from "./Utilities.js";
 import { FileTransferProgress } from "./UI.js";
-import { BaseDtoType } from "./Enums/BaseDtoType.js";
+import { DtoType } from "./Enums/BaseDtoType.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 
 export class MessageSender {
@@ -33,7 +33,7 @@ export class MessageSender {
         ViewerApp.ViewerHubConnection.ChangeWindowsSession(sessionId);
     }
     SendFrameReceived() {
-        var dto = new GenericDto(BaseDtoType.FrameReceived);
+        var dto = new GenericDto(DtoType.FrameReceived);
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto);
     }
     SendSelectScreen(displayName: string) {
@@ -73,7 +73,7 @@ export class MessageSender {
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto);
     }
     SendSetKeyStatesUp() {
-        var dto = new GenericDto(BaseDtoType.SetKeyStatesUp);
+        var dto = new GenericDto(DtoType.SetKeyStatesUp);
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto);
     }
     SendCtrlAltDel() {
@@ -82,7 +82,7 @@ export class MessageSender {
     }
 
     SendOpenFileTransferWindow() {
-        var dto = new GenericDto(BaseDtoType.OpenFileTransferWindow);
+        var dto = new GenericDto(DtoType.OpenFileTransferWindow);
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto);
     }
 

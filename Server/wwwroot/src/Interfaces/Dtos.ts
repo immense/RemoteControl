@@ -1,13 +1,21 @@
-import { BaseDto } from "./BaseDto.js";
-import { BaseDtoType } from "../Enums/BaseDtoType.js";
+import { DtoType } from "../Enums/BaseDtoType.js";
 import { WindowsSession } from "../Models/WindowsSession.js";
 
+export class DtoWrapper {
+    DtoChunk: Uint8Array;
+    DtoType: DtoType;
+    IsFirstChunk: boolean;
+    IsLastChunk: boolean;
+    RequestId: string;
+    InstanceId: string;
+    SequenceId: number;
+}
 
-export interface AudioSampleDto extends BaseDto {
+export interface AudioSampleDto {
     Buffer: Uint8Array;
 }
 
-export interface CaptureFrameDto extends BaseDto {
+export interface CaptureFrameDto {
     EndOfFrame: boolean;
     Left: number;
     Top: number;
@@ -17,12 +25,12 @@ export interface CaptureFrameDto extends BaseDto {
     Sequence: number;
 }
 
-export interface ClipboardTextDto extends BaseDto {
+export interface ClipboardTextDto {
     ClipboardText: string;
 }
 
 
-export class ClipboardTransferDto implements BaseDto {
+export class ClipboardTransferDto {
     constructor(text: string, typeText:boolean) {
         this.Text = text;
         this.TypeText = typeText;
@@ -30,22 +38,20 @@ export class ClipboardTransferDto implements BaseDto {
 
     Text: string;
     TypeText: boolean;
-    DtoType: BaseDtoType = BaseDtoType.ClipboardTransfer;
 }
 
 
-export class CtrlAltDelDto implements BaseDto {
-    DtoType: BaseDtoType = BaseDtoType.CtrlAltDel;
+export class CtrlAltDelDto {
 }
 
-export interface CursorChangeDto extends BaseDto {
+export interface CursorChangeDto {
     ImageBytes: Uint8Array;
     HotSpotX: number;
     HotSpotY: number;
     CssOverride: string;
 }
 
-export class FileDto implements BaseDto {
+export class FileDto {
     constructor(buffer: Uint8Array,
         fileName: string,
         messageId: string,
@@ -64,45 +70,33 @@ export class FileDto implements BaseDto {
     MessageId: string;
     EndOfFile: boolean;
     StartOfFile: boolean;
-
-    DtoType: BaseDtoType = BaseDtoType.File;
 }
 
-export class GenericDto implements BaseDto {
-    constructor(type: BaseDtoType) {
-        this.DtoType = type;
-    }
-    DtoType: BaseDtoType;
-}
-
-export class KeyDownDto implements BaseDto {
+export class KeyDownDto {
     constructor(key: string) {
         this.Key = key;
     }
 
     Key: string;
-    DtoType: BaseDtoType = BaseDtoType.KeyDown;
 }
 
-export class KeyPressDto implements BaseDto {
+export class KeyPressDto {
     constructor(key: string) {
         this.Key = key;
     }
 
     Key: string;
-    DtoType: BaseDtoType = BaseDtoType.KeyPress;
 }
 
-export class KeyUpDto implements BaseDto {
+export class KeyUpDto {
     constructor(key: string) {
         this.Key = key;
     }
 
     Key: string;
-    DtoType: BaseDtoType = BaseDtoType.KeyUp;
 }
 
-export class MouseDownDto implements BaseDto {
+export class MouseDownDto {
     constructor(button: number, percentX: number, percentY: number) {
         this.Button = button;
         this.PercentX = percentX;
@@ -112,10 +106,9 @@ export class MouseDownDto implements BaseDto {
     Button: number;
     PercentX: number;
     PercentY: number;
-    DtoType: BaseDtoType = BaseDtoType.MouseDown;
 }
 
-export class MouseMoveDto implements BaseDto {
+export class MouseMoveDto {
     constructor(percentX: number, percentY: number) {
         this.PercentX = percentX;
         this.PercentY = percentY;
@@ -123,10 +116,9 @@ export class MouseMoveDto implements BaseDto {
 
     PercentX: number;
     PercentY: number;
-    DtoType: BaseDtoType = BaseDtoType.MouseMove;
 }
 
-export class MouseUpDto implements BaseDto {
+export class MouseUpDto {
     constructor(button: number, percentX: number, percentY: number) {
         this.Button = button;
         this.PercentX = percentX;
@@ -136,10 +128,9 @@ export class MouseUpDto implements BaseDto {
     Button: number;
     PercentX: number;
     PercentY: number;
-    DtoType: BaseDtoType = BaseDtoType.MouseUp;
 }
 
-export class MouseWheelDto implements BaseDto {
+export class MouseWheelDto {
     constructor(deltaX: number, deltaY: number) {
         this.DeltaX = deltaX;
         this.DeltaY = deltaY;
@@ -147,10 +138,9 @@ export class MouseWheelDto implements BaseDto {
 
     DeltaX: number;
     DeltaY: number;
-    DtoType: BaseDtoType = BaseDtoType.MouseWheel;
 }
 
-export interface ScreenDataDto extends BaseDto {
+export interface ScreenDataDto {
     DisplayNames: string[];
     SelectedDisplay: string;
     MachineName: string;
@@ -158,21 +148,20 @@ export interface ScreenDataDto extends BaseDto {
     ScreenHeight: number;
 }
 
-export interface ScreenSizeDto extends BaseDto {
+export interface ScreenSizeDto {
     Width: number;
     Height: number;
 }
 
-export class SelectScreenDto implements BaseDto {
+export class SelectScreenDto {
     constructor(displayName: string) {
         this.DisplayName = displayName;
     }
 
     DisplayName: string;
-    DtoType: BaseDtoType = BaseDtoType.SelectScreen;
 }
 
-export class TapDto implements BaseDto {
+export class TapDto {
     constructor(percentX: number, percentY: number) {
         this.PercentX = percentX;
         this.PercentY = percentY;
@@ -180,31 +169,27 @@ export class TapDto implements BaseDto {
 
     PercentX: number;
     PercentY: number;
-    DtoType: BaseDtoType = BaseDtoType.Tap;
 }
 
-export class ToggleAudioDto implements BaseDto {
+export class ToggleAudioDto {
     constructor(toggleOn: boolean) {
         this.ToggleOn = toggleOn;
     }
 
     ToggleOn: boolean;
-    DtoType: BaseDtoType = BaseDtoType.ToggleAudio;
 }
 
 
-export class ToggleBlockInputDto implements BaseDto {
+export class ToggleBlockInputDto {
     constructor(toggleOn: boolean) {
         this.ToggleOn = toggleOn;
     }
 
     ToggleOn: boolean;
-    DtoType: BaseDtoType = BaseDtoType.ToggleBlockInput;
 }
 
 
-export class WindowsSessionsDto implements BaseDto {
+export class WindowsSessionsDto {
     
     WindowsSessions: Array<WindowsSession>;
-    DtoType: BaseDtoType = BaseDtoType.WindowsSessions;
 }

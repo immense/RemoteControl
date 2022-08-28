@@ -107,7 +107,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                             RequesterConnectionId = requesterId,
                             ServiceConnectionId = serviceId
                         };
-                        appState.ProcessArgs(args);
                         return appState;
                     });
 

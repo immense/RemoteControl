@@ -1,4 +1,4 @@
-﻿export enum BaseDtoType {
+﻿export enum DtoType {
     CaptureFrame = 0,
     ScreenData = 1,
     ScreenSize = 2,

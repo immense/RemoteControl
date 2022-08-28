@@ -7,7 +7,7 @@ import { GenericDto } from "./Interfaces/Dtos.js";
 import { ShowMessage } from "./UI.js";
 import { BaseDto } from "./Interfaces/BaseDto.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
-import { BaseDtoType } from "./Enums/BaseDtoType.js";
+import { DtoType } from "./Enums/BaseDtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
 
 var signalR = window["signalR"];

@@ -27,7 +27,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName);
         void InvokeViewerAdded(Viewer viewer);
         void InvokeViewerRemoved(string viewerID);
-        void ProcessArgs(string[] args);
         void UpdateHost(string host);
         void UpdateOrganizationId(string organizationId);
     }
@@ -49,9 +48,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public Dictionary<string, string> ArgDict { get; } = new();
         public string DeviceID { get; init; } = string.Empty;
-        public string Host { get; init; } = string.Empty;
+        public string Host { get; set; } = string.Empty;
         public AppMode Mode { get; init; }
-        public string OrganizationId { get; init; } = string.Empty;
+        public string OrganizationId { get; set; } = string.Empty;
         public string OrganizationName { get; init; } = string.Empty;
         public string RequesterConnectionId { get; init; } = string.Empty;
         public string ServiceConnectionId { get; init; } = string.Empty;
@@ -71,70 +70,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public void InvokeViewerRemoved(string viewerID)
         {
             ViewerRemoved?.Invoke(null, viewerID);
-        }
-
-        public void ProcessArgs(string[] args)
-        {
-            ArgDict.Clear();
-            for (var i = 0; i < args.Length; i += 2)
-            {
-                try
-                {
-                    var key = args[i];
-                    if (key != null)
-                    {
-                        if (!key.Contains('-'))
-                        {
-                            _logger.LogWarning("Command line arguments are invalid.  Key: {key}", key);
-                            i -= 1;
-                            continue;
-                        }
-
-                        key = key.Trim().Replace("-", "").ToLower();
-
-                        ArgDict.Add(key, args[i + 1].Trim());
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while processing args.");
-                }
-
-            }
-
-            if (ArgDict.TryGetValue("mode", out var mode))
-            {
-                Mode = (AppMode)Enum.Parse(typeof(AppMode), mode, true);
-            }
-            else
-            {
-                Mode = AppMode.Attended;
-            }
-
-            if (ArgDict.TryGetValue("host", out var host))
-            {
-                Host = host;
-            }
-            if (ArgDict.TryGetValue("requester", out var requester))
-            {
-                RequesterID = requester;
-            }
-            if (ArgDict.TryGetValue("serviceid", out var serviceID))
-            {
-                ServiceID = serviceID;
-            }
-            if (ArgDict.TryGetValue("deviceid", out var deviceID))
-            {
-                DeviceID = deviceID;
-            }
-            if (ArgDict.TryGetValue("organization", out var orgName))
-            {
-                OrganizationName = orgName;
-            }
-            if (ArgDict.TryGetValue("orgid", out var orgId))
-            {
-                OrganizationId = orgId;
-            }
         }
 
         public void UpdateHost(string host)

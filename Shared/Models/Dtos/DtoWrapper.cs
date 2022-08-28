@@ -26,7 +26,7 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
         public Guid RequestId { get; init; }
 
         [DataMember]
-        public Guid ResponseId { get; init; }
+        public Guid InstanceId { get; init; }
 
         [DataMember]
         public int SequenceId { get; init; }

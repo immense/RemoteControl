@@ -16,7 +16,7 @@ namespace Immense.RemoteControl.Shared.Helpers
         public static IEnumerable<DtoWrapper> ChunkDto<T>(T dto, DtoType dtoType, Guid requestId = default, int chunkSize = 50_000)
         {
             var dtoBytes = MessagePackSerializer.Serialize(dto);
-            var responseId = Guid.NewGuid();
+            var instanceId = Guid.NewGuid();
             var chunks = dtoBytes.Chunk(chunkSize).ToArray();
 
             for (var i = 0; i < chunks.Length; i++)
@@ -31,7 +31,7 @@ namespace Immense.RemoteControl.Shared.Helpers
                     IsFirstChunk = i == 0,
                     IsLastChunk = i == chunks.Length - 1,
                     RequestId = requestId,
-                    ResponseId = responseId
+                    InstanceId = instanceId
                 };
             }
         }
@@ -40,7 +40,7 @@ namespace Immense.RemoteControl.Shared.Helpers
         {
             result = default;
 
-            var chunks = _cache.GetOrCreate(wrapper.ResponseId, entry =>
+            var chunks = _cache.GetOrCreate(wrapper.InstanceId, entry =>
             {
                 entry.SlidingExpiration = TimeSpan.FromMinutes(1);
                 return new List<DtoWrapper>();
@@ -55,7 +55,7 @@ namespace Immense.RemoteControl.Shared.Helpers
                     return false;
                 }
 
-                _cache.Remove(wrapper.ResponseId);
+                _cache.Remove(wrapper.InstanceId);
 
                 chunks.Sort((a, b) =>
                 {

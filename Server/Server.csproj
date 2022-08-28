@@ -76,7 +76,6 @@
     <None Include="wwwroot\src\InputEventHandlers.js" />
     <None Include="wwwroot\src\InputEventHandlers.js.map" />
     <None Include="wwwroot\src\InputEventHandlers.ts" />
-    <None Include="wwwroot\src\Interfaces\BaseDto.ts" />
     <None Include="wwwroot\src\Interfaces\Dtos.js" />
     <None Include="wwwroot\src\Interfaces\Dtos.js.map" />
     <None Include="wwwroot\src\Interfaces\Dtos.ts" />

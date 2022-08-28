@@ -27,8 +27,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         private readonly ILogger<DtoMessageHandler> _logger;
 
 
-        public DtoMessageHandler(IKeyboardMouseInput keyboardMouseInput,
-                                                    IAudioCapturer audioCapturer,
+        public DtoMessageHandler(
+            IKeyboardMouseInput keyboardMouseInput,
+            IAudioCapturer audioCapturer,
             IClipboardService clipboardService,
             IFileTransferService fileTransferService,
             ILogger<DtoMessageHandler> logger)

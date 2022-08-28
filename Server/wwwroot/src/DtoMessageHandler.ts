@@ -1,6 +1,5 @@
 ﻿import * as UI from "./UI.js";
-import { BaseDtoType } from "./Enums/BaseDtoType.js";
-import { BaseDto } from "./Interfaces/BaseDto.js";
+import { DtoType } from "./Enums/BaseDtoType.js";
 import { ViewerApp } from "./App.js";
 import { ShowMessage } from "./UI.js";
 import { Sound } from "./Sound.js";
@@ -12,74 +11,147 @@ import {
     ScreenDataDto,
     ScreenSizeDto,
     FileDto,
-    WindowsSessionsDto
+    WindowsSessionsDto,
+    DtoWrapper
 } from "./Interfaces/Dtos.js";
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 
+const Chunks: Record<string, DtoWrapper[]> = {};
+
 export class DtoMessageHandler {
+
     MessagePack: any = window['msgpack5']();
 
     ParseBinaryMessage(data: ArrayBuffer) {
-        var model = this.MessagePack.decode(data) as BaseDto;
-        switch (model.DtoType) {
-            case BaseDtoType.AudioSample:
-                this.HandleAudioSample(model as unknown as AudioSampleDto);
+        var wrapper = this.MessagePack.decode(data) as DtoWrapper;
+        switch (wrapper.DtoType) {
+            case DtoType.AudioSample:
+                this.HandleAudioSample(wrapper);
                 break;
-            case BaseDtoType.CaptureFrame:
-                this.HandleCaptureFrame(model as unknown as CaptureFrameDto);
+            case DtoType.CaptureFrame:
+                this.HandleCaptureFrame(wrapper);
                 break;
-            case BaseDtoType.ClipboardText:
-                this.HandleClipboardText(model as unknown as ClipboardTextDto);
+            case DtoType.ClipboardText:
+                this.HandleClipboardText(wrapper);
                 break;
-            case BaseDtoType.CursorChange:
-                this.HandleCursorChange(model as unknown as CursorChangeDto);
+            case DtoType.CursorChange:
+                this.HandleCursorChange(wrapper);
                 break;
-            case BaseDtoType.ScreenData:
-                this.HandleScreenData(model as unknown as ScreenDataDto);
+            case DtoType.ScreenData:
+                this.HandleScreenData(wrapper);
                 break;
-            case BaseDtoType.ScreenSize:
-                this.HandleScreenSize(model as unknown as ScreenSizeDto)
+            case DtoType.ScreenSize:
+                this.HandleScreenSize(wrapper)
                 break;
-            case BaseDtoType.WindowsSessions:
-                this.HandleWindowsSessions(model as unknown as WindowsSessionsDto)
+            case DtoType.WindowsSessions:
+                this.HandleWindowsSessions(wrapper)
                 break;
-            case BaseDtoType.File:
-                this.HandleFile(model as unknown as FileDto);
+            case DtoType.File:
+                this.HandleFile(wrapper);
             default:
                 break;
         }
     }
 
-    HandleAudioSample(audioSample: AudioSampleDto) {
+    HandleAudioSample(wrapper: DtoWrapper) {
+        let audioSample = this.TryComplete<AudioSampleDto>(wrapper);
+
+        if (!audioSample) {
+            return;
+        }
+
         Sound.Play(audioSample.Buffer);
     }
 
-    HandleCaptureFrame(captureFrame: CaptureFrameDto) {
+    HandleCaptureFrame(wrapper: DtoWrapper) {
+        let captureFrame = this.TryComplete<CaptureFrameDto>(wrapper);
+
+        if (!captureFrame) {
+            return;
+        }
+
         HandleCaptureReceived(captureFrame);
     }
 
-    HandleClipboardText(clipboardText: ClipboardTextDto) {
+    HandleClipboardText(wrapper: DtoWrapper) {
+        let clipboardText = this.TryComplete<ClipboardTextDto>(wrapper);
+
+        if (!clipboardText) {
+            return;
+        }
+
         ViewerApp.ClipboardWatcher.SetClipboardText(clipboardText.ClipboardText);
     }
-    HandleCursorChange(cursorChange: CursorChangeDto) {
+    HandleCursorChange(wrapper: DtoWrapper) {
+        let cursorChange = this.TryComplete<CursorChangeDto>(wrapper);
+
+        if (!cursorChange) {
+            return;
+        }
+
         UI.UpdateCursor(cursorChange.ImageBytes, cursorChange.HotSpotX, cursorChange.HotSpotY, cursorChange.CssOverride);
     }
-    HandleFile(file: FileDto) {
+    HandleFile(wrapper: DtoWrapper) {
+        let file = this.TryComplete<FileDto>(wrapper);
+
+        if (!file) {
+            return;
+        }
+
         ReceiveFile(file);
     }
-    HandleScreenData(screenDataDto: ScreenDataDto) {
+    HandleScreenData(wrapper: DtoWrapper) {
+        let screenDataDto = this.TryComplete<ScreenDataDto>(wrapper);
+
+        if (!screenDataDto) {
+            return;
+        }
+
         document.title = `${screenDataDto.MachineName} - Remotely Session`;
         UI.ToggleConnectUI(false);
         UI.SetScreenSize(screenDataDto.ScreenWidth, screenDataDto.ScreenHeight);
         UI.UpdateDisplays(screenDataDto.SelectedDisplay, screenDataDto.DisplayNames);
     }
 
-    HandleScreenSize(screenSizeDto: ScreenSizeDto) {
+    HandleScreenSize(wrapper: DtoWrapper) {
+        let screenSizeDto = this.TryComplete<ScreenSizeDto>(wrapper);
+
+        if (!screenSizeDto) {
+            return;
+        }
+
         UI.SetScreenSize(screenSizeDto.Width, screenSizeDto.Height);
     }
 
-    HandleWindowsSessions(windowsSessionsDto: WindowsSessionsDto) {
+    HandleWindowsSessions(wrapper: DtoWrapper) {
+        let windowsSessionsDto = this.TryComplete<WindowsSessionsDto>(wrapper);
+
+        if (!windowsSessionsDto) {
+            return;
+        }
+
         UI.UpdateWindowsSessions(windowsSessionsDto.WindowsSessions);
+    }
+
+    private TryComplete<T>(wrapper: DtoWrapper) : T {
+        if (!Chunks[wrapper.InstanceId]) {
+            Chunks[wrapper.InstanceId] = [];
+        }
+
+        Chunks[wrapper.InstanceId].push(wrapper);
+
+        if (!wrapper.IsLastChunk) {
+            return;
+        }
+
+        const buffers = Chunks[wrapper.InstanceId]
+            .sort((a, b) => a.SequenceId - b.SequenceId)
+            .map(x => x.DtoChunk)
+            .reduce(x => x);
+        
+        delete Chunks[wrapper.InstanceId];
+
+        return this.MessagePack.decode(buffers) as T;
     }
 }
