@@ -1,4 +1,4 @@
-﻿namespace Remotely.Shared.Models
+﻿namespace Immense.RemoteControl.Shared.Models
 {
     public class ChatMessage
     {

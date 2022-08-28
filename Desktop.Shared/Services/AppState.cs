@@ -21,8 +21,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         AppMode Mode { get; }
         string OrganizationId { get; }
         string OrganizationName { get; }
-        string RequesterID { get; }
-        string ServiceID { get; }
+        string RequesterConnectionId { get; }
+        string ServiceConnectionId { get; }
         ConcurrentDictionary<string, Viewer> Viewers { get; }
         void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName);
         void InvokeViewerAdded(Viewer viewer);
@@ -48,13 +48,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public event EventHandler<string>? ViewerRemoved;
 
         public Dictionary<string, string> ArgDict { get; } = new();
-        public string DeviceID { get; private set; } = string.Empty;
-        public string Host { get; private set; } = string.Empty;
-        public AppMode Mode { get; private set; }
-        public string OrganizationId { get; private set; } = string.Empty;
-        public string OrganizationName { get; private set; } = string.Empty;
-        public string RequesterID { get; private set; } = string.Empty;
-        public string ServiceID { get; private set; } = string.Empty;
+        public string DeviceID { get; init; } = string.Empty;
+        public string Host { get; init; } = string.Empty;
+        public AppMode Mode { get; init; }
+        public string OrganizationId { get; init; } = string.Empty;
+        public string OrganizationName { get; init; } = string.Empty;
+        public string RequesterConnectionId { get; init; } = string.Empty;
+        public string ServiceConnectionId { get; init; } = string.Empty;
 
         public ConcurrentDictionary<string, Viewer> Viewers { get; } = new();
 

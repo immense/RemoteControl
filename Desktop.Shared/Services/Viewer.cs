@@ -11,7 +11,38 @@ using Immense.RemoteControl.Desktop.Shared.Win32;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services
 {
-    public class Viewer : IDisposable
+    public interface IViewer
+    {
+        IScreenCapturer Capturer { get; }
+        double CurrentFps { get; }
+        double CurrentMbps { get; }
+        bool DisconnectRequested { get; set; }
+        bool HasControl { get; set; }
+        int ImageQuality { get; }
+        bool IsConnected { get; }
+        bool IsStalled { get; }
+        string Name { get; set; }
+        ConcurrentQueue<SentFrame> PendingSentFrames { get; }
+        TimeSpan RoundTripLatency { get; }
+        string ViewerConnectionID { get; set; }
+
+        void ApplyAutoQuality();
+        void CalculateFps();
+        void DequeuePendingFrame();
+        void Dispose();
+        Task SendAudioSample(byte[] audioSample);
+        Task SendClipboardText(string clipboardText);
+        Task SendCtrlAltDel();
+        Task SendCursorChange(CursorInfo cursorInfo);
+        Task SendFile(FileUpload fileUpload, CancellationToken cancelToken, Action<double> progressUpdateCallback);
+        Task SendScreenCapture(CaptureFrame screenFrame);
+        Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
+        Task SendScreenSize(int width, int height);
+        Task SendViewerConnected();
+        Task SendWindowsSessions();
+    }
+
+    public class Viewer : IDisposable, IViewer
     {
         public const int DefaultQuality = 80;
 
@@ -131,13 +162,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public async Task SendAudioSample(byte[] audioSample)
         {
             var dto = new AudioSampleDto(audioSample);
-            await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+            await TrySendToViewer(dto, ViewerConnectionID);
         }
 
         public async Task SendClipboardText(string clipboardText)
         {
             var dto = new ClipboardTextDto(clipboardText);
-            await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+            await TrySendToViewer(dto, ViewerConnectionID);
         }
 
         public async Task SendCtrlAltDel()
@@ -153,7 +184,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
 
             var dto = new CursorChangeDto(cursorInfo.ImageBytes, cursorInfo.HotSpot.X, cursorInfo.HotSpot.Y, cursorInfo.CssOverride);
-            await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+            await TrySendToViewer(dto, ViewerConnectionID);
         }
         public async Task SendFile(FileUpload fileUpload, CancellationToken cancelToken, Action<double> progressUpdateCallback)
         {
@@ -168,7 +199,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     StartOfFile = true
                 };
 
-                await TrySendToViewer(async () => await _casterSocket.SendDtoToViewer(fileDto, ViewerConnectionID));
+                await TrySendToViewer(fileDto, ViewerConnectionID);
 
                 using var fs = File.OpenRead(fileUpload.FilePath);
                 using var br = new BinaryReader(fs);
@@ -181,12 +212,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
                     fileDto = new FileDto()
                     {
-                        Buffer = br.ReadBytes(50_000),
+                        Buffer = br.ReadBytes(40_000),
                         FileName = fileUpload.DisplayName,
                         MessageId = messageId
                     };
 
-                    await TrySendToViewer(async () => await _casterSocket.SendDtoToViewer(fileDto, ViewerConnectionID));
+                    await TrySendToViewer(fileDto, ViewerConnectionID);
 
                     progressUpdateCallback((double)fs.Position / fs.Length);
                 }
@@ -199,7 +230,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     StartOfFile = false
                 };
 
-                await TrySendToViewer(async () => await _casterSocket.SendDtoToViewer(fileDto, ViewerConnectionID));
+                await TrySendToViewer(fileDto, ViewerConnectionID);
 
                 progressUpdateCallback(1);
             }
@@ -237,7 +268,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     ImageBytes = chunk
                 };
 
-                await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+                await TrySendToViewer(dto, ViewerConnectionID);
             }
         }
 
@@ -255,13 +286,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 ScreenWidth = screenWidth,
                 ScreenHeight = screenHeight
             };
-            await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+            await TrySendToViewer(dto, ViewerConnectionID);
         }
 
         public async Task SendScreenSize(int width, int height)
         {
             var dto = new ScreenSizeDto(width, height);
-            await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+            await TrySendToViewer(dto, ViewerConnectionID);
         }
 
         public async Task SendViewerConnected()
@@ -274,7 +305,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             if (OperatingSystem.IsWindows())
             {
                 var dto = new WindowsSessionsDto(Win32Interop.GetActiveSessions());
-                await TrySendToViewer(() => _casterSocket.SendDtoToViewer(dto, ViewerConnectionID));
+                await TrySendToViewer(dto, ViewerConnectionID);
             }
         }
 
@@ -288,16 +319,18 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             await SendClipboardText(clipboardText);
         }
 
-        private Task TrySendToViewer(Func<Task> websocketSend)
+        private async Task TrySendToViewer<T>(T dto, string viewerConnectionId)
         {
             try
             {
-                return websocketSend();
+                foreach (var chunk in DtoChunker.ChunkDto(dto, DtoType.AudioSample))
+                {
+                    await _casterSocket.SendDtoToViewer(chunk, viewerConnectionId);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while sending to viewer.");
-                return Task.CompletedTask;
             }
         }
     }
