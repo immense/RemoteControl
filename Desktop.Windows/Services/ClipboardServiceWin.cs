@@ -1,27 +1,36 @@
-﻿using Remotely.Desktop.Core.Interfaces;
-using Remotely.Shared.Utilities;
-using Remotely.Shared.Win32;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Win32;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
+using Clipboard = System.Windows.Clipboard;
+using WpfApp = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class ClipboardServiceWin : IClipboardService
     {
-        private CancellationTokenSource _cancelTokenSource;
+        private readonly IWpfDispatcher _dispatcher;
+        private readonly ILogger<ClipboardServiceWin> _logger;
+        private CancellationTokenSource? _cancelTokenSource;
+        private string _clipboardText = string.Empty;
 
-        public event EventHandler<string> ClipboardTextChanged;
+        public ClipboardServiceWin(IWpfDispatcher dispatcher, ILogger<ClipboardServiceWin> logger)
+        {
+            _dispatcher = dispatcher;
+            _logger = logger;
+        }
 
-        private string ClipboardText { get; set; }
+        public event EventHandler<string>? ClipboardTextChanged;
 
         public void BeginWatching()
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
-                App.Current.Exit -= App_Exit;
-                App.Current.Exit += App_Exit;
+                WpfApp.Current.Exit -= App_Exit;
+                WpfApp.Current.Exit += App_Exit;
             });
 
             StopWatching();
@@ -49,7 +58,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while setting clipboard text.");
                 }
             });
             thread.SetApartmentState(ApartmentState.STA);
@@ -73,6 +82,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         {
             _cancelTokenSource?.Cancel();
         }
+
         private void WatchClipboard(CancellationToken cancelToken)
         {
             var thread = new Thread(() =>
@@ -85,10 +95,10 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     {
                         Win32Interop.SwitchToInputDesktop();
 
-                        if (Clipboard.ContainsText() && Clipboard.GetText() != ClipboardText)
+                        if (Clipboard.ContainsText() && Clipboard.GetText() != _clipboardText)
                         {
-                            ClipboardText = Clipboard.GetText();
-                            ClipboardTextChanged?.Invoke(this, ClipboardText);
+                            _clipboardText = Clipboard.GetText();
+                            ClipboardTextChanged?.Invoke(this, _clipboardText);
                         }
                     }
                     catch { }

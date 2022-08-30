@@ -2,8 +2,8 @@
 using Remotely.Desktop.Core;
 using Remotely.Desktop.Core.Interfaces;
 using Remotely.Desktop.Core.Services;
-using Remotely.Desktop.Win.Services;
-using Remotely.Desktop.Win.Views;
+using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.Windows.Views;
 using Remotely.Shared.Models;
 using Remotely.Shared.Utilities;
 using Remotely.Shared.Win32;

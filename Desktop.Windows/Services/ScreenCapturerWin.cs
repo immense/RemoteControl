@@ -24,7 +24,7 @@
 using Microsoft.Win32;
 using Remotely.Desktop.Core.Interfaces;
 using Remotely.Desktop.Core.Utilities;
-using Remotely.Desktop.Win.Models;
+using Immense.RemoteControl.Desktop.Windows.Models;
 using Remotely.Shared.Utilities;
 using Remotely.Shared.Win32;
 using SharpDX;

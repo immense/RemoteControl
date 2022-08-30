@@ -1,5 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Immense.RemoteControl.Shared.Models;
+using Remotely.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,45 +15,55 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class ChatUiServiceWin : IChatUiService
     {
-        private ChatWindowViewModel ChatViewModel { get; set; }
+        private readonly IWpfDispatcher _wpfDispatcher;
+        private readonly IShutdownService _shutdownService;
 
-        public event EventHandler ChatWindowClosed;
+        public ChatUiServiceWin(IWpfDispatcher wpfDispatcher, IShutdownService shutdownService)
+        {
+            _wpfDispatcher = wpfDispatcher;
+            _shutdownService = shutdownService;
+        }
+
+        private ChatWindowViewModel? _chatViewModel;
+
+        public event EventHandler? ChatWindowClosed;
 
         public void ReceiveChat(ChatMessage chatMessage)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _wpfDispatcher.Invoke(() =>
             {
                 if (chatMessage.Disconnected)
                 {
-                    MessageBox.Show("Your partner has disconnected.", "Partner Disconnected", MessageBoxButton.OK, MessageBoxImage.Information);
-                    App.Current.Shutdown();
+                    // TODO: IDialogService
+                    System.Windows.MessageBox.Show("Your partner has disconnected.", "Partner Disconnected", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _shutdownService.Shutdown();
                     return;
                 }
 
-                if (ChatViewModel != null)
+                if (_chatViewModel != null)
                 {
-                    ChatViewModel.SenderName = chatMessage.SenderName;
-                    ChatViewModel.ChatMessages.Add(chatMessage);
+                    _chatViewModel.SenderName = chatMessage.SenderName;
+                    _chatViewModel.ChatMessages.Add(chatMessage);
                 }
             });
         }
 
         public void ShowChatWindow(string organizationName, StreamWriter writer)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _wpfDispatcher.Invoke(() =>
             {
                 var chatWindow = new ChatWindow();
                 chatWindow.Closing += ChatWindow_Closing;
-                ChatViewModel = chatWindow.DataContext as ChatWindowViewModel;
-                ChatViewModel.PipeStreamWriter = writer;
-                ChatViewModel.OrganizationName = organizationName;
+                _chatViewModel = chatWindow.DataContext as ChatWindowViewModel;
+                _chatViewModel.PipeStreamWriter = writer;
+                _chatViewModel.OrganizationName = organizationName;
                 chatWindow.Show();
             });
         }
 
         private void ChatWindow_Closing(object sender, CancelEventArgs e)
         {
-            ChatWindowClosed?.Invoke(this, null);
+            ChatWindowClosed?.Invoke(this, EventArgs.Empty);
         }
     }
 }

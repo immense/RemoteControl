@@ -41,6 +41,20 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 "The remote control mode to use.  Either Attended, Unattended, or Chat.");
             rootCommand.AddOption(modeOption);
 
+
+            var pipeNameOption = new Option<string>(
+                new[] { "-p, --pipe-name" },
+                "When AppMode is Chat, this is the pipe name used by the named pipes server.");
+            pipeNameOption.AddValidator((context) =>
+            {
+                if (context.GetValueForOption(modeOption) == AppMode.Chat &&
+                    string.IsNullOrWhiteSpace(context.GetValueOrDefault<string>()))
+                {
+                    context.ErrorMessage = "A pipe name must be specified when AppMode is Chat.";
+                }
+            });
+            rootCommand.AddOption(pipeNameOption);
+
             var elevateOption = new Option<bool>(
                 new[] { "-e", "--elevate" },
                 "Attempt to relaunch the process with elevated privileges.");
@@ -76,6 +90,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                     host,
                     elevate,
                     mode,
+                    pipeName,
                     requesterId,
                     serviceId,
                     deviceId,
@@ -115,6 +130,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 hostOption,
                 elevateOption,
                 modeOption,
+                pipeNameOption,
                 requesterIdOption,
                 serviceIdOption,
                 deviceIdOption,

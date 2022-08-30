@@ -1,6 +1,6 @@
-﻿using Remotely.Desktop.Core.Interfaces;
-using Remotely.Shared.Models;
-using Remotely.Shared.Win32;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -16,18 +16,20 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
     /// </summary>
     public class CursorIconWatcherWin : ICursorIconWatcher
     {
+        private readonly System.Timers.Timer _changeTimer;
+
+        private User32.CursorInfo _cursorInfo;
+
+        private string _previousCursorHandle = string.Empty;
+
         public CursorIconWatcherWin()
         {
-            ChangeTimer = new System.Timers.Timer(25);
-            ChangeTimer.Elapsed += ChangeTimer_Elapsed;
-            ChangeTimer.Start();
+            _changeTimer = new System.Timers.Timer(25);
+            _changeTimer.Elapsed += ChangeTimer_Elapsed;
+            _changeTimer.Start();
         }
-        public event EventHandler<CursorInfo> OnChange;
-        private System.Timers.Timer ChangeTimer { get; set; }
-        private string PreviousCursorHandle { get; set; }
 
-        private User32.CursorInfo cursorInfo;
-
+        public event EventHandler<CursorInfo>? OnChange;
 
         public CursorInfo GetCurrentCursor()
         {
@@ -61,7 +63,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
         }
 
-        private void ChangeTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void ChangeTimer_Elapsed(object? sender, ElapsedEventArgs e)
         {
             if (OnChange == null)
             {
@@ -69,13 +71,13 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
             try
             {
-                cursorInfo = new User32.CursorInfo();
-                cursorInfo.cbSize = Marshal.SizeOf(cursorInfo);
-                User32.GetCursorInfo(out cursorInfo);
-                if (cursorInfo.flags == User32.CURSOR_SHOWING)
+                _cursorInfo = new User32.CursorInfo();
+                _cursorInfo.cbSize = Marshal.SizeOf(_cursorInfo);
+                User32.GetCursorInfo(out _cursorInfo);
+                if (_cursorInfo.flags == User32.CURSOR_SHOWING)
                 {
-                    var currentCursor = cursorInfo.hCursor.ToString();
-                    if (currentCursor != PreviousCursorHandle)
+                    var currentCursor = _cursorInfo.hCursor.ToString();
+                    if (currentCursor != _previousCursorHandle)
                     {
                         if (currentCursor == Cursors.IBeam.Handle.ToString())
                         {
@@ -83,19 +85,19 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         }
                         else
                         {
-                            using var icon = Icon.FromHandle(cursorInfo.hCursor);
+                            using var icon = Icon.FromHandle(_cursorInfo.hCursor);
                             using var ms = new MemoryStream();
-                            using var cursor = new Cursor(cursorInfo.hCursor);
+                            using var cursor = new Cursor(_cursorInfo.hCursor);
                             var hotspot = cursor.HotSpot;
                             icon.ToBitmap().Save(ms, ImageFormat.Png);
                             OnChange?.Invoke(this, new CursorInfo(ms.ToArray(), hotspot));
                         }
-                        PreviousCursorHandle = currentCursor;
+                        _previousCursorHandle = currentCursor;
                     }
                 }
-                else if (PreviousCursorHandle != "0")
+                else if (_previousCursorHandle != "0")
                 {
-                    PreviousCursorHandle = "0";
+                    _previousCursorHandle = "0";
                     OnChange?.Invoke(this, new CursorInfo(Array.Empty<byte>(), Point.Empty, "default"));
                 }
             }

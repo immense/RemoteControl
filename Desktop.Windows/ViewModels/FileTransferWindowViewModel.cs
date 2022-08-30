@@ -1,8 +1,11 @@
-﻿using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Services;
-using Remotely.Desktop.Core.ViewModels;
-using Remotely.Desktop.Win.Services;
-using Remotely.Shared.Win32;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.Shared.ViewModels;
+using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Desktop.Windows.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -13,33 +16,43 @@ using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class FileTransferWindowViewModel : BrandedViewModelBase
+
+    public partial class FileTransferWindowViewModel : BrandedViewModelBase
     {
+        private readonly IWpfDispatcher _dispatcher;
         private readonly IFileTransferService _fileTransferService;
-        private readonly Viewer _viewer;
-        private string _viewerConnectionId;
-        private string _viewerName;
+        private readonly IViewer _viewer;
+        [ObservableProperty]
+        private string _viewerConnectionId = string.Empty;
+
+        [ObservableProperty]
+        private string _viewerName = string.Empty;
 
         public FileTransferWindowViewModel() { }
-
         public FileTransferWindowViewModel(
-            Viewer viewer,
-            IFileTransferService fileTransferService)
+            IViewer viewer,
+            IBrandingProvider brandingProvider,
+            IWpfDispatcher wpfDispatcher,
+            IFileTransferService fileTransferService,
+            ILogger<FileTransferWindowViewModel> logger)
+            : base(brandingProvider, wpfDispatcher, logger)
         {
             _fileTransferService = fileTransferService;
             _viewer = viewer;
-            ViewerName = viewer.Name;
+            _dispatcher = wpfDispatcher;
+            _viewerName = viewer.Name;
             ViewerConnectionId = viewer.ViewerConnectionID;
         }
 
         public ObservableCollection<FileUpload> FileUploads { get; } = new ObservableCollection<FileUpload>();
 
-        public ICommand OpenFileUploadDialog => new Executor(async (param) =>
+        [RelayCommand]
+        public async Task OpenFileUploadDialog()
         {
             // Change initial directory so it doesn't open in %userprofile% path
             // for SYSTEM account.
             var rootDir = Path.GetPathRoot(Environment.SystemDirectory);
-            var userDir = Path.Combine(rootDir,
+            var userDir = Path.Combine(rootDir!,
                 "Users",
                 Win32Interop.GetUsernameFromSessionId((uint)Process.GetCurrentProcess().SessionId));
 
@@ -71,32 +84,13 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                     await UploadFile(file);
                 }
             }
-        });
-
-        public string ViewerConnectionId
-        {
-            get
-            {
-                return _viewerConnectionId;
-            }
-            set
-            {
-                _viewerConnectionId = value;
-                FirePropertyChanged();
-            }
         }
 
-        public string ViewerName
+        [RelayCommand]
+        public void RemoveFileUpload(FileUpload fileUpload)
         {
-            get
-            {
-                return _viewerName;
-            }
-            set
-            {
-                _viewerName = value;
-                FirePropertyChanged();
-            }
+            FileUploads.Remove(fileUpload);
+            fileUpload.CancellationTokenSource.Cancel();
         }
 
         public async Task UploadFile(string filePath)
@@ -106,24 +100,15 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 FilePath = filePath
             };
 
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 FileUploads.Add(fileUpload);
             });
 
             await _fileTransferService.UploadFile(fileUpload, _viewer, fileUpload.CancellationTokenSource.Token, (double progress) =>
             {
-                App.Current.Dispatcher.Invoke(() => fileUpload.PercentProgress = progress);
+                _dispatcher.Invoke(() => fileUpload.PercentProgress = progress);
             });
         }
-
-        public ICommand RemoveFileUpload => new Executor((param) =>
-        {
-            if (param is FileUpload fileUpload)
-            {
-                FileUploads.Remove(fileUpload);
-                fileUpload.CancellationTokenSource.Cancel();
-            }
-        });
     }
 }

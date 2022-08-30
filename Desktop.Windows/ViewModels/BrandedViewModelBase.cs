@@ -1,63 +1,82 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Remotely.Shared.Models;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Color = System.Windows.Media.Color;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class BrandedViewModelBase : ObservableObject
+    [ObservableObject]
+    public partial class BrandedViewModelBase
     {
-        public BrandedViewModelBase()
-        {
-            DeviceInitService = ServiceContainer.Instance?.GetRequiredService<IDeviceInitService>();
+        private static BrandingInfo? _brandingInfo;
+        private readonly IBrandingProvider _brandingProvider;
+        private readonly IWpfDispatcher _wpfDispatcher;
+        private readonly ILogger<BrandedViewModelBase> _logger;
 
-            ApplyBranding();
+        public BrandedViewModelBase(
+            IBrandingProvider brandingProvider,
+            IWpfDispatcher wpfDispatcher,
+            ILogger<BrandedViewModelBase> logger)
+        {
+            _brandingProvider = brandingProvider;
+            _wpfDispatcher = wpfDispatcher;
+            _logger = logger;
+            _ = Task.Run(ApplyBranding);
         }
 
-        public void ApplyBranding()
+        public async Task ApplyBranding()
         {
-            try
+            await _wpfDispatcher.InvokeAsync(async () =>
             {
-                var brandingInfo = DeviceInitService?.BrandingInfo ?? new BrandingInfo();
-
-                ProductName = "Remotely";
-
-                if (!string.IsNullOrWhiteSpace(brandingInfo?.Product))
+                try
                 {
-                    ProductName = brandingInfo.Product;
+                    _brandingInfo ??= await _brandingProvider.GetBrandingInfo();
+
+                    ProductName = "Remotely";
+
+                    if (!string.IsNullOrWhiteSpace(_brandingInfo.Product))
+                    {
+                        ProductName = _brandingInfo.Product;
+                    }
+
+                    TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
+                        _brandingInfo.TitleBackgroundRed,
+                        _brandingInfo.TitleBackgroundGreen,
+                        _brandingInfo.TitleBackgroundBlue));
+
+                    TitleForegroundColor = new SolidColorBrush(Color.FromRgb(
+                       _brandingInfo.TitleForegroundRed,
+                       _brandingInfo.TitleForegroundGreen,
+                       _brandingInfo.TitleForegroundBlue));
+
+                    TitleButtonForegroundColor = new SolidColorBrush(Color.FromRgb(
+                       _brandingInfo.ButtonForegroundRed,
+                       _brandingInfo.ButtonForegroundGreen,
+                       _brandingInfo.ButtonForegroundBlue));
+
+                    Icon = GetBitmapImageIcon(_brandingInfo);
+
+                    OnPropertyChanged(nameof(ProductName));
+                    OnPropertyChanged(nameof(TitleBackgroundColor));
+                    OnPropertyChanged(nameof(TitleForegroundColor));
+                    OnPropertyChanged(nameof(TitleButtonForegroundColor));
+                    OnPropertyChanged(nameof(Icon));
                 }
-
-                TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
-                    brandingInfo?.TitleBackgroundRed ?? 70,
-                    brandingInfo?.TitleBackgroundGreen ?? 70,
-                    brandingInfo?.TitleBackgroundBlue ?? 70));
-
-                TitleForegroundColor = new SolidColorBrush(Color.FromRgb(
-                   brandingInfo?.TitleForegroundRed ?? 29,
-                   brandingInfo?.TitleForegroundGreen ?? 144,
-                   brandingInfo?.TitleForegroundBlue ?? 241));
-
-                TitleButtonForegroundColor = new SolidColorBrush(Color.FromRgb(
-                   brandingInfo?.ButtonForegroundRed ?? 255,
-                   brandingInfo?.ButtonForegroundGreen ?? 255,
-                   brandingInfo?.ButtonForegroundBlue ?? 255));
-
-                Icon = GetBitmapImageIcon(brandingInfo);
-
-                FirePropertyChanged(nameof(ProductName));
-                FirePropertyChanged(nameof(TitleBackgroundColor));
-                FirePropertyChanged(nameof(TitleForegroundColor));
-                FirePropertyChanged(nameof(TitleButtonForegroundColor));
-                FirePropertyChanged(nameof(Icon));
-            }
-            catch (Exception ex)
-            {
-                Logger.Write(ex, "Error applying branding.");
-            }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error applying branding.");
+                }
+            });
+          
         }
 
         public BitmapImage Icon { get; set; }
@@ -65,28 +84,37 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         public SolidColorBrush TitleBackgroundColor { get; set; }
         public SolidColorBrush TitleButtonForegroundColor { get; set; }
         public SolidColorBrush TitleForegroundColor { get; set; }
-        protected IDeviceInitService DeviceInitService { get; }
         private BitmapImage GetBitmapImageIcon(BrandingInfo bi)
         {
-            Stream imageStream;
-            if (bi.Icon?.Any() == true)
+            try
             {
-                imageStream = new MemoryStream(bi.Icon);
+                Stream imageStream;
+                if (bi.Icon?.Any() == true)
+                {
+                    imageStream = new MemoryStream(bi.Icon);
+                }
+                else
+                {
+                    imageStream = typeof(RemoteControl.Shared.Result)
+                        .Assembly
+                        .GetManifestResourceStream("Immense.RemoteControl.Shared.Assets.DefaultIcon.png") ?? new MemoryStream();
+                }
+
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = imageStream;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                imageStream.Close();
+
+                return bitmap;
             }
-            else
+            catch (Exception ex)
             {
-                imageStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Remotely.Desktop.Win.Assets.Remotely_Icon.png");
+                _logger.LogError(ex, "Error while getting app icon.");
+                return new BitmapImage();
             }
-
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.StreamSource = imageStream;
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-            bitmap.Freeze();
-            imageStream.Close();
-
-            return bitmap;
         }
     }
 

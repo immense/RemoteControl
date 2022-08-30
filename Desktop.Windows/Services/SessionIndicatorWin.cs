@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Immense.RemoteControl.Desktop.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Remotely.Desktop.Core;
 using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Services;
 using Remotely.Desktop.Core.Utilities;
 using Remotely.Shared.Utilities;
 using System;

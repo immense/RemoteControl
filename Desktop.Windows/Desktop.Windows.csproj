@@ -18,8 +18,4 @@
     <ProjectReference Include="..\Desktop.Shared\Desktop.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Views\" />
-  </ItemGroup>
-
 </Project>

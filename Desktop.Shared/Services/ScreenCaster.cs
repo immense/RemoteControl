@@ -62,7 +62,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var viewer = scope.ServiceProvider.GetRequiredService<Viewer>();
+                var viewer = scope.ServiceProvider.GetRequiredService<IViewer>();
                 viewer.Name = screenCastRequest.RequesterName;
                 viewer.ViewerConnectionID = screenCastRequest.ViewerID;
 
@@ -136,7 +136,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        private async Task CastScreen(ScreenCastRequest screenCastRequest, Viewer viewer, int sequence)
+        private async Task CastScreen(ScreenCastRequest screenCastRequest, IViewer viewer, int sequence)
         {
             try
             {
@@ -217,7 +217,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        private static async Task SendFrame(byte[] encodedImageBytes, SKRect diffArea, long sequence, Viewer viewer)
+        private static async Task SendFrame(byte[] encodedImageBytes, SKRect diffArea, long sequence, IViewer viewer)
         {
             if (encodedImageBytes.Length == 0)
             {

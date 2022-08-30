@@ -1,9 +1,8 @@
-﻿using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Services;
-using Remotely.Desktop.Core.ViewModels;
-using Remotely.Desktop.Win.ViewModels;
-using Remotely.Desktop.Win.Views;
-using Remotely.Shared.Utilities;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.Shared.ViewModels;
+using Immense.RemoteControl.Desktop.Windows.ViewModels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,6 +13,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using MessageBoxOptions = System.Windows.MessageBoxOptions;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
@@ -27,6 +27,19 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         private static readonly SemaphoreSlim _writeLock = new(1, 1);
         private static MessageBoxResult? _result;
+        private readonly IWpfDispatcher _dispatcher;
+        private readonly IViewModelFactory _viewModelFactory;
+        private readonly ILogger<FileTransferServiceWin> _logger;
+
+        public FileTransferServiceWin(
+            IWpfDispatcher dispatcher,
+            IViewModelFactory viewModelFactory,
+            ILogger<FileTransferServiceWin> logger)
+        {
+            _dispatcher = dispatcher;
+            _viewModelFactory = viewModelFactory;
+            _logger = logger;
+        }
 
         public string GetBaseDirectory()
         {
@@ -34,9 +47,9 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             return Directory.CreateDirectory(Path.Combine(programDataPath, "Remotely", "Shared")).FullName;
         }
 
-        public void OpenFileTransferWindow(Viewer viewer)
+        public void OpenFileTransferWindow(IViewer viewer)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionID, out var window))
                 {
@@ -44,10 +57,8 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 }
                 else
                 {
-                    window = new FileTransferWindow
-                    {
-                        DataContext = new FileTransferWindowViewModel(viewer, this)
-                    };
+                    window = new FileTransferWindow();
+                    window.DataContext = _viewModelFactory.CreateFileTransferWindowViewModel(viewer);
                     window.Closed += (sender, arg) =>
                     {
                         _fileTransferWindows.Remove(viewer.ViewerConnectionID, out _);
@@ -106,7 +117,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
+                _logger.LogError(ex, "Error while receiving file.");
             }
             finally
             {
@@ -118,7 +129,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
         }
 
-        public async Task UploadFile(FileUpload fileUpload, Viewer viewer, CancellationToken cancelToken, Action<double> progressUpdateCallback)
+        public async Task UploadFile(FileUpload fileUpload, IViewer viewer, CancellationToken cancelToken, Action<double> progressUpdateCallback)
         {
             try
             {
@@ -126,7 +137,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
+                _logger.LogError(ex, "Error while uploading file.");
             }
         }
 
@@ -183,7 +194,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             // Prevent multiple dialogs from popping up.
             if (_result is null)
             {
-                _result = MessageBox.Show("File transfer complete.  Show folder?",
+                _result = System.Windows.MessageBox.Show("File transfer complete.  Show folder?",
                     "Transfer Complete",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question,

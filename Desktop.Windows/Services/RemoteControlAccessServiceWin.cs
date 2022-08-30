@@ -1,10 +1,10 @@
 ﻿using Immense.RemoteControl.Desktop.Windows.ViewModels;
-using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Win.Views;
+using Immense.RemoteControl.Desktop.Windows.Views;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {

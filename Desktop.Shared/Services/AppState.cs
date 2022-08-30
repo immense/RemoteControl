@@ -11,7 +11,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
     {
         event EventHandler<ScreenCastRequest> ScreenCastRequested;
 
-        event EventHandler<Viewer> ViewerAdded;
+        event EventHandler<IViewer> ViewerAdded;
 
         event EventHandler<string> ViewerRemoved;
 
@@ -23,9 +23,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         string OrganizationName { get; }
         string RequesterConnectionId { get; }
         string ServiceConnectionId { get; }
-        ConcurrentDictionary<string, Viewer> Viewers { get; }
+        ConcurrentDictionary<string, IViewer> Viewers { get; }
         void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName);
-        void InvokeViewerAdded(Viewer viewer);
+        void InvokeViewerAdded(IViewer viewer);
         void InvokeViewerRemoved(string viewerID);
         void UpdateHost(string host);
         void UpdateOrganizationId(string organizationId);
@@ -42,7 +42,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public event EventHandler<ScreenCastRequest>? ScreenCastRequested;
 
-        public event EventHandler<Viewer>? ViewerAdded;
+        public event EventHandler<IViewer>? ViewerAdded;
 
         public event EventHandler<string>? ViewerRemoved;
 
@@ -55,14 +55,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public string RequesterConnectionId { get; init; } = string.Empty;
         public string ServiceConnectionId { get; init; } = string.Empty;
 
-        public ConcurrentDictionary<string, Viewer> Viewers { get; } = new();
+        public ConcurrentDictionary<string, IViewer> Viewers { get; } = new();
 
         public void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName)
         {
             ScreenCastRequested?.Invoke(null, viewerIdAndRequesterName);
         }
 
-        public void InvokeViewerAdded(Viewer viewer)
+        public void InvokeViewerAdded(IViewer viewer)
         {
             ViewerAdded?.Invoke(null, viewer);
         }
