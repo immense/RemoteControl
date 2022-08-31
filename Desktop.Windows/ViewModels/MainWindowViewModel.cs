@@ -1,12 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Remotely.Desktop.Core;
-using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Services;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Immense.RemoteControl.Desktop.Windows.Views;
-using Remotely.Shared.Models;
-using Remotely.Shared.Utilities;
-using Remotely.Shared.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,167 +10,151 @@ using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Microsoft.Extensions.Logging;
+using WpfApp = System.Windows.Application;
+using Immense.RemoteControl.Shared.Models;
+using CommunityToolkit.Mvvm.Input;
+using Clipboard = System.Windows.Clipboard;
+using Immense.RemoteControl.Desktop.Shared.Win32;
+using CommunityToolkit.Mvvm.ComponentModel;
+using MessageBox = System.Windows.MessageBox;
+using Application = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class MainWindowViewModel : BrandedViewModelBase
+    public partial class MainWindowViewModel : BrandedViewModelBase
     {
-        private readonly ICasterSocket _casterSocket;
-        private readonly Conductor _conductor;
-        private readonly IConfigService _configService;
+        private readonly IBrandingProvider _brandingProvider;
+        private readonly IDesktopHubConnection _hubConnection;
+        private readonly IScreenCaster _screenCaster;
+        private readonly IShutdownService _shutdownService;
+        private readonly IViewModelFactory _viewModelFactory;
+        private readonly IAppState _appState;
+        private readonly IWpfDispatcher _dispatcher;
         private readonly ICursorIconWatcher _cursorIconWatcher;
-        private string _host;
-        private string _sessionId;
-        private string _statusMessage;
+        private readonly ILogger<MainWindowViewModel> _logger;
 
-        public MainWindowViewModel()
+        [ObservableProperty]
+        private string _host = string.Empty;
+
+        [ObservableProperty]
+        private string _sessionId = string.Empty;
+
+        [ObservableProperty]
+        private string _statusMessage = string.Empty;
+
+        public MainWindowViewModel(
+            IBrandingProvider brandingProvider,
+            IWpfDispatcher dispatcher,
+            ICursorIconWatcher iconWatcher,
+            IAppState appState,
+            IDesktopHubConnection hubConnection,
+            IScreenCaster screenCaster,
+            IShutdownService shutdownService,
+            IViewModelFactory viewModelFactory,
+            ILogger<MainWindowViewModel> logger)
+            : base(brandingProvider, dispatcher, logger)
         {
-            Current = this;
+            WpfApp.Current.Exit += Application_Exit;
 
-            if (Services is null)
-            {
-                return;
-            }
-
-            Application.Current.Exit += Application_Exit;
-
-            _configService = Services.GetRequiredService<IConfigService>();
-            _cursorIconWatcher = Services.GetRequiredService<ICursorIconWatcher>();
+            _brandingProvider = brandingProvider;
+            _dispatcher = dispatcher;
+            _cursorIconWatcher = iconWatcher;
             _cursorIconWatcher.OnChange += CursorIconWatcher_OnChange;
-            _conductor = Services.GetRequiredService<Conductor>();
-            _casterSocket = Services.GetRequiredService<ICasterSocket>();
+            _appState = appState;
+            _hubConnection = hubConnection;
+            _screenCaster = screenCaster;
+            _shutdownService = shutdownService;
+            _viewModelFactory = viewModelFactory;
+            _logger = logger;
 
-            Services.GetRequiredService<IClipboardService>().BeginWatching();
-            Services.GetRequiredService<IKeyboardMouseInput>().Init();
-            _conductor.ViewerRemoved += ViewerRemoved;
-            _conductor.ViewerAdded += ViewerAdded;
-            _conductor.ScreenCastRequested += ScreenCastRequested;
+            _appState.ViewerRemoved += ViewerRemoved;
+            _appState.ViewerAdded += ViewerAdded;
+            _appState.ScreenCastRequested += ScreenCastRequested;
         }
 
-        public static MainWindowViewModel Current { get; private set; }
-
-        public static IServiceProvider Services => ServiceContainer.Instance;
-
-        public ICommand ChangeServerCommand
+        [RelayCommand]
+        public async Task ChangeServer()
         {
-            get
+            PromptForHostName();
+            await Init();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanElevateToAdmin))]
+        public void ElevateToAdmin()
+        {
+            try
             {
-                return new Executor(async (param) =>
+                //var filePath = Process.GetCurrentProcess().MainModule.FileName;
+                var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
+                var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
+                var filePath = sections.First();
+                var arguments = string.Join('"', sections.Skip(1));
+                var psi = new ProcessStartInfo(filePath, arguments)
                 {
-                    PromptForHostName();
-                    await Init();
-                });
+                    Verb = "RunAs",
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                Process.Start(psi);
+                Environment.Exit(0);
+            }
+            // Exception can be thrown if UAC is dialog is cancelled.
+            catch { }
+        }
+
+
+        [RelayCommand(CanExecute = nameof(CanElevateToService))]
+        public void ElevateToService()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("cmd.exe")
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                };
+                //var filePath = Process.GetCurrentProcess().MainModule.FileName;
+                var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
+                var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
+                var filePath = sections.First();
+                var arguments = string.Join('"', sections.Skip(1));
+
+                _logger.LogInformation("Creating temporary service with file path {filePath} and arguments {arguments}.",
+                    filePath,
+                    arguments);
+
+                psi.Arguments = $"/c sc create Remotely_Temp binPath=\"{filePath} {arguments} --elevate\"";
+                Process.Start(psi)?.WaitForExit();
+                psi.Arguments = "/c sc start RemoteControl_Temp";
+                Process.Start(psi)?.WaitForExit();
+                psi.Arguments = "/c sc delete RemoteControl_Temp";
+                Process.Start(psi)?.WaitForExit();
+                WpfApp.Current.Shutdown();
+            }
+            catch { }
+        }
+
+        public bool CanElevateToService => IsAdministrator && !WindowsIdentity.GetCurrent().IsSystem;
+     
+        public bool IsAdministrator { get; } = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
+        public bool CanElevateToAdmin => !IsAdministrator;
+
+        [RelayCommand(CanExecute = nameof(CanRemoveViewers))]
+        public async Task RemoveViewers(IList<object> viewers)
+        {
+            foreach (var viewer in viewers.OfType<Viewer>().ToArray())
+            {
+                ViewerRemoved(this, viewer.ViewerConnectionID);
+                await _hubConnection.DisconnectViewer(viewer, true);
             }
         }
 
-        public ICommand ElevateToAdminCommand
-        {
-            get
-            {
-                return new Executor((param) =>
-                {
-                    try
-                    {
-                        //var filePath = Process.GetCurrentProcess().MainModule.FileName;
-                        var commandLine = Win32Interop.GetCommandLine().Replace(" -elevate", "");
-                        var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
-                        var filePath = sections.First();
-                        var arguments = string.Join('"', sections.Skip(1));
-                        var psi = new ProcessStartInfo(filePath, arguments)
-                        {
-                            Verb = "RunAs",
-                            UseShellExecute = true,
-                            WindowStyle = ProcessWindowStyle.Hidden
-                        };
-                        Process.Start(psi);
-                        Environment.Exit(0);
-                    }
-                    // Exception can be thrown if UAC is dialog is cancelled.
-                    catch { }
-                }, (param) =>
-                {
-                    return !IsAdministrator;
-                });
-            }
-        }
+        public bool CanRemoveViewers(IList<object> items) => items.Any();
 
-        public ICommand ElevateToServiceCommand
-        {
-            get
-            {
-                return new Executor((param) =>
-                {
-                    try
-                    {
-                        var psi = new ProcessStartInfo("cmd.exe")
-                        {
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                            CreateNoWindow = true
-                        };
-                        //var filePath = Process.GetCurrentProcess().MainModule.FileName;
-                        var commandLine = Win32Interop.GetCommandLine().Replace(" -elevate", "");
-                        var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
-                        var filePath = sections.First();
-                        var arguments = string.Join('"', sections.Skip(1));
-                        Logger.Write($"Creating temporary service with file path {filePath} and arguments {arguments}.");
-                        psi.Arguments = $"/c sc create Remotely_Temp binPath=\"{filePath} {arguments} -elevate\"";
-                        Process.Start(psi).WaitForExit();
-                        psi.Arguments = "/c sc start Remotely_Temp";
-                        Process.Start(psi).WaitForExit();
-                        psi.Arguments = "/c sc delete Remotely_Temp";
-                        Process.Start(psi).WaitForExit();
-                        App.Current.Shutdown();
-                    }
-                    catch { }
-                }, (param) =>
-                {
-                    return IsAdministrator && !WindowsIdentity.GetCurrent().IsSystem;
-                });
-            }
-        }
-
-        public string Host
-        {
-            get => _host;
-            set
-            {
-                _host = value;
-                FirePropertyChanged();
-            }
-        }
-
-        public bool IsAdministrator => new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
-
-        public ICommand RemoveViewersCommand
-        {
-            get
-            {
-                return new Executor(async (param) =>
-                {
-                    foreach (var viewer in (param as IList<object>).ToArray().Cast<Viewer>())
-                    {
-                        ViewerRemoved(this, viewer.ViewerConnectionID);
-                        await _casterSocket.DisconnectViewer(viewer, true);
-                    }
-                },
-                (param) =>
-                {
-                    return (param as IList<object>)?.Count > 0;
-                });
-            }
-
-        }
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set
-            {
-                _statusMessage = value;
-                FirePropertyChanged();
-            }
-        }
-
-        public ObservableCollection<Viewer> Viewers { get; } = new ObservableCollection<Viewer>();
+        public ObservableCollection<IViewer> Viewers { get; } = new();
 
         public void CopyLink()
         {
@@ -185,8 +163,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         public async Task GetSessionID()
         {
-            await _casterSocket.SendDeviceInfo(_conductor.ServiceID, Environment.MachineName, _conductor.DeviceID);
-            var sessionId = await _casterSocket.GetSessionID();
+            await _hubConnection.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
+            var sessionId = await _hubConnection.GetSessionID();
 
             var formattedSessionID = "";
             for (var i = 0; i < sessionId.Length; i += 3)
@@ -194,7 +172,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 formattedSessionID += sessionId.Substring(i, 3) + " ";
             }
 
-            App.Current?.Dispatcher?.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 _sessionId = formattedSessionID.Trim();
                 StatusMessage = _sessionId;
@@ -205,7 +183,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         {
             StatusMessage = "Retrieving...";
 
-            Host = _configService.GetConfig().Host;
+            Host = _appState.Host;
 
             while (string.IsNullOrWhiteSpace(Host))
             {
@@ -213,17 +191,18 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 PromptForHostName();
             }
 
-            _conductor.ProcessArgs(new string[] { "-mode", "Normal", "-host", Host });
+            _appState.Host = Host;
+            _appState.Mode = Shared.Enums.AppMode.Attended;
 
             try
             {
-                var result = await _casterSocket.Connect(_conductor.Host);
+                var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken);
 
                 if (result)
                 {
-                    _casterSocket.Connection.Closed += (ex) =>
+                    _hubConnection.Connection.Closed += (ex) =>
                     {
-                        App.Current?.Dispatcher?.Invoke(() =>
+                        _dispatcher.Invoke(() =>
                         {
                             Viewers.Clear();
                             StatusMessage = "Disconnected";
@@ -231,9 +210,9 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                         return Task.CompletedTask;
                     };
 
-                    _casterSocket.Connection.Reconnecting += (ex) =>
+                    _hubConnection.Connection.Reconnecting += (ex) =>
                     {
-                        App.Current?.Dispatcher?.Invoke(() =>
+                        _dispatcher.Invoke(() =>
                         {
                             Viewers.Clear();
                             StatusMessage = "Reconnecting";
@@ -241,14 +220,13 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                         return Task.CompletedTask;
                     };
 
-                    _casterSocket.Connection.Reconnected += (id) =>
+                    _hubConnection.Connection.Reconnected += (id) =>
                     {
                         StatusMessage = _sessionId;
                         return Task.CompletedTask;
                     };
 
-                    await DeviceInitService.GetInitParams();
-                    ApplyBranding();
+                    await ApplyBranding();
 
                     await GetSessionID();
 
@@ -257,7 +235,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
+                _logger.LogError(ex, "Error during initialization.");
             }
 
             // If we got here, something went wrong.
@@ -268,81 +246,82 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         public void PromptForHostName()
         {
             var prompt = new HostNamePrompt();
+            var viewModel = _viewModelFactory.CreateHostNamePromptViewModel();
+            prompt.DataContext = viewModel;
+
             if (!string.IsNullOrWhiteSpace(Host))
             {
-                prompt.ViewModel.Host = Host;
+                viewModel.Host = Host;
             }
 
-            prompt.Owner = App.Current?.MainWindow;
+            prompt.Owner = Application.Current.MainWindow;
             prompt.ShowDialog();
-            var result = prompt.ViewModel.Host?.Trim()?.TrimEnd('/');
+            var result = viewModel.Host?.Trim()?.TrimEnd('/');
 
             if (!Uri.TryCreate(result, UriKind.Absolute, out var serverUri) ||
                 serverUri.Scheme != Uri.UriSchemeHttp && serverUri.Scheme != Uri.UriSchemeHttps)
             {
-                Logger.Write("Server URL is not valid.");
-                MessageBox.Show("Server URL must be a valid Uri (e.g. https://app.remotely.one).", "Invalid Server URL", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _logger.LogWarning("Server URL is not valid.");
+                MessageBox.Show("Server URL must be a valid Uri (e.g. https://example.com).", "Invalid Server URL", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             Host = result;
-            var config = _configService.GetConfig();
-            config.Host = Host;
-            _configService.Save(config);
+            _appState.Host = Host;
         }
 
         public void ShutdownApp()
         {
-            Services.GetRequiredService<IShutdownService>().Shutdown();
+            _shutdownService.Shutdown();
         }
 
         private void Application_Exit(object sender, ExitEventArgs e)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 Viewers.Clear();
             });
         }
 
-        private async void CursorIconWatcher_OnChange(object sender, CursorInfo cursor)
+        private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)
         {
-            if (_conductor?.Viewers?.Count > 0)
+            if (_appState?.Viewers?.Count > 0)
             {
-                foreach (var viewer in _conductor.Viewers.Values)
+                foreach (var viewer in _appState.Viewers.Values)
                 {
                     await viewer.SendCursorChange(cursor);
                 }
             }
         }
 
-        private async void ScreenCastRequested(object sender, ScreenCastRequest screenCastRequest)
+        private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
         {
-            await App.Current.Dispatcher.InvokeAsync(async () =>
+            await _dispatcher.InvokeAsync(async () =>
             {
-                App.Current.MainWindow.Activate();
-                var result = MessageBox.Show(Application.Current.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                WpfApp.Current.MainWindow.Activate();
+                var result = MessageBox.Show(WpfApp.Current.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
-                    Services.GetRequiredService<IScreenCaster>().BeginScreenCasting(screenCastRequest);
+                    _screenCaster.BeginScreenCasting(screenCastRequest);
                 }
                 else
                 {
-                    await _casterSocket.SendConnectionRequestDenied(screenCastRequest.ViewerID);
+                    await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerID);
                 }
             });
         }
 
-        private void ViewerAdded(object sender, Viewer viewer)
+        private void ViewerAdded(object? sender, IViewer viewer)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 Viewers.Add(viewer);
             });
         }
 
-        private void ViewerRemoved(object sender, string viewerID)
+        private void ViewerRemoved(object? sender, string viewerID)
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
                 var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
                 if (viewer != null)

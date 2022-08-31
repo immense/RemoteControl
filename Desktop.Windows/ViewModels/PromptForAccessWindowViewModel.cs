@@ -1,5 +1,8 @@
-﻿using Remotely.Desktop.Core.ViewModels;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Windows.Services;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,48 +11,54 @@ using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class PromptForAccessWindowViewModel : BrandedViewModelBase
+    public partial class PromptForAccessWindowViewModel : BrandedViewModelBase
     {
+        [ObservableProperty]
         private string _organizationName = "your IT provider";
+
+        [ObservableProperty]
         private string _requesterName = "a technician";
-        public string OrganizationName
+
+#nullable disable
+        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
+        public PromptForAccessWindowViewModel() { }
+#nullable enable
+
+
+        public PromptForAccessWindowViewModel(
+            string requesterName, 
+            string organizationName,
+            IBrandingProvider brandingProvider,
+            IWpfDispatcher wpfDispatcher,
+            ILogger<PromptForAccessWindowViewModel> logger)
+            : base(brandingProvider, wpfDispatcher, logger)
         {
-            get => _organizationName;
-            set
+            if (!string.IsNullOrWhiteSpace(requesterName))
             {
-                _organizationName = value;
-                FirePropertyChanged();
+                RequesterName = requesterName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(requesterName))
+            {
+                OrganizationName = organizationName;
             }
         }
+
 
         public bool PromptResult { get; set; }
 
-        public string RequesterName
+        [RelayCommand]
+        public void SetResultNo(Window promptWindow)
         {
-            get => _requesterName;
-            set
-            {
-                _requesterName = value;
-                FirePropertyChanged();
-            }
+            PromptResult = false;
+            promptWindow.Close();
         }
 
-        public ICommand SetResultNo => new Executor(param =>
+        [RelayCommand]
+        public void SetResultYes(Window promptWindow)
         {
-            if (param is Window promptWindow)
-            {
-                PromptResult = false;
-                promptWindow.Close();
-            }
-        });
-
-        public ICommand SetResultYes => new Executor(param =>
-                {
-                    if (param is Window promptWindow)
-                    {
-                        PromptResult = true;
-                        promptWindow.Close();
-                    }
-                });
+            PromptResult = true;
+            promptWindow.Close();
+        }
     }
 }

@@ -22,11 +22,6 @@
 // THE SOFTWARE.
 
 using Microsoft.Win32;
-using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Utilities;
-using Immense.RemoteControl.Desktop.Windows.Models;
-using Remotely.Shared.Utilities;
-using Remotely.Shared.Win32;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -37,12 +32,15 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using Remotely.Shared;
-using Result = Remotely.Shared.Result;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
-using Remotely.Desktop.Core.Extensions;
 using System.Runtime.InteropServices;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Windows.Models;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Microsoft.Extensions.Logging;
+using Result = Immense.RemoteControl.Shared.Result;
+using Immense.RemoteControl.Desktop.Shared.Win32;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
@@ -51,16 +49,25 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         private readonly Dictionary<string, int> _bitBltScreens = new();
         private readonly Dictionary<string, DirectXOutput> _directxScreens = new();
         private readonly object _screenBoundsLock = new();
-        private SKBitmap _currentFrame;
-        private SKBitmap _previousFrame;
+        private readonly IImageHelper _imageHelper;
+        private readonly ILogger<ScreenCapturerWin> _logger;
 
-        public ScreenCapturerWin()
+        private SKBitmap? _currentFrame;
+        private SKBitmap? _previousFrame;
+
+        public ScreenCapturerWin(
+            IImageHelper imageHelper,
+            ILogger<ScreenCapturerWin> logger)
         {
+            _imageHelper = imageHelper;
+            _logger = logger;
+
             Init();
+
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
         }
 
-        public event EventHandler<Rectangle> ScreenChanged;
+        public event EventHandler<Rectangle>? ScreenChanged;
 
         public bool CaptureFullscreen { get; set; } = true;
         public Rectangle CurrentScreenBounds { get; private set; } = Screen.PrimaryScreen.Bounds;
@@ -83,16 +90,24 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public SKRect GetFrameDiffArea()
         {
-            return ImageUtils.GetDiffArea(_currentFrame, _previousFrame, CaptureFullscreen);
+            if (_currentFrame is null)
+            {
+                return SKRect.Empty;
+            }
+            return _imageHelper.GetDiffArea(_currentFrame, _previousFrame, CaptureFullscreen);
         }
 
 
-        public Result<SKBitmap> GetImageDiff()
+        public Immense.RemoteControl.Shared.Result<SKBitmap> GetImageDiff()
         {
-            return ImageUtils.GetImageDiff(_currentFrame, _previousFrame);
+            if (_currentFrame is null)
+            {
+                return Result.Fail<SKBitmap>("Current frame cannot be empty.");
+            }
+            return _imageHelper.GetImageDiff(_currentFrame, _previousFrame);
         }
 
-        public Result<SKBitmap> GetNextFrame()
+        public Immense.RemoteControl.Shared.Result<SKBitmap> GetNextFrame()
         {
             lock (_screenBoundsLock)
             {
@@ -105,14 +120,13 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         // is getting put in the desktop, which causes SetThreadDesktop to fail.
                         // The caller can start a new thread, which seems to resolve it.
                         var errCode = Marshal.GetLastWin32Error();
-                        var errMessage = $"Failed to switch to input desktop. Last Win32 error code: {errCode}";
-                        Logger.Write(errMessage);
-                        return Result.Fail<SKBitmap>(errMessage);
+                        _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
+                        return Result.Fail<SKBitmap>($"Failed to switch to input desktop. Last Win32 error code: {errCode}");
                     }
 
                     if (NeedsInit)
                     {
-                        Logger.Write("Init needed in GetNextFrame.");
+                        _logger.LogWarning("Init needed in GetNextFrame.");
                         Init();
                     }
 
@@ -126,17 +140,17 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         if (!result.IsSuccess || result.Value is null)
                         {
                             var ex = result.Exception ?? new("Unknown error.");
-                            Logger.Write(ex);
+                            _logger.LogError(ex, "Error while getting next frame.");
                             return Result.Fail<SKBitmap>(ex);
                         }
                     }
 
                     _currentFrame = result.Value;
-                    return result;
+                    return result!;
                 }
                 catch (Exception e)
                 {
-                    Logger.Write(e);
+                    _logger.LogError(e, "Error while getting next frame.");
                     NeedsInit = true;
                     return Result.Fail<SKBitmap>(e);
                 }
@@ -196,7 +210,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
         }
 
-        internal Result<SKBitmap> GetBitBltFrame()
+        internal Immense.RemoteControl.Shared.Result<SKBitmap> GetBitBltFrame()
         {
             try
             {
@@ -209,14 +223,13 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
-                Logger.Write("Capturer error in BitBltCapture.");
+                _logger.LogError(ex, "Capturer error in BitBltCapture.");
                 NeedsInit = true;
                 return Result.Fail<SKBitmap>("Error while capturing BitBlt frame.");
             }
         }
 
-        internal Result<SKBitmap> GetDirectXFrame()
+        internal Immense.RemoteControl.Shared.Result<SKBitmap> GetDirectXFrame()
         {
             if (!_directxScreens.TryGetValue(SelectedScreen, out var dxOutput))
             {
@@ -285,7 +298,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
             catch (Exception ex)
             {
-                Logger.Write(ex, "Error while getting DirectX frame.");
+                _logger.LogError(ex, "Error while getting DirectX frame.");
             }
             finally
             {
@@ -367,14 +380,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         }
                         catch (Exception ex)
                         {
-                            Logger.Write(ex);
+                            _logger.LogError(ex, "Error while initializing DirectX.");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
+                _logger.LogError(ex, "Error while initializing DirectX.");
             }
         }
 
@@ -438,7 +451,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 _previousFrame = _currentFrame;
             }
         }
-        private void SystemEvents_DisplaySettingsChanged(object sender, EventArgs e)
+        private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
         {
             RefreshCurrentScreenBounds();
         }

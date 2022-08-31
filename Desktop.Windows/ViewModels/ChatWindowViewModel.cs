@@ -1,4 +1,8 @@
-﻿using Remotely.Shared.Models;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Shared.Models;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
@@ -6,65 +10,39 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class ChatWindowViewModel : BrandedViewModelBase
+    public partial class ChatWindowViewModel : BrandedViewModelBase
     {
-        private string _inputText;
+        private readonly StreamWriter _streamWriter;
+        [ObservableProperty]
+        private string _inputText = string.Empty;
+
+        [ObservableProperty]
         private string _organizationName = "your IT provider";
+
+        [ObservableProperty]
         private string _senderName = "a technician";
 
+#nullable disable
+        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
+        public ChatWindowViewModel() { }
+#nullable enable
+
+        public ChatWindowViewModel(
+            StreamWriter streamWriter,
+            string organizationName,
+            IBrandingProvider brandingProvider, 
+            IWpfDispatcher wpfDispatcher, 
+            ILogger<BrandedViewModelBase> logger)
+            : base(brandingProvider, wpfDispatcher, logger)
+        {
+            _streamWriter = streamWriter;
+            if (!string.IsNullOrWhiteSpace(organizationName))
+            {
+                OrganizationName = organizationName;
+            }
+        }
+
         public ObservableCollection<ChatMessage> ChatMessages { get; } = new ObservableCollection<ChatMessage>();
-
-        public string InputText
-        {
-            get
-            {
-                return _inputText;
-            }
-            set
-            {
-                _inputText = value;
-                FirePropertyChanged();
-            }
-        }
-
-        public string OrganizationName
-        {
-            get
-            {
-                return _organizationName;
-            }
-            set
-            {
-                if (string.IsNullOrWhiteSpace(value) ||
-                    value == _organizationName)
-                {
-                    return;
-                }
-
-
-                _organizationName = value;
-                FirePropertyChanged();
-            }
-        }
-
-        public StreamWriter PipeStreamWriter { get; set; }
-        public string SenderName
-        {
-            get
-            {
-                return _senderName;
-            }
-            set
-            {
-                if (value == _senderName)
-                {
-                    return;
-                }
-
-                _senderName = value;
-                FirePropertyChanged();
-            }
-        }
 
         public async Task SendChatMessage()
         {
@@ -75,8 +53,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
             var chatMessage = new ChatMessage(string.Empty, InputText);
             InputText = string.Empty;
-            await PipeStreamWriter.WriteLineAsync(JsonSerializer.Serialize(chatMessage));
-            await PipeStreamWriter.FlushAsync();
+            await _streamWriter.WriteLineAsync(JsonSerializer.Serialize(chatMessage));
+            await _streamWriter.FlushAsync();
             chatMessage.SenderName = "You";
             ChatMessages.Add(chatMessage);
         }

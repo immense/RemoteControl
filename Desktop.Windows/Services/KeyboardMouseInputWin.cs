@@ -1,23 +1,35 @@
-﻿using Remotely.Desktop.Core.Enums;
-using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Services;
-using Remotely.Shared.Utilities;
-using Remotely.Shared.Win32;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.Shared.Win32;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Remotely.Shared.Win32.User32;
+using static Immense.RemoteControl.Desktop.Shared.Win32.User32;
+using WpfApp = System.Windows.Application;
+
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class KeyboardMouseInputWin : IKeyboardMouseInput
     {
         private readonly ConcurrentQueue<Action> _inputActions = new();
-        private CancellationTokenSource _cancelTokenSource;
+        private readonly IWpfDispatcher _dispatcher;
+        private readonly ILogger<KeyboardMouseInputWin> _logger;
+        private CancellationTokenSource? _cancelTokenSource;
         private volatile bool _inputBlocked;
-        private Thread _inputProcessingThread;
+        private Thread? _inputProcessingThread;
+
+        public KeyboardMouseInputWin(
+            IWpfDispatcher dispatcher,
+            ILogger<KeyboardMouseInputWin> logger)
+        {
+            _dispatcher = dispatcher;
+            _logger = logger;
+        }
 
         public Tuple<double, double> GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer capturer)
         {
@@ -35,10 +47,10 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void Init()
         {
-            App.Current.Dispatcher.Invoke(() =>
+            _dispatcher.Invoke(() =>
             {
-                App.Current.Exit -= App_Exit;
-                App.Current.Exit += App_Exit;
+                WpfApp.Current.Exit -= App_Exit;
+                WpfApp.Current.Exit += App_Exit;
             });
 
             StartInputProcessingThread();
@@ -66,11 +78,11 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         }
                     };
                     var input = new INPUT() { type = InputType.KEYBOARD, U = union };
-                    SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while sending key down.");
                 }
 
             });
@@ -99,17 +111,17 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         }
                     };
                     var input = new INPUT() { type = InputType.KEYBOARD, U = union };
-                    SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while sending key up.");
                 }
 
             });
         }
 
-        public void SendMouseButtonAction(int button, ButtonAction buttonAction, double percentX, double percentY, Viewer viewer)
+        public void SendMouseButtonAction(int button, ButtonAction buttonAction, double percentX, double percentY, IViewer viewer)
         {
             TryOnInputDesktop(() =>
             {
@@ -166,16 +178,16 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     var normalizedY = xyPercent.Item2 * 65535D;
                     var union = new InputUnion() { mi = new MOUSEINPUT() { dwFlags = MOUSEEVENTF.ABSOLUTE | mouseEvent | MOUSEEVENTF.VIRTUALDESK, dx = (int)normalizedX, dy = (int)normalizedY, time = 0, mouseData = 0, dwExtraInfo = GetMessageExtraInfo() } };
                     var input = new INPUT() { type = InputType.MOUSE, U = union };
-                    SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while sending mouse button.");
                 }
             });
         }
 
-        public void SendMouseMove(double percentX, double percentY, Viewer viewer)
+        public void SendMouseMove(double percentX, double percentY, IViewer viewer)
         {
             TryOnInputDesktop(() =>
             {
@@ -187,11 +199,11 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     var normalizedY = xyPercent.Item2 * 65535D;
                     var union = new InputUnion() { mi = new MOUSEINPUT() { dwFlags = MOUSEEVENTF.ABSOLUTE | MOUSEEVENTF.MOVE | MOUSEEVENTF.VIRTUALDESK, dx = (int)normalizedX, dy = (int)normalizedY, time = 0, mouseData = 0, dwExtraInfo = GetMessageExtraInfo() } };
                     var input = new INPUT() { type = InputType.MOUSE, U = union };
-                    SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while sending mouse move.");
                 }
             });
         }
@@ -212,11 +224,11 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     }
                     var union = new InputUnion() { mi = new MOUSEINPUT() { dwFlags = MOUSEEVENTF.WHEEL, dx = 0, dy = 0, time = 0, mouseData = deltaY, dwExtraInfo = GetMessageExtraInfo() } };
                     var input = new INPUT() { type = InputType.MOUSE, U = union };
-                    SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while sending mouse wheel.");
                 }
             });
         }
@@ -231,7 +243,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error while sending text.");
                 }
             });
         }
@@ -261,7 +273,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                                     }
                                 };
                                 var input = new INPUT() { type = InputType.KEYBOARD, U = union };
-                                SendInput(1, new INPUT[] { input }, INPUT.Size);
+                                _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                             }
                         }
                         catch { }
@@ -278,7 +290,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             {
                 _inputBlocked = toggleOn;
                 var result = BlockInput(toggleOn);
-                Logger.Write($"Result of ToggleBlockInput set to {toggleOn}: {result}");
+                _logger.LogInformation("Result of ToggleBlockInput set to {toggleOn}: {result}", toggleOn, result);
             });
         }
 
@@ -303,7 +315,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 }
             }
 
-            Logger.Write($"Stopping input processing on thread {Thread.CurrentThread.ManagedThreadId}.");
+            _logger.LogInformation("Stopping input processing on thread {threadId}.", Thread.CurrentThread.ManagedThreadId);
         }
 
         private bool ConvertJavaScriptKeyToVirtualKey(string key, out VirtualKey? result)
@@ -353,7 +365,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
             if (result is null)
             {
-                Logger.Write($"Unable to parse key input: {key}.");
+                _logger.LogWarning("Unable to parse key input: {key}.", key);
                 return false;
             }
             return true;
@@ -369,7 +381,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             // processes a queue of input events.
             _inputProcessingThread = new Thread(() =>
             {
-                Logger.Write($"New input processing thread started on thread {Thread.CurrentThread.ManagedThreadId}.");
+                _logger.LogInformation("New input processing thread started on thread {threadId}.", Thread.CurrentThread.ManagedThreadId);
                 _cancelTokenSource = new CancellationTokenSource();
 
                 if (_inputBlocked)
@@ -391,7 +403,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 {
                     if (!Win32Interop.SwitchToInputDesktop())
                     {
-                        Logger.Write("Desktop switch failed during input processing.");
+                        _logger.LogWarning("Desktop switch failed during input processing.");
 
                         // Thread likely has hooks in current desktop.  SendKeys will create one with no way to unhook it.
                         // Start a new thread for processing input.
@@ -402,7 +414,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 }
                 catch (Exception ex)
                 {
-                    Logger.Write(ex);
+                    _logger.LogError(ex, "Error during input queue processing.");
                 }
             });
         }

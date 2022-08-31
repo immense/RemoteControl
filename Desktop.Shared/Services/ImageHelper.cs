@@ -15,8 +15,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
     {
         SKBitmap CropBitmap(SKBitmap bitmap, SKRect cropArea);
         byte[] EncodeBitmap(SKBitmap bitmap, SKEncodedImageFormat format, int quality);
-        SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap previousFrame, bool forceFullscreen = false);
-        Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap previousFrame, bool forceFullscreen = false);
+        SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
+        Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false);
     }
 
     public class ImageHelper : IImageHelper
@@ -47,7 +47,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             return cropped;
         }
 
-        public Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap previousFrame, bool forceFullscreen = false)
+        public Result<SKBitmap> GetImageDiff(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false)
         {
             try
             {
@@ -123,7 +123,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 return Result.Fail<SKBitmap>(ex);
             }
         }
-        public SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap previousFrame, bool forceFullscreen = false)
+        public SKRect GetDiffArea(SKBitmap currentFrame, SKBitmap? previousFrame, bool forceFullscreen = false)
         {
             try
             {

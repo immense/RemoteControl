@@ -15,12 +15,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 {
     public interface IDesktopHubConnection
     {
+        HubConnection Connection { get; }
         bool IsConnected { get; }
 
         Task<bool> Connect(CancellationToken cancellationToken);
         Task Disconnect();
         Task DisconnectAllViewers();
-        Task DisconnectViewer(Viewer viewer, bool notifyViewer);
+        Task DisconnectViewer(IViewer viewer, bool notifyViewer);
         Task<string> GetSessionID();
         Task NotifyRequesterUnattendedReady(string requesterID);
         Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs);
@@ -35,18 +36,15 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
     public class DesktopHubConnection : IDesktopHubConnection
     {
+        private readonly IAppState _appState;
         private readonly IIdleTimer _idleTimer;
 
+        private readonly ILogger<DesktopHubConnection> _logger;
         private readonly IDtoMessageHandler _messageHandler;
 
         private readonly IRemoteControlAccessService _remoteControlAccessService;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IAppState _appState;
-        private readonly ILogger<DesktopHubConnection> _logger;
         private readonly IScreenCaster _screenCaster;
-
-        private HubConnection _connection;
-
 
         public DesktopHubConnection(
             IIdleTimer idleTimer,
@@ -66,21 +64,22 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _logger = logger;
 
 
-            _connection = BuildConnection();
+            Connection = BuildConnection();
         }
 
-        public bool IsConnected => _connection?.State == HubConnectionState.Connected;
+        public HubConnection Connection { get; private set; }
+        public bool IsConnected => Connection?.State == HubConnectionState.Connected;
         public async Task<bool> Connect(CancellationToken cancellationToken)
         {
             try
             {
-                if (_connection is not null &&
-                    _connection.State != HubConnectionState.Disconnected)
+                if (Connection is not null &&
+                    Connection.State != HubConnectionState.Disconnected)
                 {
                     return true;
                 }
 
-                _connection = BuildConnection();
+                Connection = BuildConnection();
 
                 ApplyConnectionHandlers();
 
@@ -90,7 +89,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     {
                         _logger.LogInformation("Connecting to server.");
 
-                        await _connection.StartAsync(cancellationToken);
+                        await Connection.StartAsync(cancellationToken);
 
                         _logger.LogInformation("Connected to server.");
 
@@ -116,27 +115,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        private HubConnection BuildConnection()
-        {
-            using var scope = _scopeFactory.CreateScope();
-            var builder = scope.ServiceProvider.GetRequiredService<IHubConnectionBuilder>();
-
-            var connection = builder
-                .WithUrl($"{_appState.Host.Trim().TrimEnd('/')}/hubs/desktop")
-                .AddMessagePackProtocol()
-                .WithAutomaticReconnect(new RetryPolicy())
-                .Build();
-            return connection;
-        }
-
         public async Task Disconnect()
         {
             try
             {
-                if (_connection is not null)
+                if (Connection is not null)
                 {
-                    await _connection.StopAsync();
-                    await _connection.DisposeAsync();
+                    await Connection.StopAsync();
+                    await Connection.DisposeAsync();
                 }
             }
             catch (Exception ex)
@@ -153,79 +139,79 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        public Task DisconnectViewer(Viewer viewer, bool notifyViewer)
+        public Task DisconnectViewer(IViewer viewer, bool notifyViewer)
         {
             viewer.DisconnectRequested = true;
             viewer.Dispose();
-            return _connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionID, notifyViewer);
+            return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionID, notifyViewer);
         }
 
         public async Task<string> GetSessionID()
         {
-            return await _connection.InvokeAsync<string>("GetSessionID");
+            return await Connection.InvokeAsync<string>("GetSessionID");
         }
 
         public Task NotifyRequesterUnattendedReady(string requesterID)
         {
-            return _connection.SendAsync("NotifyRequesterUnattendedReady", requesterID);
+            return Connection.SendAsync("NotifyRequesterUnattendedReady", requesterID);
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
         {
-            return _connection.SendAsync("NotifyViewersRelaunchedScreenCasterReady", viewerIDs);
+            return Connection.SendAsync("NotifyViewersRelaunchedScreenCasterReady", viewerIDs);
         }
 
         public Task SendConnectionFailedToViewers(List<string> viewerIDs)
         {
-            return _connection.SendAsync("SendConnectionFailedToViewers", viewerIDs);
+            return Connection.SendAsync("SendConnectionFailedToViewers", viewerIDs);
         }
 
         public Task SendConnectionRequestDenied(string viewerID)
         {
-            return _connection.SendAsync("SendConnectionRequestDenied", viewerID);
+            return Connection.SendAsync("SendConnectionRequestDenied", viewerID);
         }
 
         public Task SendCtrlAltDelToAgent()
         {
-            return _connection.SendAsync("SendCtrlAltDelToAgent");
+            return Connection.SendAsync("SendCtrlAltDelToAgent");
         }
 
         public Task SendDeviceInfo(string serviceID, string machineName, string deviceID)
         {
-            return _connection.SendAsync("ReceiveDeviceInfo", serviceID, machineName, deviceID);
+            return Connection.SendAsync("ReceiveDeviceInfo", serviceID, machineName, deviceID);
         }
 
         public Task SendDtoToViewer<T>(T dto, string viewerId)
         {
             var serializedDto = MessagePack.MessagePackSerializer.Serialize(dto);
-            return _connection.SendAsync("SendDtoToBrowser", serializedDto, viewerId);
+            return Connection.SendAsync("SendDtoToBrowser", serializedDto, viewerId);
         }
 
         public Task SendMessageToViewer(string viewerID, string message)
         {
-            return _connection.SendAsync("SendMessageToViewer", viewerID, message);
+            return Connection.SendAsync("SendMessageToViewer", viewerID, message);
         }
 
         public Task SendViewerConnected(string viewerConnectionId)
         {
-            return _connection.SendAsync("ViewerConnected", viewerConnectionId);
+            return Connection.SendAsync("ViewerConnected", viewerConnectionId);
         }
 
         private void ApplyConnectionHandlers()
         {
-            _connection.Closed += (ex) =>
+            Connection.Closed += (ex) =>
             {
                 _logger.LogWarning(ex, "Connection closed.");
                 return Task.CompletedTask;
             };
 
-            _connection.On("Disconnect", async (string reason) =>
+            Connection.On("Disconnect", async (string reason) =>
             {
                 _logger.LogInformation("Disconnecting caster socket.  Reason: {reason}", reason);
                 await DisconnectAllViewers();
             });
 
-            _connection.On("GetScreenCast", async (
+            Connection.On("GetScreenCast", async (
                 string viewerID,
                 string requesterName,
                 bool notifyUser,
@@ -263,7 +249,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             });
 
 
-            _connection.On("RequestScreenCast", (string viewerID, string requesterName, bool notifyUser) =>
+            Connection.On("RequestScreenCast", (string viewerID, string requesterName, bool notifyUser) =>
             {
                 _appState.InvokeScreenCastRequested(new ScreenCastRequest()
                 {
@@ -273,7 +259,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 });
             });
 
-            _connection.On("SendDtoToClient", (byte[] baseDto, string viewerConnectionId) =>
+            Connection.On("SendDtoToClient", (byte[] baseDto, string viewerConnectionId) =>
             {
                 if (_appState.Viewers.TryGetValue(viewerConnectionId, out var viewer))
                 {
@@ -281,9 +267,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 }
             });
 
-            _connection.On("ViewerDisconnected", async (string viewerID) =>
+            Connection.On("ViewerDisconnected", async (string viewerID) =>
             {
-                await _connection.SendAsync("DisconnectViewer", viewerID, false);
+                await Connection.SendAsync("DisconnectViewer", viewerID, false);
                 if (_appState.Viewers.TryGetValue(viewerID, out var viewer))
                 {
                     viewer.DisconnectRequested = true;
@@ -294,6 +280,18 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             });
         }
 
+        private HubConnection BuildConnection()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var builder = scope.ServiceProvider.GetRequiredService<IHubConnectionBuilder>();
+
+            var connection = builder
+                .WithUrl($"{_appState.Host.Trim().TrimEnd('/')}/hubs/desktop")
+                .AddMessagePackProtocol()
+                .WithAutomaticReconnect(new RetryPolicy())
+                .Build();
+            return connection;
+        }
         private class RetryPolicy : IRetryPolicy
         {
             public TimeSpan? NextRetryDelay(RetryContext retryContext)

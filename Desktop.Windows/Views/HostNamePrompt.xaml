@@ -5,13 +5,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
-        xmlns:ViewModels="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels" x:Name="PromptWindow"
+        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels" x:Name="PromptWindow"
         mc:Ignorable="d"
         Title="Host Name" Height="150" Width="350" WindowStartupLocation="CenterOwner" 
+        d:DataContext="{d:DesignInstance Type=vm:HostNamePromptViewModel, IsDesignTimeCreatable=True}"
         Icon="{Binding Icon}">
-    <Window.DataContext>
-        <ViewModels:HostNamePromptViewModel/>
-    </Window.DataContext>
+
     <StackPanel Margin="10">
         <TextBlock Margin="0,0,0,5" Style="{StaticResource SectionHeader}"><Run Text="Enter the server URL:"/></TextBlock>
         <TextBox x:Name="HostTextBox" Height="25" Text="{Binding Host, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

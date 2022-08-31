@@ -55,11 +55,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             });
             rootCommand.AddOption(pipeNameOption);
 
-            var elevateOption = new Option<bool>(
-                new[] { "-e", "--elevate" },
-                "Attempt to relaunch the process with elevated privileges.");
-            rootCommand.AddOption(elevateOption);
-
             var requesterIdOption = new Option<string>(
                new[] { "-r", "--requester" },
                "Attempt to relaunch the process with elevated privileges.");
@@ -84,11 +79,10 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 new[] { "-n", "--org-name" },
                 "The organization name of the technician requesting to connect.");
             rootCommand.AddOption(organizationNameOption);
-
+           
             rootCommand.SetHandler(
-                async (
+                (
                     host,
-                    elevate,
                     mode,
                     pipeName,
                     requesterId,
@@ -97,12 +91,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                     organizationId,
                     organizationName) =>
                 {
-                    if (elevate)
-                    {
-                        RelaunchElevated();
-                        return;
-                    }
-
+                 
                     if (string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(serverUri))
                     {
                         host = serverUri;
@@ -111,8 +100,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                     AddServices(services, platformServicesConfig);
                     services.AddSingleton<IAppState>(s =>
                     {
-                        var logger = s.GetRequiredService<ILogger<AppState>>();
-                        var appState = new AppState(logger)
+                        var appState = new AppState()
                         {
                             DeviceID = deviceId,
                             Host = host,
@@ -124,11 +112,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                         };
                         return appState;
                     });
-
-
                 },
                 hostOption,
-                elevateOption,
                 modeOption,
                 pipeNameOption,
                 requesterIdOption,
@@ -150,26 +135,10 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             services.AddSingleton<IScreenCaster, ScreenCaster>();
             services.AddSingleton<IDesktopHubConnection, DesktopHubConnection>();
             services.AddSingleton<IIdleTimer, IdleTimer>();
-            //services.AddSingleton<IChatClientService, ChatHostService>();
+            services.AddSingleton<IChatHostService, ChatHostService>();
             services.AddTransient<IViewer, Viewer>();
             services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
             platformServicesConfig.Invoke(services);
-        }
-
-        private static void RelaunchElevated()
-        {
-            var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "").Replace(" -e", "");
-
-            Console.WriteLine($"Elevating process {commandLine}.");
-            var result = Win32Interop.OpenInteractiveProcess(
-                commandLine,
-                -1,
-                false,
-                "default",
-                true,
-                out var procInfo);
-            Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
-            Environment.Exit(0);
         }
     }
 }

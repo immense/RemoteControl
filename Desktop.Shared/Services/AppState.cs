@@ -17,8 +17,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         Dictionary<string, string> ArgDict { get; }
         string DeviceID { get; }
-        string Host { get; }
-        AppMode Mode { get; }
+        string Host { get; set; }
+        AppMode Mode { get; set; }
         string OrganizationId { get; }
         string OrganizationName { get; }
         string RequesterConnectionId { get; }
@@ -33,12 +33,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
     public class AppState : IAppState
     {
-        private readonly ILogger<AppState> _logger;
-
-        public AppState(ILogger<AppState> logger)
-        {
-            _logger = logger;
-        }
 
         public event EventHandler<ScreenCastRequest>? ScreenCastRequested;
 
@@ -49,7 +43,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public Dictionary<string, string> ArgDict { get; } = new();
         public string DeviceID { get; init; } = string.Empty;
         public string Host { get; set; } = string.Empty;
-        public AppMode Mode { get; init; }
+        public AppMode Mode { get; set; }
         public string OrganizationId { get; set; } = string.Empty;
         public string OrganizationName { get; init; } = string.Empty;
         public string RequesterConnectionId { get; init; } = string.Empty;

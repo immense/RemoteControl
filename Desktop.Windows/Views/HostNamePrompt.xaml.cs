@@ -13,7 +13,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
             InitializeComponent();
         }
 
-        public HostNamePromptViewModel ViewModel => DataContext as HostNamePromptViewModel;
+        public HostNamePromptViewModel? ViewModel => DataContext as HostNamePromptViewModel;
 
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {

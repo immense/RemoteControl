@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
-        xmlns:ViewModels="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
-        xmlns:Models="clr-namespace:Remotely.Shared.Models;assembly=Remotely_Shared"
+        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
+        xmlns:Models="clr-namespace:Immense.RemoteControl.Shared.Models;assembly=Immense.RemoteControl.Shared"
         mc:Ignorable="d"
         WindowStyle="None"
         ResizeMode="CanResizeWithGrip"
@@ -20,12 +20,16 @@
         Title="Chat Session" Height="450" Width="450" 
         Icon="{Binding Icon}"
         Loaded="Window_Loaded"
-        ContentRendered="Window_ContentRendered">
-    
-    <Window.DataContext>
-        <ViewModels:ChatWindowViewModel />
-    </Window.DataContext>
+        ContentRendered="Window_ContentRendered"
+        d:DataContext="{d:DesignInstance Type=vm:ChatWindowViewModel, IsDesignTimeCreatable=True}">
 
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

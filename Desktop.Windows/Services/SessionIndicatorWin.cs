@@ -1,32 +1,45 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Services;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Shared;
 using Microsoft.Extensions.DependencyInjection;
-using Remotely.Desktop.Core;
-using Remotely.Desktop.Core.Interfaces;
-using Remotely.Desktop.Core.Utilities;
-using Remotely.Shared.Utilities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
+using WpfApp = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class SessionIndicatorWin : ISessionIndicator
     {
         private readonly Form _backgroundForm;
-        private readonly IDeviceInitService _deviceInitService;
-        private Container _container;
-        private ContextMenuStrip _contextMenuStrip;
-        private NotifyIcon _notifyIcon;
+        private readonly IWpfDispatcher _dispatcher;
+        private readonly IDesktopHubConnection _hubConnection;
+        private readonly IBrandingProvider _brandingProvider;
+        private readonly ILogger<SessionIndicatorWin> _logger;
+        private Container? _container;
+        private ContextMenuStrip? _contextMenuStrip;
+        private NotifyIcon? _notifyIcon;
 
-        public SessionIndicatorWin(Form backgroundForm, IDeviceInitService deviceInitService)
+        public SessionIndicatorWin(
+            Form backgroundForm, 
+            IWpfDispatcher dispatcher,
+            IDesktopHubConnection hubConnection,
+            IBrandingProvider brandingProvider,
+            ILogger<SessionIndicatorWin> logger)
         {
             _backgroundForm = backgroundForm;
-            _deviceInitService = deviceInitService;
+            _dispatcher = dispatcher;
+            _hubConnection = hubConnection;
+            _brandingProvider = brandingProvider;
+            _logger = logger;
         }
+
         public void Show()
         {
             try
@@ -36,12 +49,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     return;
                 }
 
-                App.Current.Dispatcher.Invoke(() =>
+                _dispatcher.Invoke(() =>
                 {
-                    App.Current.Exit += App_Exit;
+                    WpfApp.Current.Exit += App_Exit;
                 });
 
-                _backgroundForm.Invoke(new Action(() =>
+                _backgroundForm.Invoke(async () =>
                 {
                     _container = new Container();
                     _contextMenuStrip = new ContextMenuStrip(_container);
@@ -49,15 +62,26 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
                     Icon icon;
 
-                    if (_deviceInitService.BrandingInfo?.Icon?.Any() == true)
+                    var brandingInfo = await _brandingProvider.GetBrandingInfo();
+                    if (brandingInfo.Icon?.Any() == true)
                     {
-                        using var ms = new MemoryStream(_deviceInitService.BrandingInfo.Icon);
+                        using var ms = new MemoryStream(brandingInfo.Icon);
                         using var bitmap = new Bitmap(ms);
                         icon = Icon.FromHandle(bitmap.GetHicon());
                     }
                     else
                     {
-                        icon = Icon.ExtractAssociatedIcon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, EnvironmentHelper.DesktopExecutableFileName));
+                        var fileName = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                        if (!string.IsNullOrWhiteSpace(fileName) &&
+                            Icon.ExtractAssociatedIcon(fileName) is Icon fileIcon)
+                        {
+                            icon = fileIcon;    
+                        }
+                        else
+                        {
+                            using var mrs = typeof(Result).Assembly.GetManifestResourceStream("Immense.RemoteControl.Shared.Assets.DefaultIcon.ico");
+                            icon = new Icon(mrs!);
+                        }
                     }
 
                     _notifyIcon = new NotifyIcon(_container)
@@ -67,16 +91,15 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                         BalloonTipIcon = ToolTipIcon.Info,
                         BalloonTipText = "A remote control session has started.",
                         BalloonTipTitle = "Remote Control Started",
-                        ContextMenuStrip = _contextMenuStrip
+                        ContextMenuStrip = _contextMenuStrip,
+                        Visible = true
                     };
-
-                    _notifyIcon.Visible = true;
                     _notifyIcon.ShowBalloonTip(3000);
-                }));
+                });
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
+                _logger.LogError(ex, "Error while showing session indicator.");
             }
         }
 
@@ -89,10 +112,10 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 _notifyIcon?.Icon?.Dispose();
             }
         }
-        private async void ExitMenuItem_Click(object sender, EventArgs e)
+
+        private async void ExitMenuItem_Click(object? sender, EventArgs e)
         {
-            var casterSocket = ServiceContainer.Instance.GetRequiredService<ICasterSocket>();
-            await casterSocket.DisconnectAllViewers();
+            await _hubConnection.DisconnectAllViewers();
         }
     }
 }

@@ -11,6 +11,13 @@ export class DtoWrapper {
     SequenceId: number;
 }
 
+export class GenericDto {
+    constructor(type: DtoType) {
+        this.DtoType = type;
+    }
+    DtoType: DtoType;
+}
+
 export interface AudioSampleDto {
     Buffer: Uint8Array;
 }

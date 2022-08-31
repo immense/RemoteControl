@@ -1,6 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
-using Remotely.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -75,6 +75,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     if (!string.IsNullOrWhiteSpace(messageJson))
                     {
                         var chatMessage = JsonSerializer.Deserialize<ChatMessage>(messageJson);
+                        if (chatMessage is null)
+                        {
+                            _logger.LogWarning("Deserialized message was null.  Value: {value}", messageJson);
+                            continue;
+                        }
                         _chatUiService.ReceiveChat(chatMessage);
 
                     }

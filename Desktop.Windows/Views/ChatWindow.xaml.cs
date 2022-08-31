@@ -1,8 +1,8 @@
 ﻿using Immense.RemoteControl.Desktop.Windows.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using System;
 using System.Windows;
 using System.Windows.Input;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace Immense.RemoteControl.Desktop.Windows.Views
 {
@@ -17,10 +17,15 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
         }
 
 
-        private ChatWindowViewModel ViewModel => DataContext as ChatWindowViewModel;
+        private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
 
         private async void ChatInputBox_PreviewKeyUp(object sender, KeyEventArgs e)
         {
+            if (ViewModel is null)
+            {
+                return;
+            }
+
             if (e.Key == Key.Enter)
             {
                 await ViewModel.SendChatMessage();

@@ -1,5 +1,4 @@
 ﻿using Immense.RemoteControl.Shared.Models;
-using Remotely.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;

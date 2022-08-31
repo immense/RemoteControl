@@ -7,6 +7,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using Button = System.Windows.Controls.Button;
+using ToolTip = System.Windows.Controls.ToolTip;
 
 namespace Immense.RemoteControl.Desktop.Windows.Views
 {
@@ -20,7 +22,6 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
             InitializeComponent();
         }
 
-        public MainWindowViewModel ViewModel => DataContext as MainWindowViewModel;
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
@@ -28,7 +29,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
 
         private async void CopyLinkButton_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.CopyLink();
+            if (DataContext is not MainWindowViewModel viewModel)
+            {
+                return;
+            }
+
+            viewModel.CopyLink();
             var tooltip = new ToolTip
             {
                 PlacementTarget = sender as Button,
@@ -52,20 +58,26 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
 
         private void OptionsButton_Click(object sender, RoutedEventArgs e)
         {
-            (sender as Button).ContextMenu.IsOpen = true;
+            if (sender is Button senderButton)
+            {
+                senderButton.ContextMenu.IsOpen = true;
+            }
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            ViewModel?.ShutdownApp();
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                viewModel.ShutdownApp();
+            }
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (!DesignerProperties.GetIsInDesignMode(this) &&
-                ViewModel != null)
+                DataContext is MainWindowViewModel viewModel)
             {
-                await ViewModel?.Init();
+                await viewModel.Init();
             }
         }
 

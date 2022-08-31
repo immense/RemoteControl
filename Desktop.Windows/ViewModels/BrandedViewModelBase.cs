@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Remotely.Shared.Models;
 using System;
 using System.IO;
 using System.Linq;
@@ -19,8 +19,13 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
     {
         private static BrandingInfo? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
-        private readonly IWpfDispatcher _wpfDispatcher;
         private readonly ILogger<BrandedViewModelBase> _logger;
+        private readonly IWpfDispatcher _wpfDispatcher;
+
+#nullable disable
+        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
+        public BrandedViewModelBase() { }
+#nullable enable
 
         public BrandedViewModelBase(
             IBrandingProvider brandingProvider,
@@ -32,6 +37,16 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             _logger = logger;
             _ = Task.Run(ApplyBranding);
         }
+
+        public BitmapImage? Icon { get; set; }
+
+        public string? ProductName { get; set; }
+
+        public SolidColorBrush? TitleBackgroundColor { get; set; }
+
+        public SolidColorBrush? TitleButtonForegroundColor { get; set; }
+
+        public SolidColorBrush? TitleForegroundColor { get; set; }
 
         public async Task ApplyBranding()
         {
@@ -78,12 +93,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             });
           
         }
-
-        public BitmapImage Icon { get; set; }
-        public string ProductName { get; set; }
-        public SolidColorBrush TitleBackgroundColor { get; set; }
-        public SolidColorBrush TitleButtonForegroundColor { get; set; }
-        public SolidColorBrush TitleForegroundColor { get; set; }
         private BitmapImage GetBitmapImageIcon(BrandingInfo bi)
         {
             try

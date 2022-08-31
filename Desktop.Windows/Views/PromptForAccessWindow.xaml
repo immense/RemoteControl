@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
         mc:Ignorable="d"
         WindowStyle="None"
-        xmlns:ViewModels="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
+        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
         ResizeMode="CanResizeWithGrip"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         WindowStartupLocation="CenterScreen"
@@ -21,10 +21,6 @@
         Width="450"
         Icon="{Binding Icon}"
         ContentRendered="Window_ContentRendered">
-
-    <Window.DataContext>
-        <ViewModels:PromptForAccessWindowViewModel />
-    </Window.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>

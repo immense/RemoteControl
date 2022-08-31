@@ -1,7 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Windows.ViewModels;
+using Immense.RemoteControl.Desktop.Windows.Views;
 using Immense.RemoteControl.Shared.Models;
-using Remotely.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,11 +17,16 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
     {
         private readonly IWpfDispatcher _wpfDispatcher;
         private readonly IShutdownService _shutdownService;
+        private readonly IViewModelFactory _viewModelFactory;
 
-        public ChatUiServiceWin(IWpfDispatcher wpfDispatcher, IShutdownService shutdownService)
+        public ChatUiServiceWin(
+            IWpfDispatcher wpfDispatcher, 
+            IShutdownService shutdownService,
+            IViewModelFactory viewModelFactory)
         {
             _wpfDispatcher = wpfDispatcher;
             _shutdownService = shutdownService;
+            _viewModelFactory = viewModelFactory;
         }
 
         private ChatWindowViewModel? _chatViewModel;
@@ -52,16 +57,15 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         {
             _wpfDispatcher.Invoke(() =>
             {
+                _chatViewModel = _viewModelFactory.CreateChatWindowViewModel(organizationName, writer);
                 var chatWindow = new ChatWindow();
                 chatWindow.Closing += ChatWindow_Closing;
-                _chatViewModel = chatWindow.DataContext as ChatWindowViewModel;
-                _chatViewModel.PipeStreamWriter = writer;
-                _chatViewModel.OrganizationName = organizationName;
+                chatWindow.DataContext = _chatViewModel;
                 chatWindow.Show();
             });
         }
 
-        private void ChatWindow_Closing(object sender, CancelEventArgs e)
+        private void ChatWindow_Closing(object? sender, CancelEventArgs e)
         {
             ChatWindowClosed?.Invoke(this, EventArgs.Empty);
         }

@@ -12,7 +12,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 {
     public interface IDtoMessageHandler
     {
-        Task ParseMessage(Viewer viewer, byte[] message);
+        Task ParseMessage(IViewer viewer, byte[] message);
     }
     public class DtoMessageHandler : IDtoMessageHandler
     {
@@ -41,7 +41,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _logger = logger;
         }
 
-        public async Task ParseMessage(Viewer viewer, byte[] message)
+        public async Task ParseMessage(IViewer viewer, byte[] message)
         {
             try
             {
@@ -169,12 +169,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 dto.StartOfFile);
         }
 
-        private async Task GetWindowsSessions(Viewer viewer)
+        private async Task GetWindowsSessions(IViewer viewer)
         {
             await viewer.SendWindowsSessions();
         }
 
-        private void HandleFrameReceived(Viewer viewer)
+        private void HandleFrameReceived(IViewer viewer)
         {
             viewer.DequeuePendingFrame();
         }
@@ -227,7 +227,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _keyboardMouseInput.SendKeyUp(dto.Key);
         }
 
-        private void MouseDown(DtoWrapper wrapper, Viewer viewer)
+        private void MouseDown(DtoWrapper wrapper, IViewer viewer)
         {
             if (!DtoChunker.TryComplete<MouseDownDto>(wrapper, out var dto))
             {
@@ -237,7 +237,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _keyboardMouseInput.SendMouseButtonAction(dto!.Button, ButtonAction.Down, dto.PercentX, dto.PercentY, viewer);
         }
 
-        private void MouseMove(DtoWrapper wrapper, Viewer viewer)
+        private void MouseMove(DtoWrapper wrapper, IViewer viewer)
         {
             if (!DtoChunker.TryComplete<MouseMoveDto>(wrapper, out var dto))
             {
@@ -247,7 +247,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _keyboardMouseInput.SendMouseMove(dto!.PercentX, dto.PercentY, viewer);
         }
 
-        private void MouseUp(DtoWrapper wrapper, Viewer viewer)
+        private void MouseUp(DtoWrapper wrapper, IViewer viewer)
         {
             if (!DtoChunker.TryComplete<MouseUpDto>(wrapper, out var dto))
             {
@@ -267,12 +267,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _keyboardMouseInput.SendMouseWheel(-(int)dto!.DeltaY);
         }
 
-        private void OpenFileTransferWindow(Viewer viewer)
+        private void OpenFileTransferWindow(IViewer viewer)
         {
             _fileTransferService.OpenFileTransferWindow(viewer);
         }
 
-        private void SelectScreen(DtoWrapper wrapper, Viewer viewer)
+        private void SelectScreen(DtoWrapper wrapper, IViewer viewer)
         {
             if (!DtoChunker.TryComplete<SelectScreenDto>(wrapper, out var dto))
             {
@@ -287,7 +287,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _keyboardMouseInput.SetKeyStatesUp();
         }
 
-        private void Tap(DtoWrapper wrapper, Viewer viewer)
+        private void Tap(DtoWrapper wrapper, IViewer viewer)
         {
             if (!DtoChunker.TryComplete<TapDto>(wrapper, out var dto))
             {

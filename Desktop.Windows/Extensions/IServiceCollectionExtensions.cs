@@ -23,8 +23,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
             string serverUri = "",
             CancellationToken cancellationToken = default)
         {
+            if (OperatingSystem.IsWindows() && args.Contains("--elevate"))
+            {
+                RelaunchElevated();
+                return;
+            }
 
-            await services.AddRemoteControlClientCore(args, AddWindowsServices, serverUri, cancellationToken);
+
+            //await services.AddRemoteControlClientCore(args, AddWindowsServices, serverUri, cancellationToken);
 
         }
 
@@ -40,7 +46,34 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
             services.AddSingleton<ISessionIndicator, SessionIndicatorWin>();
             services.AddSingleton<IShutdownService, ShutdownServiceWin>();
             services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
+            services.AddSingleton<IAppStartup, AppStartup>();
             services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
+
+            var backgroundForm = new Form()
+            {
+                Visible = false,
+                Opacity = 0,
+                ShowIcon = false,
+                ShowInTaskbar = false,
+                WindowState = System.Windows.Forms.FormWindowState.Minimized
+            };
+            services.AddSingleton((serviceProvider) => backgroundForm);
+        }
+
+        private static void RelaunchElevated()
+        {
+            var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
+
+            Console.WriteLine($"Elevating process {commandLine}.");
+            var result = Win32Interop.OpenInteractiveProcess(
+                commandLine,
+                -1,
+                false,
+                "default",
+                true,
+                out var procInfo);
+            Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
+            Environment.Exit(0);
         }
     }
 }

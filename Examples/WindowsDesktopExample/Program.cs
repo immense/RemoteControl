@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Desktop.Windows.Extensions;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Windows.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 
@@ -13,11 +14,14 @@ var services = new ServiceCollection();
 
 await services.AddRemoteControlClient(
     args,
-    //"https://localhost:7024",
-    "",
+    "https://localhost:7024",
     cts.Token);
 
 var provider = services.BuildServiceProvider();
+
+var startup = provider.GetRequiredService<IAppStartup>();
+
+await startup.Initialize();
 
 // Do other app startup stuff.
 

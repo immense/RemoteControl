@@ -1,19 +1,27 @@
-﻿using Remotely.Desktop.Core.ViewModels;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Windows.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class HostNamePromptViewModel : BrandedViewModelBase
+    public partial class HostNamePromptViewModel : BrandedViewModelBase
     {
+        [ObservableProperty]
         private string _host = "https://";
 
-        public string Host
+#nullable disable
+        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
+        public HostNamePromptViewModel() { }
+#nullable enable
+
+
+        public HostNamePromptViewModel(
+            IBrandingProvider brandingProvider,
+            IWpfDispatcher wpfDispatcher,
+            ILogger<BrandedViewModelBase> logger)
+            : base(brandingProvider, wpfDispatcher, logger)
         {
-            get => _host;
-            set
-            {
-                _host = value;
-                FirePropertyChanged();
-            }
         }
     }
 }
