@@ -14,7 +14,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 {
     public static class IServiceCollectionExtensions
     {
-        internal static async Task AddRemoteControlClientCore(
+        public static async Task AddRemoteControlClientCore(
             this IServiceCollection services,
             string[] args,
             Action<IServiceCollection> platformServicesConfig,

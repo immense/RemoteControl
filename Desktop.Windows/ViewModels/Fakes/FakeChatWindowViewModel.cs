@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
 {
-    public class FakeChatWindowViewModel : IChatWindowViewModel
+    public class FakeChatWindowViewModel : FakeBrandedViewModelBase, IChatWindowViewModel
     {
         public ObservableCollection<ChatMessage> ChatMessages { get; } = new()
         {

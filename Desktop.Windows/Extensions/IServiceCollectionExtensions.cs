@@ -30,7 +30,6 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
                 return;
             }
 
-
             await services.AddRemoteControlClientCore(args, AddWindowsServices, serverUri, cancellationToken);
 
         }

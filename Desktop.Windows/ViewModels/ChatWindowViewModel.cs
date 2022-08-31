@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public interface IChatWindowViewModel
+    public interface IChatWindowViewModel : IBrandedViewModelBase
     {
         ObservableCollection<ChatMessage> ChatMessages { get; }
         string InputText { get; set; }

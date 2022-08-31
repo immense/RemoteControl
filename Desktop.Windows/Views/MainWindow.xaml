@@ -110,14 +110,14 @@
                 HorizontalContentAlignment="Stretch"
                 Margin="10,5"
                 Click="OptionsButton_Click">
-            <Button.ContextMenu>
+            <!--<Button.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Change Server" Command="{Binding Path=ChangeServerCommand, Source={x:Static vm:MainWindowViewModel.Current}}"></MenuItem>
 
                     <MenuItem Header="Elevate to Admin" Command="{Binding Path=ElevateToAdminCommand, Source={x:Static vm:MainWindowViewModel.Current}}"></MenuItem>
                     <MenuItem Header="Elevate to Service" Command="{Binding Path=ElevateToServiceCommand, Source={x:Static vm:MainWindowViewModel.Current}}"></MenuItem>
                 </ContextMenu>
-            </Button.ContextMenu>
+            </Button.ContextMenu>-->
             <Rectangle Fill="{StaticResource GearBrush}"></Rectangle>
         </Button>
     </Grid>

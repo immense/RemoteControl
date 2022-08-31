@@ -15,7 +15,18 @@ using Color = System.Windows.Media.Color;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public abstract class BrandedViewModelBase : ObservableObjectEx
+    public interface IBrandedViewModelBase
+    {
+        BitmapImage? Icon { get; set; }
+        string? ProductName { get; set; }
+        SolidColorBrush? TitleBackgroundColor { get; set; }
+        SolidColorBrush? TitleButtonForegroundColor { get; set; }
+        SolidColorBrush? TitleForegroundColor { get; set; }
+
+        Task ApplyBranding();
+    }
+
+    public abstract class BrandedViewModelBase : ObservableObjectEx, IBrandedViewModelBase
     {
         private static BrandingInfo? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
@@ -71,7 +82,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 {
                     _brandingInfo ??= await _brandingProvider.GetBrandingInfo();
 
-                    ProductName = "Remotely";
+                    ProductName = "Remote Control";
 
                     if (!string.IsNullOrWhiteSpace(_brandingInfo.Product))
                     {
@@ -106,7 +117,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                     _logger.LogError(ex, "Error applying branding.");
                 }
             });
-          
+
         }
         private BitmapImage GetBitmapImageIcon(BrandingInfo bi)
         {
@@ -121,7 +132,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 {
                     imageStream = typeof(RemoteControl.Shared.Result)
                         .Assembly
-                        .GetManifestResourceStream("Immense.RemoteControl.Shared.Assets.DefaultIcon.png") ?? new MemoryStream();
+                        .GetManifestResourceStream("Immense.RemoteControl.Desktop.Shared.Assets.DefaultIcon.png") ?? new MemoryStream();
                 }
 
                 var bitmap = new BitmapImage();

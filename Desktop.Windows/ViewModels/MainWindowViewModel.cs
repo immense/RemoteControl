@@ -24,27 +24,17 @@ using Application = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public partial class MainWindowViewModel : BrandedViewModelBase
+    public class MainWindowViewModel : BrandedViewModelBase
     {
+        private readonly IAppState _appState;
         private readonly IBrandingProvider _brandingProvider;
+        private readonly ICursorIconWatcher _cursorIconWatcher;
+        private readonly IWpfDispatcher _dispatcher;
         private readonly IDesktopHubConnection _hubConnection;
+        private readonly ILogger<MainWindowViewModel> _logger;
         private readonly IScreenCaster _screenCaster;
         private readonly IShutdownService _shutdownService;
         private readonly IViewModelFactory _viewModelFactory;
-        private readonly IAppState _appState;
-        private readonly IWpfDispatcher _dispatcher;
-        private readonly ICursorIconWatcher _cursorIconWatcher;
-        private readonly ILogger<MainWindowViewModel> _logger;
-
-        [ObservableProperty]
-        private string _host = string.Empty;
-
-        [ObservableProperty]
-        private string _sessionId = string.Empty;
-
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
-
 
         public MainWindowViewModel(
             IBrandingProvider brandingProvider,
@@ -58,6 +48,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             ILogger<MainWindowViewModel> logger)
             : base(brandingProvider, dispatcher, logger)
         {
+            Current = this;
+
             WpfApp.Current.Exit += Application_Exit;
 
             _brandingProvider = brandingProvider;
@@ -74,16 +66,64 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             _appState.ViewerRemoved += ViewerRemoved;
             _appState.ViewerAdded += ViewerAdded;
             _appState.ScreenCastRequested += ScreenCastRequested;
+
+            ChangeServerCommand = new AsyncRelayCommand(ChangeServer);
+            ElevateToAdminCommand = new RelayCommand(ElevateToAdmin, () => CanElevateToAdmin);
+            ElevateToServiceCommand = new RelayCommand(ElevateToService, () => CanElevateToService);
+            RemoveViewersCommand = new AsyncRelayCommand<IList<object>>(RemoveViewers, CanRemoveViewers);
         }
 
-        [RelayCommand]
+        // This is necessary for context menus that can't use FindAncestor relative binding.
+        // A ViewModelLocator would also work, but would require some refactoring.
+        public static MainWindowViewModel? Current { get; private set; }
+
+        public bool CanElevateToAdmin => !IsAdministrator;
+
+        public bool CanElevateToService => IsAdministrator && !WindowsIdentity.GetCurrent().IsSystem;
+
+        public AsyncRelayCommand ChangeServerCommand { get; }
+
+        public RelayCommand ElevateToAdminCommand { get; }
+
+        public RelayCommand ElevateToServiceCommand { get; }
+
+        public string Host
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
+        public bool IsAdministrator { get; } = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
+
+        public AsyncRelayCommand<IList<object>> RemoveViewersCommand { get; }
+
+        public string SessionId
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
+        public string StatusMessage
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+        public ObservableCollection<IViewer> Viewers { get; } = new();
+        public bool CanRemoveViewers(IList<object>? items) => items?.Any() == true;
+
+        
         public async Task ChangeServer()
         {
             PromptForHostName();
             await Init();
         }
 
-        [RelayCommand(CanExecute = nameof(CanElevateToAdmin))]
+        public void CopyLink()
+        {
+            Clipboard.SetText($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage?.Replace(" ", "")}");
+        }
+
+        
         public void ElevateToAdmin()
         {
             try
@@ -107,7 +147,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         }
 
 
-        [RelayCommand(CanExecute = nameof(CanElevateToService))]
         public void ElevateToService()
         {
             try
@@ -137,31 +176,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             }
             catch { }
         }
-
-        public bool CanElevateToService => IsAdministrator && !WindowsIdentity.GetCurrent().IsSystem;
-     
-        public bool IsAdministrator { get; } = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
-        public bool CanElevateToAdmin => !IsAdministrator;
-
-        [RelayCommand(CanExecute = nameof(CanRemoveViewers))]
-        public async Task RemoveViewers(IList<object> viewers)
-        {
-            foreach (var viewer in viewers.OfType<Viewer>().ToArray())
-            {
-                ViewerRemoved(this, viewer.ViewerConnectionID);
-                await _hubConnection.DisconnectViewer(viewer, true);
-            }
-        }
-
-        public bool CanRemoveViewers(IList<object> items) => items.Any();
-
-        public ObservableCollection<IViewer> Viewers { get; } = new();
-
-        public void CopyLink()
-        {
-            Clipboard.SetText($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage?.Replace(" ", "")}");
-        }
-
         public async Task GetSessionID()
         {
             await _hubConnection.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
@@ -175,8 +189,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
             _dispatcher.Invoke(() =>
             {
-                _sessionId = formattedSessionID.Trim();
-                StatusMessage = _sessionId;
+                SessionId = formattedSessionID.Trim();
+                StatusMessage = SessionId;
             });
         }
 
@@ -223,7 +237,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
                     _hubConnection.Connection.Reconnected += (id) =>
                     {
-                        StatusMessage = _sessionId;
+                        StatusMessage = SessionId;
                         return Task.CompletedTask;
                     };
 
@@ -271,6 +285,19 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             _appState.Host = Host;
         }
 
+        public async Task RemoveViewers(IList<object>? viewers)
+        {
+            if (viewers?.Any() != true)
+            {
+                return;
+            }
+
+            foreach (var viewer in viewers.OfType<Viewer>().ToArray())
+            {
+                ViewerRemoved(this, viewer.ViewerConnectionID);
+                await _hubConnection.DisconnectViewer(viewer, true);
+            }
+        }
         public void ShutdownApp()
         {
             _shutdownService.Shutdown();

@@ -11,16 +11,22 @@ using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public partial class PromptForAccessWindowViewModel : BrandedViewModelBase
+    public interface IPromptForAccessWindowViewModel : IBrandedViewModelBase
     {
-        [ObservableProperty]
-        private string _organizationName = "your IT provider";
+        string OrganizationName { get; set; }
+        bool PromptResult { get; set; }
+        string RequesterName { get; set; }
+        RelayCommand<Window> SetResultNoCommand { get; }
+        RelayCommand<Window> SetResultYesCommand { get; }
 
-        [ObservableProperty]
-        private string _requesterName = "a technician";
+        void SetResultNo(Window? promptWindow);
+        void SetResultYes(Window? promptWindow);
+    }
 
+    public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAccessWindowViewModel
+    {
         public PromptForAccessWindowViewModel(
-            string requesterName, 
+            string requesterName,
             string organizationName,
             IBrandingProvider brandingProvider,
             IWpfDispatcher wpfDispatcher,
@@ -36,21 +42,46 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             {
                 OrganizationName = organizationName;
             }
+
+            SetResultNoCommand = new RelayCommand<Window>(SetResultNo);
+            SetResultYesCommand = new RelayCommand<Window>(SetResultYes);
         }
 
+        public string OrganizationName
+        {
+            get => Get<string>() ?? "your IT provider";
+            set => Set(value);
+        }
 
         public bool PromptResult { get; set; }
-
-        [RelayCommand]
-        public void SetResultNo(Window promptWindow)
+        public string RequesterName
         {
+            get => Get<string>() ?? "a technician";
+            set => Set(value);
+        }
+
+        public RelayCommand<Window> SetResultNoCommand { get; }
+        public RelayCommand<Window> SetResultYesCommand { get; }
+
+
+        public void SetResultNo(Window? promptWindow)
+        {
+            if (promptWindow is null)
+            {
+                return;
+            }
+
             PromptResult = false;
             promptWindow.Close();
         }
 
-        [RelayCommand]
-        public void SetResultYes(Window promptWindow)
+        public void SetResultYes(Window? promptWindow)
         {
+            if (promptWindow is null)
+            {
+                return;
+            }
+
             PromptResult = true;
             promptWindow.Close();
         }

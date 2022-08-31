@@ -5,17 +5,20 @@ using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public partial class HostNamePromptViewModel : BrandedViewModelBase
+    public class HostNamePromptViewModel : BrandedViewModelBase
     {
-        [ObservableProperty]
-        private string _host = "https://";
-
         public HostNamePromptViewModel(
             IBrandingProvider brandingProvider,
             IWpfDispatcher wpfDispatcher,
             ILogger<BrandedViewModelBase> logger)
             : base(brandingProvider, wpfDispatcher, logger)
         {
+        }
+
+        public string Host
+        {
+            get => Get<string>() ?? "https://";
+            set => Set(value);
         }
     }
 }

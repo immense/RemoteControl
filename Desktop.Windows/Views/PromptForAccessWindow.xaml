@@ -1,4 +1,5 @@
 ﻿<Window x:Class="Immense.RemoteControl.Desktop.Windows.Views.PromptForAccessWindow"
+        x:Name="ThisWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,6 +8,7 @@
         mc:Ignorable="d"
         WindowStyle="None"
         xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
+        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes"
         ResizeMode="CanResizeWithGrip"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
         WindowStartupLocation="CenterScreen"
@@ -20,6 +22,7 @@
         Height="275" 
         Width="450"
         Icon="{Binding Icon}"
+        d:DataContext="{d:DesignInstance Type=fakes:FakePromptForAccessViewModel, IsDesignTimeCreatable=True}"
         ContentRendered="Window_ContentRendered">
 
     <Window.Resources>
@@ -69,12 +72,12 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
             <Button Width="60" Height="40" Content="Yes" Margin="10"
                     Style="{StaticResource NormalButton}"
-                    Command="{Binding SetResultYes}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:PromptForAccessWindow}}}"></Button>
+                    Command="{Binding ViewModel.SetResultYesCommand, ElementName=ThisWindow}"
+                    CommandParameter="{Binding ElementName=ThisWindow, Mode=OneWay}"></Button>
             <Button Width="60" Height="40" Content="No" Margin="10"
                     Style="{StaticResource NormalButton}"
-                    Command="{Binding SetResultNo}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:PromptForAccessWindow}}}"></Button>
+                    Command="{Binding ViewModel.SetResultNoCommand, ElementName=ThisWindow}"
+                    CommandParameter="{Binding ElementName=ThisWindow, Mode=OneWay}"></Button>
         </StackPanel>
 
     </Grid>

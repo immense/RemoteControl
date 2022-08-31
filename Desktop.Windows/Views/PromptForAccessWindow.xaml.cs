@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Immense.RemoteControl.Desktop.Windows.ViewModels;
 
 namespace Immense.RemoteControl.Desktop.Windows.Views
 {
@@ -21,6 +22,8 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
         {
             InitializeComponent();
         }
+
+        public PromptForAccessWindowViewModel? ViewModel => DataContext as PromptForAccessWindowViewModel;
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {

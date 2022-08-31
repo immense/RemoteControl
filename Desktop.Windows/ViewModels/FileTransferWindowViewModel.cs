@@ -16,17 +16,24 @@ using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
+    public interface IFileTransferWindowViewModel
+    {
+        ObservableCollection<FileUpload> FileUploads { get; }
+        AsyncRelayCommand OpenFileDialogCommand { get; }
+        RelayCommand<FileUpload> RemoveFileUploadCommand { get; }
+        string ViewerConnectionId { get; set; }
+        string ViewerName { get; set; }
 
-    public partial class FileTransferWindowViewModel : BrandedViewModelBase
+        Task OpenFileUploadDialog();
+        void RemoveFileUpload(FileUpload? fileUpload);
+        Task UploadFile(string filePath);
+    }
+
+    public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWindowViewModel
     {
         private readonly IWpfDispatcher _dispatcher;
         private readonly IFileTransferService _fileTransferService;
         private readonly IViewer _viewer;
-        [ObservableProperty]
-        private string _viewerConnectionId = string.Empty;
-
-        [ObservableProperty]
-        private string _viewerName = string.Empty;
 
 
         public FileTransferWindowViewModel(
@@ -40,13 +47,29 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             _fileTransferService = fileTransferService;
             _viewer = viewer;
             _dispatcher = wpfDispatcher;
-            _viewerName = viewer.Name;
+            ViewerName = viewer.Name;
             ViewerConnectionId = viewer.ViewerConnectionID;
+
+            OpenFileDialogCommand = new AsyncRelayCommand(OpenFileUploadDialog);
+            RemoveFileUploadCommand = new RelayCommand<FileUpload>(RemoveFileUpload);
         }
 
         public ObservableCollection<FileUpload> FileUploads { get; } = new ObservableCollection<FileUpload>();
 
-        [RelayCommand]
+        public AsyncRelayCommand OpenFileDialogCommand { get; }
+        public RelayCommand<FileUpload> RemoveFileUploadCommand { get; }
+
+        public string ViewerConnectionId
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+        public string ViewerName
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
         public async Task OpenFileUploadDialog()
         {
             // Change initial directory so it doesn't open in %userprofile% path
@@ -86,9 +109,14 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             }
         }
 
-        [RelayCommand]
-        public void RemoveFileUpload(FileUpload fileUpload)
+
+        public void RemoveFileUpload(FileUpload? fileUpload)
         {
+            if (fileUpload is null)
+            {
+                return;
+            }
+
             FileUploads.Remove(fileUpload);
             fileUpload.CancellationTokenSource.Cancel();
         }
