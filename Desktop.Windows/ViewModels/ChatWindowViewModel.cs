@@ -10,28 +10,25 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public partial class ChatWindowViewModel : BrandedViewModelBase
+    public interface IChatWindowViewModel
+    {
+        ObservableCollection<ChatMessage> ChatMessages { get; }
+        string InputText { get; set; }
+        string OrganizationName { get; set; }
+        string SenderName { get; set; }
+
+        Task SendChatMessage();
+    }
+
+    public class ChatWindowViewModel : BrandedViewModelBase, IChatWindowViewModel
     {
         private readonly StreamWriter _streamWriter;
-        [ObservableProperty]
-        private string _inputText = string.Empty;
-
-        [ObservableProperty]
-        private string _organizationName = "your IT provider";
-
-        [ObservableProperty]
-        private string _senderName = "a technician";
-
-#nullable disable
-        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
-        public ChatWindowViewModel() { }
-#nullable enable
 
         public ChatWindowViewModel(
             StreamWriter streamWriter,
             string organizationName,
-            IBrandingProvider brandingProvider, 
-            IWpfDispatcher wpfDispatcher, 
+            IBrandingProvider brandingProvider,
+            IWpfDispatcher wpfDispatcher,
             ILogger<BrandedViewModelBase> logger)
             : base(brandingProvider, wpfDispatcher, logger)
         {
@@ -43,6 +40,24 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         }
 
         public ObservableCollection<ChatMessage> ChatMessages { get; } = new ObservableCollection<ChatMessage>();
+
+        public string InputText
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
+        public string OrganizationName
+        {
+            get => Get<string>() ?? "your IT provider";
+            set => Set(value);
+        }
+
+        public string SenderName
+        {
+            get => Get<string>() ?? "a technician";
+            set => Set(value);
+        }
 
         public async Task SendChatMessage()
         {

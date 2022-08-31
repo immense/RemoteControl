@@ -19,12 +19,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         [ObservableProperty]
         private string _requesterName = "a technician";
 
-#nullable disable
-        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
-        public PromptForAccessWindowViewModel() { }
-#nullable enable
-
-
         public PromptForAccessWindowViewModel(
             string requesterName, 
             string organizationName,

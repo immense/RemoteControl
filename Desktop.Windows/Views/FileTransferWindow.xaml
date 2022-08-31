@@ -10,8 +10,15 @@
         Height="300" Width="400" 
         Topmost="True"
         ContentRendered="Window_ContentRendered"
-        d:DataContext="{d:DesignInstance Type=vm:FileTransferWindowViewModel, IsDesignTimeCreatable=True}"
         Icon="{Binding Icon}">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     
     <Grid Margin="10">
         <Grid.RowDefinitions>

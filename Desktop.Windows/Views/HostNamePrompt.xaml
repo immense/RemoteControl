@@ -8,8 +8,15 @@
         xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels" x:Name="PromptWindow"
         mc:Ignorable="d"
         Title="Host Name" Height="150" Width="350" WindowStartupLocation="CenterOwner" 
-        d:DataContext="{d:DesignInstance Type=vm:HostNamePromptViewModel, IsDesignTimeCreatable=True}"
         Icon="{Binding Icon}">
+    
+        <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Resources/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 
     <StackPanel Margin="10">
         <TextBlock Margin="0,0,0,5" Style="{StaticResource SectionHeader}"><Run Text="Enter the server URL:"/></TextBlock>

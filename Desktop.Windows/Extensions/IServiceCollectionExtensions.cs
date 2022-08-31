@@ -4,6 +4,7 @@ using Immense.RemoteControl.Desktop.Shared.Extensions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
             }
 
 
-            //await services.AddRemoteControlClientCore(args, AddWindowsServices, serverUri, cancellationToken);
+            await services.AddRemoteControlClientCore(args, AddWindowsServices, serverUri, cancellationToken);
 
         }
 
@@ -48,6 +49,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
             services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
             services.AddSingleton<IAppStartup, AppStartup>();
             services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
+            services.AddSingleton<MainWindowViewModel>();
 
             var backgroundForm = new Form()
             {

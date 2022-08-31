@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Immense.RemoteControl.Desktop.Windows.Views;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -27,12 +28,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         private readonly IChatHostService _chatHostService;
         private readonly ICursorIconWatcher _cursorIconWatcher;
         private readonly IWpfDispatcher _dispatcher;
+        private readonly MainWindowViewModel _mainWindowVm;
         private readonly IIdleTimer _idleTimer;
         private readonly ILogger<AppStartup> _logger;
         private MainWindow? _mainWindow;
 
         public AppStartup(
             Form backgroundForm,
+            MainWindowViewModel mainWindowVm,
             IAppState appState,
             IKeyboardMouseInput inputService,
             IDesktopHubConnection desktopHub,
@@ -51,6 +54,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             _chatHostService = chatHostService;
             _cursorIconWatcher = iconWatcher;
             _dispatcher = dispatcher;
+            _mainWindowVm = mainWindowVm;
             _idleTimer = idleTimer;
             _logger = logger;
         }
@@ -93,7 +97,10 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 case AppMode.Attended:
                     _dispatcher.Invoke(() =>
                     {
-                        _mainWindow = new MainWindow();
+                        _mainWindow = new MainWindow
+                        {
+                            DataContext = _mainWindowVm
+                        };
                         _mainWindow.Show();
                     });
                     break;

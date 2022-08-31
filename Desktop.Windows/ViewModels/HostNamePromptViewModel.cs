@@ -10,12 +10,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         [ObservableProperty]
         private string _host = "https://";
 
-#nullable disable
-        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
-        public HostNamePromptViewModel() { }
-#nullable enable
-
-
         public HostNamePromptViewModel(
             IBrandingProvider brandingProvider,
             IWpfDispatcher wpfDispatcher,

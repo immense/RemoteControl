@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
-        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
+        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes"
         xmlns:Models="clr-namespace:Immense.RemoteControl.Shared.Models;assembly=Immense.RemoteControl.Shared"
         mc:Ignorable="d"
         WindowStyle="None"
@@ -21,7 +21,7 @@
         Icon="{Binding Icon}"
         Loaded="Window_Loaded"
         ContentRendered="Window_ContentRendered"
-        d:DataContext="{d:DesignInstance Type=vm:ChatWindowViewModel, IsDesignTimeCreatable=True}">
+        d:DataContext="{d:DesignInstance Type=fakes:FakeChatWindowViewModel, IsDesignTimeCreatable=True}">
 
     <Window.Resources>
         <ResourceDictionary>

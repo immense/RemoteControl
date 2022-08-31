@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,18 +15,12 @@ using Color = System.Windows.Media.Color;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    [ObservableObject]
-    public partial class BrandedViewModelBase
+    public abstract class BrandedViewModelBase : ObservableObjectEx
     {
         private static BrandingInfo? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
         private readonly ILogger<BrandedViewModelBase> _logger;
         private readonly IWpfDispatcher _wpfDispatcher;
-
-#nullable disable
-        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
-        public BrandedViewModelBase() { }
-#nullable enable
 
         public BrandedViewModelBase(
             IBrandingProvider brandingProvider,
@@ -38,15 +33,35 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             _ = Task.Run(ApplyBranding);
         }
 
-        public BitmapImage? Icon { get; set; }
+        public BitmapImage? Icon
+        {
+            get => Get<BitmapImage?>();
+            set => Set(value);
+        }
 
-        public string? ProductName { get; set; }
+        public string? ProductName
+        {
+            get => Get<string?>();
+            set => Set(value);
+        }
 
-        public SolidColorBrush? TitleBackgroundColor { get; set; }
+        public SolidColorBrush? TitleBackgroundColor
+        {
+            get => Get<SolidColorBrush?>();
+            set => Set(value);
+        }
 
-        public SolidColorBrush? TitleButtonForegroundColor { get; set; }
+        public SolidColorBrush? TitleButtonForegroundColor
+        {
+            get => Get<SolidColorBrush?>();
+            set => Set(value);
+        }
 
-        public SolidColorBrush? TitleForegroundColor { get; set; }
+        public SolidColorBrush? TitleForegroundColor
+        {
+            get => Get<SolidColorBrush?>();
+            set => Set(value);
+        }
 
         public async Task ApplyBranding()
         {

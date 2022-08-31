@@ -29,11 +29,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         private string _viewerName = string.Empty;
 
 
-#nullable disable
-        [Obsolete("Parameterless constructor used only for WPF design-time DataContext")]
-        public FileTransferWindowViewModel() { }
-#nullable enable
-
         public FileTransferWindowViewModel(
             IViewer viewer,
             IBrandingProvider brandingProvider,

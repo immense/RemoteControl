@@ -3,9 +3,8 @@ import { ViewerApp } from "./App.js";
 import { CursorInfo } from "./Models/CursorInfo.js";
 import { IceServerModel } from "./Models/IceServerModel.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
-import { GenericDto } from "./Interfaces/Dtos.js";
+import { DtoWrapper, GenericDto } from "./Interfaces/Dtos.js";
 import { ShowMessage } from "./UI.js";
-import { BaseDto } from "./Interfaces/BaseDto.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { DtoType } from "./Enums/BaseDtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
@@ -49,7 +48,7 @@ export class ViewerHubConnection {
         }
     }
 
-    SendDtoToClient(dto: BaseDto): Promise<any> {
+    SendDtoToClient(dto: DtoWrapper): Promise<any> {
         return this.Connection.invoke("SendDtoToClient", this.MessagePack.encode(dto));
     }
 

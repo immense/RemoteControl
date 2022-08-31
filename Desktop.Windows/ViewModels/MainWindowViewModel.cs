@@ -45,6 +45,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         [ObservableProperty]
         private string _statusMessage = string.Empty;
 
+
         public MainWindowViewModel(
             IBrandingProvider brandingProvider,
             IWpfDispatcher dispatcher,
