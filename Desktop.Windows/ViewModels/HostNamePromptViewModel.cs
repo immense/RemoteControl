@@ -5,7 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class HostNamePromptViewModel : BrandedViewModelBase
+    public interface IHostNamePromptViewModel
+    {
+        string Host { get; set; }
+    }
+
+    public class HostNamePromptViewModel : BrandedViewModelBase, IHostNamePromptViewModel
     {
         public HostNamePromptViewModel(
             IBrandingProvider brandingProvider,
