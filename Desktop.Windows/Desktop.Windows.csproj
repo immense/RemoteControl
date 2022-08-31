@@ -9,6 +9,7 @@
     <RootNamespace>Immense.RemoteControl.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <AssemblyName>Immense.RemoteControl.$(MSBuildProjectName)</AssemblyName>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>

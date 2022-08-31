@@ -41,7 +41,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
             get => _icon;
             set => _icon = value;
         }
-        public string? ProductName { get; set; }
+        public string? ProductName { get; set; } = "Test Product";
         public SolidColorBrush? TitleBackgroundColor { get; set; }
         public SolidColorBrush? TitleButtonForegroundColor { get; set; }
         public SolidColorBrush? TitleForegroundColor { get; set; }

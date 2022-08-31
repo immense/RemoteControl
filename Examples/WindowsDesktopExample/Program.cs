@@ -1,29 +1,38 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Windows.Extensions;
+using Immense.RemoteControl.Desktop.Windows;
+using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Win32;
+using WindowsDesktopExample;
 
-var cts = new CancellationTokenSource();
-Console.CancelKeyPress += (s, e) =>
+
+// The service provider is returned in case it's needed.
+var provider = await Startup.UseRemoteControlClient(
+    args,
+    config =>
+    {
+        config.AddBrandingProvider<BrandingProvider>();
+    },
+    services =>
+    {
+        // Add some other services here if I wanted.
+
+        //services.AddLogging(builder =>
+        //{
+        //    builder.ClearProviders();
+        //    // Add file logger, etc.
+        //});
+    },
+    "https://localhost:7024");
+
+
+var shutdownService = provider.GetRequiredService<IShutdownService>();
+Console.CancelKeyPress += async (s, e) =>
 {
-    cts.Cancel();
+    await shutdownService.Shutdown();
 };
 
+var dispatcher = provider.GetRequiredService<IWpfDispatcher>();
 
-var services = new ServiceCollection();
-
-await services.AddRemoteControlClient(
-    args,
-    "https://localhost:7024",
-    cts.Token);
-
-var provider = services.BuildServiceProvider();
-
-var startup = provider.GetRequiredService<IAppStartup>();
-
-await startup.Initialize();
-
-// Do other app startup stuff.
 
 Console.WriteLine("Press Ctrl + C to exit.");
-await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token);
+await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.ApplicationExitingToken);

@@ -22,6 +22,8 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
             InitializeComponent();
         }
 
+        public MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
+
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();

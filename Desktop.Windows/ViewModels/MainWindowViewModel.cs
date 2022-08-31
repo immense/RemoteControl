@@ -24,10 +24,29 @@ using Application = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
-    public class MainWindowViewModel : BrandedViewModelBase
+    public interface IMainWindowViewModel
+    {
+        bool CanElevateToAdmin { get; }
+        bool CanElevateToService { get; }
+        AsyncRelayCommand ChangeServerCommand { get; }
+        RelayCommand ElevateToAdminCommand { get; }
+        RelayCommand ElevateToServiceCommand { get; }
+        string Host { get; set; }
+        bool IsAdministrator { get; }
+        AsyncRelayCommand<IList<object>> RemoveViewersCommand { get; }
+        string SessionId { get; set; }
+        string StatusMessage { get; set; }
+        ObservableCollection<IViewer> Viewers { get; }
+
+        bool CanRemoveViewers(IList<object>? items);
+        void CopyLink();
+        Task Init();
+        void ShutdownApp();
+    }
+
+    public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         private readonly IAppState _appState;
-        private readonly IBrandingProvider _brandingProvider;
         private readonly ICursorIconWatcher _cursorIconWatcher;
         private readonly IWpfDispatcher _dispatcher;
         private readonly IDesktopHubConnection _hubConnection;
@@ -48,11 +67,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             ILogger<MainWindowViewModel> logger)
             : base(brandingProvider, dispatcher, logger)
         {
-            Current = this;
-
             WpfApp.Current.Exit += Application_Exit;
 
-            _brandingProvider = brandingProvider;
             _dispatcher = dispatcher;
             _cursorIconWatcher = iconWatcher;
             _cursorIconWatcher.OnChange += CursorIconWatcher_OnChange;
@@ -73,9 +89,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             RemoveViewersCommand = new AsyncRelayCommand<IList<object>>(RemoveViewers, CanRemoveViewers);
         }
 
-        // This is necessary for context menus that can't use FindAncestor relative binding.
-        // A ViewModelLocator would also work, but would require some refactoring.
-        public static MainWindowViewModel? Current { get; private set; }
 
         public bool CanElevateToAdmin => !IsAdministrator;
 
@@ -111,87 +124,10 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         public ObservableCollection<IViewer> Viewers { get; } = new();
         public bool CanRemoveViewers(IList<object>? items) => items?.Any() == true;
 
-        
-        public async Task ChangeServer()
-        {
-            PromptForHostName();
-            await Init();
-        }
 
         public void CopyLink()
         {
             Clipboard.SetText($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage?.Replace(" ", "")}");
-        }
-
-        
-        public void ElevateToAdmin()
-        {
-            try
-            {
-                //var filePath = Process.GetCurrentProcess().MainModule.FileName;
-                var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
-                var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
-                var filePath = sections.First();
-                var arguments = string.Join('"', sections.Skip(1));
-                var psi = new ProcessStartInfo(filePath, arguments)
-                {
-                    Verb = "RunAs",
-                    UseShellExecute = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                };
-                Process.Start(psi);
-                Environment.Exit(0);
-            }
-            // Exception can be thrown if UAC is dialog is cancelled.
-            catch { }
-        }
-
-
-        public void ElevateToService()
-        {
-            try
-            {
-                var psi = new ProcessStartInfo("cmd.exe")
-                {
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true
-                };
-                //var filePath = Process.GetCurrentProcess().MainModule.FileName;
-                var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
-                var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
-                var filePath = sections.First();
-                var arguments = string.Join('"', sections.Skip(1));
-
-                _logger.LogInformation("Creating temporary service with file path {filePath} and arguments {arguments}.",
-                    filePath,
-                    arguments);
-
-                psi.Arguments = $"/c sc create Remotely_Temp binPath=\"{filePath} {arguments} --elevate\"";
-                Process.Start(psi)?.WaitForExit();
-                psi.Arguments = "/c sc start RemoteControl_Temp";
-                Process.Start(psi)?.WaitForExit();
-                psi.Arguments = "/c sc delete RemoteControl_Temp";
-                Process.Start(psi)?.WaitForExit();
-                WpfApp.Current.Shutdown();
-            }
-            catch { }
-        }
-        public async Task GetSessionID()
-        {
-            await _hubConnection.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
-            var sessionId = await _hubConnection.GetSessionID();
-
-            var formattedSessionID = "";
-            for (var i = 0; i < sessionId.Length; i += 3)
-            {
-                formattedSessionID += sessionId.Substring(i, 3) + " ";
-            }
-
-            _dispatcher.Invoke(() =>
-            {
-                SessionId = formattedSessionID.Trim();
-                StatusMessage = SessionId;
-            });
         }
 
         public async Task Init()
@@ -258,7 +194,106 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             MessageBox.Show(Application.Current.MainWindow, "Failed to connect to server.", "Connection Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
-        public void PromptForHostName()
+        public void ShutdownApp()
+        {
+            _shutdownService.Shutdown();
+        }
+
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
+            _dispatcher.Invoke(() =>
+            {
+                Viewers.Clear();
+            });
+        }
+
+        private async Task ChangeServer()
+        {
+            PromptForHostName();
+            await Init();
+        }
+        private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)
+        {
+            if (_appState?.Viewers?.Count > 0)
+            {
+                foreach (var viewer in _appState.Viewers.Values)
+                {
+                    await viewer.SendCursorChange(cursor);
+                }
+            }
+        }
+
+        private void ElevateToAdmin()
+        {
+            try
+            {
+                //var filePath = Process.GetCurrentProcess().MainModule.FileName;
+                var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
+                var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
+                var filePath = sections.First();
+                var arguments = string.Join('"', sections.Skip(1));
+                var psi = new ProcessStartInfo(filePath, arguments)
+                {
+                    Verb = "RunAs",
+                    UseShellExecute = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                Process.Start(psi);
+                Environment.Exit(0);
+            }
+            // Exception can be thrown if UAC is dialog is cancelled.
+            catch { }
+        }
+
+
+        private void ElevateToService()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("cmd.exe")
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                };
+                //var filePath = Process.GetCurrentProcess().MainModule.FileName;
+                var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
+                var sections = commandLine.Split('"', StringSplitOptions.RemoveEmptyEntries);
+                var filePath = sections.First();
+                var arguments = string.Join('"', sections.Skip(1));
+
+                _logger.LogInformation("Creating temporary service with file path {filePath} and arguments {arguments}.",
+                    filePath,
+                    arguments);
+
+                psi.Arguments = $"/c sc create Remotely_Temp binPath=\"{filePath} {arguments} --elevate\"";
+                Process.Start(psi)?.WaitForExit();
+                psi.Arguments = "/c sc start RemoteControl_Temp";
+                Process.Start(psi)?.WaitForExit();
+                psi.Arguments = "/c sc delete RemoteControl_Temp";
+                Process.Start(psi)?.WaitForExit();
+                WpfApp.Current.Shutdown();
+            }
+            catch { }
+        }
+        private async Task GetSessionID()
+        {
+            await _hubConnection.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
+            var sessionId = await _hubConnection.GetSessionID();
+
+            var formattedSessionID = "";
+            for (var i = 0; i < sessionId.Length; i += 3)
+            {
+                formattedSessionID += sessionId.Substring(i, 3) + " ";
+            }
+
+            _dispatcher.Invoke(() =>
+            {
+                SessionId = formattedSessionID.Trim();
+                StatusMessage = SessionId;
+            });
+        }
+
+        private void PromptForHostName()
         {
             var prompt = new HostNamePrompt();
             var viewModel = _viewModelFactory.CreateHostNamePromptViewModel();
@@ -285,7 +320,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             _appState.Host = Host;
         }
 
-        public async Task RemoveViewers(IList<object>? viewers)
+        private async Task RemoveViewers(IList<object>? viewers)
         {
             if (viewers?.Any() != true)
             {
@@ -298,30 +333,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 await _hubConnection.DisconnectViewer(viewer, true);
             }
         }
-        public void ShutdownApp()
-        {
-            _shutdownService.Shutdown();
-        }
-
-        private void Application_Exit(object sender, ExitEventArgs e)
-        {
-            _dispatcher.Invoke(() =>
-            {
-                Viewers.Clear();
-            });
-        }
-
-        private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)
-        {
-            if (_appState?.Viewers?.Count > 0)
-            {
-                foreach (var viewer in _appState.Viewers.Values)
-                {
-                    await viewer.SendCursorChange(cursor);
-                }
-            }
-        }
-
         private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
         {
             await _dispatcher.InvokeAsync(async () =>

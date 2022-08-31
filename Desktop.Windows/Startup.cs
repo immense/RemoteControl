@@ -1,5 +1,4 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Extensions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Win32;
@@ -8,31 +7,33 @@ using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Windows.Extensions
+namespace Immense.RemoteControl.Desktop.Windows
 {
-    public static class IServiceCollectionExtensions
+    public static class Startup
     {
-        public static async Task AddRemoteControlClient(
-            this IServiceCollection services,
+        public static async Task<IServiceProvider> UseRemoteControlClient(
             string[] args,
-            string serverUri = "",
-            CancellationToken cancellationToken = default)
+            Action<IRemoteControlClientBuilder> clientConfig,
+            Action<IServiceCollection>? serviceConfig = null,
+            string serverUri = "")
         {
+            var services = new ServiceCollection();
+
             if (OperatingSystem.IsWindows() && args.Contains("--elevate"))
             {
                 RelaunchElevated();
-                return;
+                return services.BuildServiceProvider();
             }
 
-            await services.AddRemoteControlClientCore(args, AddWindowsServices, serverUri, cancellationToken);
+            serviceConfig?.Invoke(services);
 
+            return await services.BuildRemoteControlServiceProvider(args, clientConfig, AddWindowsServices, serverUri);
         }
+
 
         private static void AddWindowsServices(IServiceCollection services)
         {
@@ -45,20 +46,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
             services.AddScoped<IFileTransferService, FileTransferServiceWin>();
             services.AddSingleton<ISessionIndicator, SessionIndicatorWin>();
             services.AddSingleton<IShutdownService, ShutdownServiceWin>();
-            services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
-            services.AddSingleton<IAppStartup, AppStartup>();
             services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
+            services.AddSingleton<IWpfDispatcher, WpfDispatcher>();
+            services.AddSingleton<IAppStartup, AppStartup>();
+            services.AddSingleton<IViewModelFactory, ViewModelFactory>();
             services.AddSingleton<MainWindowViewModel>();
-
-            var backgroundForm = new Form()
-            {
-                Visible = false,
-                Opacity = 0,
-                ShowIcon = false,
-                ShowInTaskbar = false,
-                WindowState = System.Windows.Forms.FormWindowState.Minimized
-            };
-            services.AddSingleton((serviceProvider) => backgroundForm);
+            services.AddSingleton((serviceProvider) => GetBackgroundForm());
         }
 
         private static void RelaunchElevated()
@@ -75,6 +68,18 @@ namespace Immense.RemoteControl.Desktop.Windows.Extensions
                 out var procInfo);
             Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
             Environment.Exit(0);
+        }
+
+        private static Form GetBackgroundForm()
+        {
+            return new Form()
+            {
+                Visible = false,
+                Opacity = 0,
+                ShowIcon = false,
+                ShowInTaskbar = false,
+                WindowState = System.Windows.Forms.FormWindowState.Minimized
+            };
         }
     }
 }

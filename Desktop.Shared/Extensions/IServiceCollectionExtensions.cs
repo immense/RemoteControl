@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Enums;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Win32;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,13 +15,17 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 {
     public static class IServiceCollectionExtensions
     {
-        public static async Task AddRemoteControlClientCore(
+        public static async Task<IServiceProvider> BuildRemoteControlServiceProvider(
             this IServiceCollection services,
             string[] args,
+            Action<IRemoteControlClientBuilder> clientConfig,
             Action<IServiceCollection> platformServicesConfig,
-            string serverUri = "",
-            CancellationToken cancellationToken = default)
+            string serverUri = "")
         {
+            var builder = new RemoteControlClientBuilder(services);
+            clientConfig.Invoke(builder);
+            builder.Validate();
+
 
             var rootCommand = new RootCommand(
                 $"This app is using the {typeof(IServiceCollectionExtensions).Assembly.GetName().Name} library, " +
@@ -43,7 +48,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
 
             var pipeNameOption = new Option<string>(
-                new[] { "-p, --pipe-name" },
+                new[] { "-p", "--pipe-name" },
                 "When AppMode is Chat, this is the pipe name used by the named pipes server.");
             pipeNameOption.AddValidator((context) =>
             {
@@ -97,21 +102,18 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                         host = serverUri;
                     }
 
-                    AddServices(services, platformServicesConfig);
-                    services.AddSingleton<IAppState>(s =>
+                    services.AddSingleton<IAppState>(s => new AppState()
                     {
-                        var appState = new AppState()
-                        {
-                            DeviceID = deviceId,
-                            Host = host,
-                            Mode = mode,
-                            OrganizationId = organizationId,
-                            OrganizationName = organizationName,
-                            RequesterConnectionId = requesterId,
-                            ServiceConnectionId = serviceId
-                        };
-                        return appState;
+                        DeviceID = deviceId,
+                        Host = host,
+                        Mode = mode,
+                        OrganizationId = organizationId,
+                        OrganizationName = organizationName,
+                        RequesterConnectionId = requesterId,
+                        ServiceConnectionId = serviceId
                     });
+
+                    AddServices(services, platformServicesConfig);
                 },
                 hostOption,
                 modeOption,
@@ -123,6 +125,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 organizationNameOption);
 
             await rootCommand.InvokeAsync(args);
+
+            var provider = services.BuildServiceProvider();
+            StaticServiceProvider.Instance = provider;
+
+            var appStartup = provider.GetRequiredService<IAppStartup>();
+            await appStartup.Initialize();
+            return provider;
         }
 
         private static void AddServices(IServiceCollection services, Action<IServiceCollection> platformServicesConfig)
