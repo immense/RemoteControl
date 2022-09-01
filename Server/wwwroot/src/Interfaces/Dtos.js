@@ -1,9 +1,6 @@
 export class DtoWrapper {
 }
-export class GenericDto {
-    constructor(type) {
-        this.DtoType = type;
-    }
+export class EmptyDto {
 }
 export class ClipboardTransferDto {
     constructor(text, typeText) {

@@ -63,7 +63,7 @@
     <None Include="wwwroot\src\DtoMessageHandler.js" />
     <None Include="wwwroot\src\DtoMessageHandler.js.map" />
     <None Include="wwwroot\src\DtoMessageHandler.ts" />
-    <None Include="wwwroot\src\Enums\BaseDtoType.ts" />
+    <None Include="wwwroot\src\Enums\DtoType.ts" />
     <None Include="wwwroot\src\Enums\RemoteControlMode.js" />
     <None Include="wwwroot\src\Enums\RemoteControlMode.js.map" />
     <None Include="wwwroot\src\Enums\RemoteControlMode.ts" />
@@ -94,9 +94,6 @@
     <None Include="wwwroot\src\Models\HubConnection.js" />
     <None Include="wwwroot\src\Models\HubConnection.js.map" />
     <None Include="wwwroot\src\Models\HubConnection.ts" />
-    <None Include="wwwroot\src\Models\IceServerModel.js" />
-    <None Include="wwwroot\src\Models\IceServerModel.js.map" />
-    <None Include="wwwroot\src\Models\IceServerModel.ts" />
     <None Include="wwwroot\src\Models\Point.js" />
     <None Include="wwwroot\src\Models\Point.js.map" />
     <None Include="wwwroot\src\Models\Point.ts" />
@@ -131,6 +128,7 @@
 
   <ItemGroup>
     <PackageReference Include="ConcurrentList" Version="1.4.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.8" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.8.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -139,6 +137,10 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

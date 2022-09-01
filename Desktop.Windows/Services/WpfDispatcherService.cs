@@ -1,99 +1,133 @@
 ﻿using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using WpfApp = System.Windows.Application;
+using Application = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public interface IWpfDispatcher
     {
         CancellationToken ApplicationExitingToken { get; }
-
+        Application CurrentApp { get; }
         void Invoke(Action action);
         T? Invoke<T>(Func<T> func);
         Task InvokeAsync(Action action);
         Task<Result<T>> InvokeAsync<T>(Func<T> func);
-        void StartWpfThread();
+        Task<bool> StartWpfThread();
     }
 
     internal class WpfDispatcher : IWpfDispatcher
     {
         private readonly CancellationTokenSource _appExitCts = new();
+        private readonly ManualResetEvent _initSignal = new(false);
+        private Application? _wpfApp;
         private Thread? _wpfThread;
 
         public CancellationToken ApplicationExitingToken => _appExitCts.Token;
+
+        public Application CurrentApp
+        {
+            get
+            {
+                _initSignal.WaitOne();
+                if (_wpfApp is null)
+                {
+                    throw new Exception("WPF app hasn't been started yet.");
+                }
+                return _wpfApp;
+            }
+        }
+
+
         public void Invoke(Action action)
         {
-            WpfApp.Current?.Dispatcher.Invoke(action);
+            _initSignal.WaitOne();
+            _wpfApp?.Dispatcher.Invoke(action);
         }
 
         public T? Invoke<T>(Func<T> func)
         {
-            if (WpfApp.Current is null)
+            _initSignal.WaitOne();
+            if (_wpfApp is null)
             {
                 return default;
             }
-            return WpfApp.Current.Dispatcher.Invoke(func);
+            return _wpfApp.Dispatcher.Invoke(func);
         }
 
         public async Task InvokeAsync(Action action)
         {
-            if (WpfApp.Current is null)
+            _initSignal.WaitOne();
+            if (_wpfApp is null)
             {
                 return;
             }
 
-            await WpfApp.Current.Dispatcher.InvokeAsync(action);
+            await _wpfApp.Dispatcher.InvokeAsync(action);
         }
 
         public async Task<Result<T>> InvokeAsync<T>(Func<T> func)
         {
-            if (WpfApp.Current is null)
+            _initSignal.WaitOne();
+            if (_wpfApp is null)
             {
-                return Result.Fail<T>("Application.Current is null.");
+                return Result.Fail<T>("WPF app is null.");
             }
 
-            var result = await WpfApp.Current.Dispatcher.InvokeAsync(func);
+            var result = await _wpfApp.Dispatcher.InvokeAsync(func);
             return Result.Ok(result);
         }
 
-        public void StartWpfThread()
+        public async Task<bool> StartWpfThread()
         {
-            if (WpfApp.Current is not null)
+            try
             {
-                WpfApp.Current.Dispatcher.Invoke(() =>
+                if (Application.Current is not null)
                 {
-                    WpfApp.Current.Exit += (s, e) =>
+                    _wpfApp = Application.Current;
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        Application.Current.Exit += (s, e) =>
+                        {
+                            _appExitCts.Cancel();
+                        };
+
+                    });
+
+                    return true;
+                }
+
+                var startedSignal = new SemaphoreSlim(0, 1);
+
+                _wpfThread = new Thread(() =>
+                {
+                    _wpfApp = new Application();
+                    _wpfApp.Startup += (s, e) =>
+                    {
+                        startedSignal.Release();
+                    };
+                    _wpfApp.Exit += (s, e) =>
                     {
                         _appExitCts.Cancel();
                     };
-
+                    _wpfApp.Run();
                 });
 
-                return;
+                _wpfThread.SetApartmentState(ApartmentState.STA);
+                _wpfThread.Start();
+
+                return await startedSignal.WaitAsync(5_000).ConfigureAwait(false);
             }
-
-            _wpfThread = new Thread(() =>
+            finally
             {
-                var wpfApp = new WpfApp();
-                var rd = new ResourceDictionary
-                {
-                    Source = new Uri("pack://application:,,,/Resources/Styles.xaml")
-                };
-                wpfApp.Resources.MergedDictionaries.Add(rd);
-                wpfApp.Exit += (s, e) =>
-                {
-                    _appExitCts.Cancel();
-                };
-                wpfApp.Run();
-            });
-
-            _wpfThread.SetApartmentState(ApartmentState.STA);
-            _wpfThread.Start();
+                _initSignal.Set();
+            }
         }
     }
 }

@@ -22,7 +22,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Resources/Styles.xaml" />
+                <ResourceDictionary Source="/Immense.RemoteControl.Desktop.Windows;component/Resources/Styles.xaml" />
 
                 <ResourceDictionary>
                     <DrawingBrush x:Key="GearBrush">
@@ -116,10 +116,10 @@
                 Click="OptionsButton_Click">
             <Button.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Change Server" Command="{Binding ViewModel.ChangeServerCommand, ElementName=ThisWindow}"></MenuItem>
+                    <MenuItem Header="Change Server" Click="ChangeServerMenuItem_Click"></MenuItem>
 
-                    <MenuItem Header="Elevate to Admin" Command="{Binding ViewModel.ElevateToAdminCommand, ElementName=ThisWindow}"></MenuItem>
-                    <MenuItem Header="Elevate to Service" Command="{Binding ViewModel.ElevateToServiceCommand, ElementName=ThisWindow}"></MenuItem>
+                    <MenuItem Header="Elevate to Admin" Click="ElevateToAdminMenuItem_Click"></MenuItem>
+                    <MenuItem Header="Elevate to Service" Click="ElevateToServiceMenuItem_Click"></MenuItem>
                 </ContextMenu>
             </Button.ContextMenu>
             <Rectangle Fill="{StaticResource GearBrush}"></Rectangle>

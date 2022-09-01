@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static Immense.RemoteControl.Desktop.Shared.Win32.User32;
-using WpfApp = System.Windows.Application;
 
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
@@ -49,8 +48,8 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         {
             _dispatcher.Invoke(() =>
             {
-                WpfApp.Current.Exit -= App_Exit;
-                WpfApp.Current.Exit += App_Exit;
+                _dispatcher.CurrentApp.Exit -= App_Exit;
+                _dispatcher.CurrentApp.Exit += App_Exit;
             });
 
             StartInputProcessingThread();

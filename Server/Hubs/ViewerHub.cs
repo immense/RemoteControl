@@ -2,6 +2,8 @@
 using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Shared.Models.Dtos;
+using MessagePack;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -118,15 +120,16 @@ namespace Immense.RemoteControl.Server.Hubs
             }
         }
 
-        public Task SendDtoToClient(byte[] baseDto)
+        public Task SendDtoToClient(byte[] dtoWrapper)
         {
             if (string.IsNullOrWhiteSpace(ScreenCasterID))
             {
                 return Task.CompletedTask;
             }
 
-            return _desktopHub.Clients.Client(ScreenCasterID).SendAsync("SendDtoToClient", baseDto, Context.ConnectionId);
+            return _desktopHub.Clients.Client(ScreenCasterID).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
         }
+
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {

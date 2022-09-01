@@ -130,7 +130,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 }
                 else
                 {
-                    imageStream = typeof(RemoteControl.Shared.Result)
+                    imageStream = typeof(IAppStartup)
                         .Assembly
                         .GetManifestResourceStream("Immense.RemoteControl.Desktop.Shared.Assets.DefaultIcon.png") ?? new MemoryStream();
                 }

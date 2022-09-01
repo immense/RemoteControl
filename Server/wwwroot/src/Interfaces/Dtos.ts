@@ -1,4 +1,4 @@
-import { DtoType } from "../Enums/BaseDtoType.js";
+import { DtoType } from "../Enums/DtoType.js";
 import { WindowsSession } from "../Models/WindowsSession.js";
 
 export class DtoWrapper {
@@ -11,11 +11,8 @@ export class DtoWrapper {
     SequenceId: number;
 }
 
-export class GenericDto {
-    constructor(type: DtoType) {
-        this.DtoType = type;
-    }
-    DtoType: DtoType;
+export class EmptyDto {
+
 }
 
 export interface AudioSampleDto {

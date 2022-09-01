@@ -19,9 +19,16 @@ namespace Immense.RemoteControl.Server.Extensions
             configure(builder);
             builder.Validate();
 
+            //services
+            //    .AddRazorPages()
+            //    .AddApplicationPart(typeof(ServiceCollectionExtensions).Assembly);
+
             services
-                .AddRazorPages()
-                .AddApplicationPart(typeof(ServiceCollectionExtensions).Assembly);
+                .AddSignalR(options => {
+                    options.MaximumReceiveMessageSize = 64_000;
+                    options.MaximumParallelInvocationsPerClient = 5;
+                })
+                .AddMessagePackProtocol();
 
             services.AddSingleton<IDesktopHubSessionCache, DesktopHubSessionCache>();
             services.AddScoped<ViewerAuthorizationFilter>();

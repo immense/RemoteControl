@@ -2,6 +2,7 @@ import * as UI from "./UI.js";
 import { ViewerApp } from "./App.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { ShowMessage } from "./UI.js";
+import { ChunkDto } from "./DtoChunker.js";
 var signalR = window["signalR"];
 export class ViewerHubConnection {
     constructor() {
@@ -33,19 +34,15 @@ export class ViewerHubConnection {
             this.Connection.invoke("ChangeWindowsSession", sessionID);
         }
     }
-    SendDtoToClient(dto) {
-        return this.Connection.invoke("SendDtoToClient", this.MessagePack.encode(dto));
-    }
-    SendIceCandidate(candidate) {
-        if (candidate) {
-            this.Connection.invoke("SendIceCandidateToAgent", candidate.candidate, candidate.sdpMLineIndex, candidate.sdpMid);
+    SendDtoToClient(dto, type) {
+        if (this.Connection.state != "Connected") {
+            return;
         }
-        else {
-            this.Connection.invoke("SendIceCandidateToAgent", "", 0, "");
+        let chunks = ChunkDto(dto, type);
+        for (var i = 0; i < chunks.length; i++) {
+            const chunk = this.MessagePack.encode(chunks[i]);
+            this.Connection.invoke("SendDtoToClient", chunk);
         }
-    }
-    SendRtcAnswer(sessionDescription) {
-        this.Connection.invoke("SendRtcAnswerToAgent", sessionDescription.sdp);
     }
     SendScreenCastRequestToDevice() {
         this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.CasterID, ViewerApp.RequesterName, ViewerApp.Mode, ViewerApp.Otp);

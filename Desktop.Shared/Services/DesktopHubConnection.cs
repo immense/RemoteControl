@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -18,7 +19,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         HubConnection Connection { get; }
         bool IsConnected { get; }
 
-        Task<bool> Connect(CancellationToken cancellationToken);
+        Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout);
         Task Disconnect();
         Task DisconnectAllViewers();
         Task DisconnectViewer(IViewer viewer, bool notifyViewer);
@@ -41,15 +42,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         private readonly ILogger<DesktopHubConnection> _logger;
         private readonly IDtoMessageHandler _messageHandler;
-
         private readonly IRemoteControlAccessService _remoteControlAccessService;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IScreenCaster _screenCaster;
 
         public DesktopHubConnection(
             IIdleTimer idleTimer,
             IDtoMessageHandler messageHandler,
-            IScreenCaster screenCastService,
             IServiceScopeFactory scopeFactory,
             IAppState appState,
             IRemoteControlAccessService remoteControlAccessService,
@@ -57,7 +55,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         {
             _idleTimer = idleTimer;
             _messageHandler = messageHandler;
-            _screenCaster = screenCastService;
             _remoteControlAccessService = remoteControlAccessService;
             _scopeFactory = scopeFactory;
             _appState = appState;
@@ -69,7 +66,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public HubConnection Connection { get; private set; }
         public bool IsConnected => Connection?.State == HubConnectionState.Connected;
-        public async Task<bool> Connect(CancellationToken cancellationToken)
+        public async Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout)
         {
             try
             {
@@ -83,6 +80,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
                 ApplyConnectionHandlers();
 
+                var sw = Stopwatch.StartNew();
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
@@ -104,6 +102,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                         _logger.LogError(ex, "Error in hub connection.");
                     }
                     await Task.Delay(3_000, cancellationToken);
+
+                    if (sw.Elapsed > timeout)
+                    {
+                        _logger.LogWarning("Timed out while trying to connect to desktop hub.");
+                        return false;
+                    }
                 }
 
                 return true;
@@ -235,7 +239,10 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                         }
                     }
 
-                    _screenCaster.BeginScreenCasting(new ScreenCastRequest()
+                    using var scope = _scopeFactory.CreateScope();
+                    var screenCaster = scope.ServiceProvider.GetRequiredService<IScreenCaster>();
+
+                    screenCaster.BeginScreenCasting(new ScreenCastRequest()
                     {
                         NotifyUser = notifyUser,
                         ViewerID = viewerID,
@@ -259,11 +266,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 });
             });
 
-            Connection.On("SendDtoToClient", (byte[] baseDto, string viewerConnectionId) =>
+            Connection.On("SendDtoToClient", (byte[] dtoWrapper, string viewerConnectionId) =>
             {
                 if (_appState.Viewers.TryGetValue(viewerConnectionId, out var viewer))
                 {
-                    _messageHandler.ParseMessage(viewer, baseDto);
+                    _messageHandler.ParseMessage(viewer, dtoWrapper);
                 }
             });
 

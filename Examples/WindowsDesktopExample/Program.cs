@@ -33,6 +33,5 @@ Console.CancelKeyPress += async (s, e) =>
 
 var dispatcher = provider.GetRequiredService<IWpfDispatcher>();
 
-
 Console.WriteLine("Press Ctrl + C to exit.");
 await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.ApplicationExitingToken);

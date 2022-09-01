@@ -1,10 +1,10 @@
 import * as UI from "./UI.js";
-import { DtoType } from "./Enums/BaseDtoType.js";
+import { DtoType } from "./Enums/DtoType.js";
 import { ViewerApp } from "./App.js";
 import { Sound } from "./Sound.js";
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
-const Chunks = {};
+import { TryComplete } from "./DtoChunker.js";
 export class DtoMessageHandler {
     constructor() {
         this.MessagePack = window['msgpack5']();
@@ -40,42 +40,42 @@ export class DtoMessageHandler {
         }
     }
     HandleAudioSample(wrapper) {
-        let audioSample = this.TryComplete(wrapper);
+        let audioSample = TryComplete(wrapper);
         if (!audioSample) {
             return;
         }
         Sound.Play(audioSample.Buffer);
     }
     HandleCaptureFrame(wrapper) {
-        let captureFrame = this.TryComplete(wrapper);
+        let captureFrame = TryComplete(wrapper);
         if (!captureFrame) {
             return;
         }
         HandleCaptureReceived(captureFrame);
     }
     HandleClipboardText(wrapper) {
-        let clipboardText = this.TryComplete(wrapper);
+        let clipboardText = TryComplete(wrapper);
         if (!clipboardText) {
             return;
         }
         ViewerApp.ClipboardWatcher.SetClipboardText(clipboardText.ClipboardText);
     }
     HandleCursorChange(wrapper) {
-        let cursorChange = this.TryComplete(wrapper);
+        let cursorChange = TryComplete(wrapper);
         if (!cursorChange) {
             return;
         }
         UI.UpdateCursor(cursorChange.ImageBytes, cursorChange.HotSpotX, cursorChange.HotSpotY, cursorChange.CssOverride);
     }
     HandleFile(wrapper) {
-        let file = this.TryComplete(wrapper);
+        let file = TryComplete(wrapper);
         if (!file) {
             return;
         }
         ReceiveFile(file);
     }
     HandleScreenData(wrapper) {
-        let screenDataDto = this.TryComplete(wrapper);
+        let screenDataDto = TryComplete(wrapper);
         if (!screenDataDto) {
             return;
         }
@@ -85,33 +85,18 @@ export class DtoMessageHandler {
         UI.UpdateDisplays(screenDataDto.SelectedDisplay, screenDataDto.DisplayNames);
     }
     HandleScreenSize(wrapper) {
-        let screenSizeDto = this.TryComplete(wrapper);
+        let screenSizeDto = TryComplete(wrapper);
         if (!screenSizeDto) {
             return;
         }
         UI.SetScreenSize(screenSizeDto.Width, screenSizeDto.Height);
     }
     HandleWindowsSessions(wrapper) {
-        let windowsSessionsDto = this.TryComplete(wrapper);
+        let windowsSessionsDto = TryComplete(wrapper);
         if (!windowsSessionsDto) {
             return;
         }
         UI.UpdateWindowsSessions(windowsSessionsDto.WindowsSessions);
-    }
-    TryComplete(wrapper) {
-        if (!Chunks[wrapper.InstanceId]) {
-            Chunks[wrapper.InstanceId] = [];
-        }
-        Chunks[wrapper.InstanceId].push(wrapper);
-        if (!wrapper.IsLastChunk) {
-            return;
-        }
-        const buffers = Chunks[wrapper.InstanceId]
-            .sort((a, b) => a.SequenceId - b.SequenceId)
-            .map(x => x.DtoChunk)
-            .reduce(x => x);
-        delete Chunks[wrapper.InstanceId];
-        return this.MessagePack.decode(buffers);
     }
 }
 //# sourceMappingURL=DtoMessageHandler.js.map

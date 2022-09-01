@@ -11,7 +11,6 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
-using WpfApp = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
@@ -51,7 +50,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
                 _dispatcher.Invoke(() =>
                 {
-                    WpfApp.Current.Exit += App_Exit;
+                    _dispatcher.CurrentApp.Exit += App_Exit;
                 });
 
                 _backgroundForm.Invoke(async () =>

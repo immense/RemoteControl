@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using WpfApp = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
@@ -36,7 +35,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 System.Windows.Forms.Application.Exit();
                 _dispatcher.Invoke(() =>
                 {
-                    WpfApp.Current.Shutdown();
+                    _dispatcher.CurrentApp.Shutdown();
                 });
             }
             catch (Exception ex)

@@ -1,4 +1,6 @@
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Extensions;
+using ServerExample.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +9,11 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddRemoteControlServer(config =>
 {
-
+    config.AddHubEventHandler<HubEventHandler>();
+    config.AddServiceHubSessionCache<ServiceHubSessionCache>();
+    config.AddViewerAuthorizer<ViewerAuthorizer>();
+    config.AddViewerHubDataProvider<ViewerHubDataProvider>();
+    config.AddViewerPageDataProvider<ViewerPageDataProvider>();
 });
 
 var app = builder.Build();
@@ -25,8 +31,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseRemoteControlServer();
+
 app.UseAuthorization();
 
-app.MapRazorPages();
+//app.MapRazorPages();
 
 app.Run();

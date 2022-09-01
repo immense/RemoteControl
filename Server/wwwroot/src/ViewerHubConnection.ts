@@ -1,19 +1,19 @@
 ﻿import * as UI from "./UI.js";
 import { ViewerApp } from "./App.js";
 import { CursorInfo } from "./Models/CursorInfo.js";
-import { IceServerModel } from "./Models/IceServerModel.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
-import { DtoWrapper, GenericDto } from "./Interfaces/Dtos.js";
 import { ShowMessage } from "./UI.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
-import { DtoType } from "./Enums/BaseDtoType.js";
+import { DtoType } from "./Enums/DtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
+import { ChunkDto } from "./DtoChunker.js";
+import { MessagePack } from "./Interfaces/MessagePack.js";
 
 var signalR = window["signalR"];
 
 export class ViewerHubConnection {
     Connection: HubConnection;
-    MessagePack: any = window['msgpack5']();
+    MessagePack: MessagePack = window['msgpack5']();
     PartialCaptureFrames: Uint8Array[] = [];
 
  
@@ -48,20 +48,18 @@ export class ViewerHubConnection {
         }
     }
 
-    SendDtoToClient(dto: DtoWrapper): Promise<any> {
-        return this.Connection.invoke("SendDtoToClient", this.MessagePack.encode(dto));
-    }
+    SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
 
-    SendIceCandidate(candidate: RTCIceCandidate) {
-        if (candidate) {
-            this.Connection.invoke("SendIceCandidateToAgent", candidate.candidate, candidate.sdpMLineIndex, candidate.sdpMid);
+        if (this.Connection.state != "Connected") {
+            return;
         }
-        else {
-            this.Connection.invoke("SendIceCandidateToAgent", "", 0, "");
+
+        let chunks = ChunkDto(dto, type);
+
+        for (var i = 0; i < chunks.length; i++) {
+            const chunk = this.MessagePack.encode(chunks[i]);
+            this.Connection.invoke("SendDtoToClient", chunk);
         }
-    }
-    SendRtcAnswer(sessionDescription: RTCSessionDescription) {
-        this.Connection.invoke("SendRtcAnswerToAgent", sessionDescription.sdp);
     }
 
 

@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Button = System.Windows.Controls.Button;
+using MessageBox = System.Windows.MessageBox;
 using ToolTip = System.Windows.Controls.ToolTip;
 
 namespace Immense.RemoteControl.Desktop.Windows.Views
@@ -86,6 +87,47 @@ namespace Immense.RemoteControl.Desktop.Windows.Views
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             DragMove();
+        }
+
+        private void ChangeServerMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                if (viewModel.ChangeServerCommand.CanExecute(null))
+                {
+                    viewModel.ChangeServerCommand.Execute(null);
+                }
+            }
+        }
+
+        private void ElevateToAdminMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                if (viewModel.ElevateToAdminCommand.CanExecute(null))
+                {
+                    viewModel.ElevateToAdminCommand.Execute(null);
+                }
+                else
+                {
+                    MessageBox.Show("Unable to execute in current state.", "Unable to Execute", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+
+        private void ElevateToServiceMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                if (viewModel.ElevateToServiceCommand.CanExecute(null))
+                {
+                    viewModel.ElevateToServiceCommand.Execute(null);
+                }
+                else
+                {
+                    MessageBox.Show("Unable to execute in current state.", "Unable to Execute", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Immense.RemoteControl.Desktop.Windows.Services;
+﻿using Immense.RemoteControl.Desktop.Windows.Services;
 using Immense.RemoteControl.Desktop.Windows.Views;
 using System;
 using System.Collections.Generic;
@@ -13,14 +12,11 @@ using System.Windows.Input;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
-using WpfApp = System.Windows.Application;
 using Immense.RemoteControl.Shared.Models;
 using CommunityToolkit.Mvvm.Input;
 using Clipboard = System.Windows.Clipboard;
 using Immense.RemoteControl.Desktop.Shared.Win32;
-using CommunityToolkit.Mvvm.ComponentModel;
 using MessageBox = System.Windows.MessageBox;
-using Application = System.Windows.Application;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
@@ -67,8 +63,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             ILogger<MainWindowViewModel> logger)
             : base(brandingProvider, dispatcher, logger)
         {
-            WpfApp.Current.Exit += Application_Exit;
-
             _dispatcher = dispatcher;
             _cursorIconWatcher = iconWatcher;
             _cursorIconWatcher.OnChange += CursorIconWatcher_OnChange;
@@ -132,6 +126,9 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         public async Task Init()
         {
+            _dispatcher.CurrentApp.Exit -= Application_Exit;
+            _dispatcher.CurrentApp.Exit += Application_Exit;
+
             StatusMessage = "Retrieving...";
 
             Host = _appState.Host;
@@ -147,7 +144,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
             try
             {
-                var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken);
+                var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(5));
 
                 if (result)
                 {
@@ -191,7 +188,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
             // If we got here, something went wrong.
             StatusMessage = "Failed";
-            MessageBox.Show(Application.Current.MainWindow, "Failed to connect to server.", "Connection Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(_dispatcher.CurrentApp.MainWindow, "Failed to connect to server.", "Connection Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         public void ShutdownApp()
@@ -271,7 +268,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 Process.Start(psi)?.WaitForExit();
                 psi.Arguments = "/c sc delete RemoteControl_Temp";
                 Process.Start(psi)?.WaitForExit();
-                WpfApp.Current.Shutdown();
+                _dispatcher.CurrentApp.Shutdown();
             }
             catch { }
         }
@@ -283,7 +280,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             var formattedSessionID = "";
             for (var i = 0; i < sessionId.Length; i += 3)
             {
-                formattedSessionID += sessionId.Substring(i, 3) + " ";
+                formattedSessionID += $"{sessionId.Substring(i, 3)} ";
             }
 
             _dispatcher.Invoke(() =>
@@ -304,7 +301,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 viewModel.Host = Host;
             }
 
-            prompt.Owner = Application.Current.MainWindow;
+            prompt.Owner = _dispatcher.CurrentApp.MainWindow;
             prompt.ShowDialog();
             var result = viewModel.Host?.Trim()?.TrimEnd('/');
 
@@ -337,8 +334,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         {
             await _dispatcher.InvokeAsync(async () =>
             {
-                WpfApp.Current.MainWindow.Activate();
-                var result = MessageBox.Show(WpfApp.Current.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                _dispatcher.CurrentApp.MainWindow.Activate();
+                var result = MessageBox.Show(_dispatcher.CurrentApp.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
                     _screenCaster.BeginScreenCasting(screenCastRequest);

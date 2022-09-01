@@ -4,6 +4,7 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Immense.RemoteControl.Desktop.Windows.Views;
+using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -30,6 +31,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         private readonly IWpfDispatcher _dispatcher;
         private readonly MainWindowViewModel _mainWindowVm;
         private readonly IIdleTimer _idleTimer;
+        private readonly IShutdownService _shutdownService;
         private readonly ILogger<AppStartup> _logger;
         private MainWindow? _mainWindow;
 
@@ -44,6 +46,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             ICursorIconWatcher iconWatcher,
             IWpfDispatcher dispatcher,
             IIdleTimer idleTimer,
+            IShutdownService shutdownService,
             ILogger<AppStartup> logger)
         {
             _backgroundForm = backgroundForm;
@@ -56,6 +59,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             _dispatcher = dispatcher;
             _mainWindowVm = mainWindowVm;
             _idleTimer = idleTimer;
+            _shutdownService = shutdownService;
             _logger = logger;
         }
 
@@ -71,12 +75,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
             StartWinFormsThread();
 
-            if (System.Windows.Application.Current is null)
-            {
-                _dispatcher.StartWpfThread();
+            var wpfStarted = await _dispatcher.StartWpfThread().ConfigureAwait(false);
 
-                _logger.LogInformation("Background WPF thread started.");
+            if (!wpfStarted)
+            {
+                throw new Exception("WPF app thread failed to start.");
             }
+
+            _logger.LogInformation("Background WPF thread started.");
 
             if (_appState.Mode is AppMode.Unattended or AppMode.Attended)
             {
@@ -105,7 +111,8 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     });
                     break;
                 case AppMode.Chat:
-                    await _chatHostService.StartChat(_appState.RequesterConnectionId, _appState.OrganizationName)
+                    await _chatHostService
+                        .StartChat(_appState.RequesterConnectionId, _appState.OrganizationName)
                         .ConfigureAwait(false);
                     break;
                 default:
@@ -116,7 +123,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         private async Task StartScreenCasting()
         {
-            await _desktopHub.Connect(_dispatcher.ApplicationExitingToken);
+            if (!await _desktopHub.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(30)))
+            {
+                await _shutdownService.Shutdown();
+                return;
+            }
+
             await _desktopHub.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
 
             if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))

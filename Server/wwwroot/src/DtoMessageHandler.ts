@@ -1,5 +1,5 @@
 ﻿import * as UI from "./UI.js";
-import { DtoType } from "./Enums/BaseDtoType.js";
+import { DtoType } from "./Enums/DtoType.js";
 import { ViewerApp } from "./App.js";
 import { ShowMessage } from "./UI.js";
 import { Sound } from "./Sound.js";
@@ -16,8 +16,7 @@ import {
 } from "./Interfaces/Dtos.js";
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
-
-const Chunks: Record<string, DtoWrapper[]> = {};
+import { TryComplete } from "./DtoChunker.js";
 
 export class DtoMessageHandler {
 
@@ -55,7 +54,7 @@ export class DtoMessageHandler {
     }
 
     HandleAudioSample(wrapper: DtoWrapper) {
-        let audioSample = this.TryComplete<AudioSampleDto>(wrapper);
+        let audioSample = TryComplete<AudioSampleDto>(wrapper);
 
         if (!audioSample) {
             return;
@@ -65,7 +64,7 @@ export class DtoMessageHandler {
     }
 
     HandleCaptureFrame(wrapper: DtoWrapper) {
-        let captureFrame = this.TryComplete<CaptureFrameDto>(wrapper);
+        let captureFrame = TryComplete<CaptureFrameDto>(wrapper);
 
         if (!captureFrame) {
             return;
@@ -75,7 +74,7 @@ export class DtoMessageHandler {
     }
 
     HandleClipboardText(wrapper: DtoWrapper) {
-        let clipboardText = this.TryComplete<ClipboardTextDto>(wrapper);
+        let clipboardText = TryComplete<ClipboardTextDto>(wrapper);
 
         if (!clipboardText) {
             return;
@@ -84,7 +83,7 @@ export class DtoMessageHandler {
         ViewerApp.ClipboardWatcher.SetClipboardText(clipboardText.ClipboardText);
     }
     HandleCursorChange(wrapper: DtoWrapper) {
-        let cursorChange = this.TryComplete<CursorChangeDto>(wrapper);
+        let cursorChange = TryComplete<CursorChangeDto>(wrapper);
 
         if (!cursorChange) {
             return;
@@ -93,7 +92,7 @@ export class DtoMessageHandler {
         UI.UpdateCursor(cursorChange.ImageBytes, cursorChange.HotSpotX, cursorChange.HotSpotY, cursorChange.CssOverride);
     }
     HandleFile(wrapper: DtoWrapper) {
-        let file = this.TryComplete<FileDto>(wrapper);
+        let file = TryComplete<FileDto>(wrapper);
 
         if (!file) {
             return;
@@ -102,7 +101,7 @@ export class DtoMessageHandler {
         ReceiveFile(file);
     }
     HandleScreenData(wrapper: DtoWrapper) {
-        let screenDataDto = this.TryComplete<ScreenDataDto>(wrapper);
+        let screenDataDto = TryComplete<ScreenDataDto>(wrapper);
 
         if (!screenDataDto) {
             return;
@@ -115,7 +114,7 @@ export class DtoMessageHandler {
     }
 
     HandleScreenSize(wrapper: DtoWrapper) {
-        let screenSizeDto = this.TryComplete<ScreenSizeDto>(wrapper);
+        let screenSizeDto = TryComplete<ScreenSizeDto>(wrapper);
 
         if (!screenSizeDto) {
             return;
@@ -125,33 +124,12 @@ export class DtoMessageHandler {
     }
 
     HandleWindowsSessions(wrapper: DtoWrapper) {
-        let windowsSessionsDto = this.TryComplete<WindowsSessionsDto>(wrapper);
+        let windowsSessionsDto = TryComplete<WindowsSessionsDto>(wrapper);
 
         if (!windowsSessionsDto) {
             return;
         }
 
         UI.UpdateWindowsSessions(windowsSessionsDto.WindowsSessions);
-    }
-
-    private TryComplete<T>(wrapper: DtoWrapper) : T {
-        if (!Chunks[wrapper.InstanceId]) {
-            Chunks[wrapper.InstanceId] = [];
-        }
-
-        Chunks[wrapper.InstanceId].push(wrapper);
-
-        if (!wrapper.IsLastChunk) {
-            return;
-        }
-
-        const buffers = Chunks[wrapper.InstanceId]
-            .sort((a, b) => a.SequenceId - b.SequenceId)
-            .map(x => x.DtoChunk)
-            .reduce(x => x);
-        
-        delete Chunks[wrapper.InstanceId];
-
-        return this.MessagePack.decode(buffers) as T;
     }
 }
