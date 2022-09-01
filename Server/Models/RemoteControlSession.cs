@@ -15,7 +15,7 @@ namespace Immense.RemoteControl.Server.Models
         public string DesktopConnectionId { get; internal set; } = string.Empty;
         public string MachineName { get; internal set; } = string.Empty;
         public RemoteControlMode Mode { get; internal set; }
-        public string OrganizationName { get; internal set; }
+        public string OrganizationName { get; internal set; } = string.Empty;
         public string RequesterName { get; internal set; } = string.Empty;
         public string RequesterUserName { get; internal set; } = string.Empty;
         public DateTimeOffset StartTime { get; internal set; }
@@ -25,5 +25,6 @@ namespace Immense.RemoteControl.Server.Models
         /// Contains a collection of viewer SignalR connection IDs.
         /// </summary>
         public HashSet<string> ViewerList { get; } = new();
+        public Guid StreamId { get; internal set; }
     }
 }

@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Models.Dtos;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,14 +17,17 @@ namespace Immense.RemoteControl.Server.Hubs
         private readonly IHubEventHandler _hubEvents;
         private readonly ILogger<DesktopHub> _logger;
         private readonly IDesktopHubSessionCache _sessionCache;
+        private readonly IDesktopStreamCache _streamCache;
         private readonly IHubContext<ViewerHub> _viewerHub;
         public DesktopHub(
             IDesktopHubSessionCache sessionCache,
+            IDesktopStreamCache streamCache,
             IHubContext<ViewerHub> viewerHubContext,
             IHubEventHandler hubEvents,
             ILogger<DesktopHub> logger)
         {
             _sessionCache = sessionCache;
+            _streamCache = streamCache;
             _viewerHub = viewerHubContext;
             _hubEvents = hubEvents;
             _logger = logger;
@@ -180,6 +184,22 @@ namespace Immense.RemoteControl.Server.Hubs
         public Task SendMessageToViewer(string viewerId, string message)
         {
             return _viewerHub.Clients.Client(viewerId).SendAsync("ShowMessage", message);
+        }
+
+        public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
+        {
+            var session = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));
+
+            try
+            {
+                session.Stream = stream;
+                session.ReadySignal.Release();
+                await session.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+            }
+            finally
+            {
+                _streamCache.TryRemove(session.StreamId, out _);
+            }
         }
         public Task ViewerConnected(string viewerConnectionId)
         {

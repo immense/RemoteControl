@@ -223,7 +223,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 string requesterName,
                 bool notifyUser,
                 bool enforceAttendedAccess,
-                string organizationName) =>
+                string organizationName,
+                Guid streamId) =>
             {
                 try
                 {
@@ -249,7 +250,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     {
                         NotifyUser = notifyUser,
                         ViewerID = viewerID,
-                        RequesterName = requesterName
+                        RequesterName = requesterName,
+                        StreamId = streamId
                     });
                 }
                 catch (Exception ex)
@@ -259,13 +261,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             });
 
 
-            Connection.On("RequestScreenCast", (string viewerID, string requesterName, bool notifyUser) =>
+            Connection.On("RequestScreenCast", (string viewerID, string requesterName, bool notifyUser, Guid streamId) =>
             {
                 _appState.InvokeScreenCastRequested(new ScreenCastRequest()
                 {
                     NotifyUser = notifyUser,
                     ViewerID = viewerID,
-                    RequesterName = requesterName
+                    RequesterName = requesterName,
+                    StreamId = streamId
                 });
             });
 

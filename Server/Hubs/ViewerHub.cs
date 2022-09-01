@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ namespace Immense.RemoteControl.Server.Hubs
     {
         private readonly IHubEventHandler _hubEvents;
         private readonly IDesktopHubSessionCache _desktopSessionCache;
+        private readonly IDesktopStreamCache _streamCache;
         private readonly IViewerHubDataProvider _viewerHubDataProvider;
         private readonly IHubContext<DesktopHub> _desktopHub;
         private readonly ILogger<ViewerHub> _logger;
@@ -27,12 +29,14 @@ namespace Immense.RemoteControl.Server.Hubs
         public ViewerHub(
             IHubEventHandler hubEvents,
             IDesktopHubSessionCache desktopSessionCache,
+            IDesktopStreamCache streamCache,
             IViewerHubDataProvider viewerHubDataProvider,
             IHubContext<DesktopHub> desktopHub,
             ILogger<ViewerHub> logger)
         {
             _hubEvents = hubEvents;
             _desktopSessionCache = desktopSessionCache;
+            _streamCache = streamCache;
             _viewerHubDataProvider = viewerHubDataProvider;
             _desktopHub = desktopHub;
             _logger = logger;
@@ -75,6 +79,33 @@ namespace Immense.RemoteControl.Server.Hubs
             }
         }
 
+        public async IAsyncEnumerable<byte[]> GetDesktopStream()
+        {
+            if (!_streamCache.TryGet(SessionInfo.StreamId, out var signaler))
+            {
+                _logger.LogError("Stream session was not found in the cache.");
+                yield break;
+            }
+
+            if (signaler.Stream is null)
+            {
+                _logger.LogError("Stream was null.");
+                yield break;
+            }
+
+            try
+            {
+                await foreach (var chunk in signaler.Stream)
+                {
+                    yield return chunk;
+                }
+            }
+            finally
+            {
+                signaler.EndSignal.Release();
+                _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
+            }
+        }
 
         public async Task ChangeWindowsSession(int sessionID)
         {
@@ -134,6 +165,7 @@ namespace Immense.RemoteControl.Server.Hubs
 
             SessionInfo = session;
             SessionInfo.ViewerList.Add(Context.ConnectionId);
+            SessionInfo.StreamId = Guid.NewGuid();
             RequesterDisplayName = requesterName;
 
             if (Context.User?.Identity?.IsAuthenticated == true)
@@ -154,20 +186,25 @@ namespace Immense.RemoteControl.Server.Hubs
 
             if (SessionInfo.Mode == RemoteControlMode.Unattended)
             {
-
-
-                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("GetScreenCast",
-                      Context.ConnectionId,
-                      RequesterDisplayName,
-                      _viewerHubDataProvider.RemoteControlNotifyUser,
-                      _viewerHubDataProvider.EnforceAttendedAccess,
-                      SessionInfo.OrganizationName);
+                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
+                    "GetScreenCast",
+                    Context.ConnectionId,
+                    RequesterDisplayName,
+                    _viewerHubDataProvider.RemoteControlNotifyUser,
+                    _viewerHubDataProvider.EnforceAttendedAccess,
+                    SessionInfo.OrganizationName,
+                    SessionInfo.StreamId);
             }
             else
             {
                 SessionInfo.Mode = RemoteControlMode.Attended;
                 await Clients.Caller.SendAsync("RequestingScreenCast");
-                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("RequestScreenCast", Context.ConnectionId, RequesterDisplayName, _viewerHubDataProvider.RemoteControlNotifyUser);
+                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
+                    "RequestScreenCast", 
+                    Context.ConnectionId, 
+                    RequesterDisplayName, 
+                    _viewerHubDataProvider.RemoteControlNotifyUser,
+                    SessionInfo.StreamId);
             }
         }
 

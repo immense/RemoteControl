@@ -16,6 +16,7 @@ using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
+using MessagePack;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services
 {
@@ -28,12 +29,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
     {
         private readonly IAppState _appState;
         private readonly ICursorIconWatcher _cursorIconWatcher;
-        private readonly ISessionIndicator _sessionIndicator;
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IShutdownService _shutdownService;
         private readonly IImageHelper _imageHelper;
         private readonly ILogger<ScreenCaster> _logger;
-
+        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ISessionIndicator _sessionIndicator;
+        private readonly IShutdownService _shutdownService;
         public ScreenCaster(
             IAppState appState,
             ICursorIconWatcher cursorIconWatcher,
@@ -59,6 +59,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         private async Task BeginScreenCastingImpl(ScreenCastRequest screenCastRequest)
         {
+            var monitorCts = new CancellationTokenSource();
+
             try
             {
                 using var scope = _scopeFactory.CreateScope();
@@ -128,11 +130,16 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     return;
                 }
 
-                await CastScreen(screenCastRequest, viewer, 0);
+                _ = Task.Run(async () => await LogMetrics(viewer, monitorCts.Token));
+                await viewer.SendDesktopStream(GetDesktopStream(screenCastRequest, viewer), screenCastRequest.StreamId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while starting screen casting.");
+            }
+            finally
+            {
+                monitorCts.Cancel();
             }
         }
 
@@ -140,7 +147,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         {
             try
             {
-
                 while (!viewer.DisconnectRequested && viewer.IsConnected)
                 {
                     try
@@ -158,6 +164,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
                         var result = viewer.Capturer.GetNextFrame();
 
+                        // Try to restart on a new thread if capturing failed.
                         if (!result.IsSuccess || result.Value is null)
                         {
                             _ = Task.Run(() => CastScreen(screenCastRequest, viewer, sequence));
@@ -177,7 +184,20 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
                         var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
 
-                        await SendFrame(encodedImageBytes, diffArea, sequence++, viewer);
+                        if (encodedImageBytes.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        await viewer.SendScreenCapture(new ScreenCaptureDto()
+                        {
+                            ImageBytes = encodedImageBytes,
+                            Top = (int)diffArea.Top,
+                            Left = (int)diffArea.Left,
+                            Width = (int)diffArea.Width,
+                            Height = (int)diffArea.Height,
+                            Sequence = sequence++
+                        });
 
                     }
                     catch (Exception ex)
@@ -217,22 +237,104 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        private static async Task SendFrame(byte[] encodedImageBytes, SKRect diffArea, long sequence, IViewer viewer)
+        private async IAsyncEnumerable<byte[]> GetDesktopStream(ScreenCastRequest screenCastRequest, IViewer viewer)
         {
-            if (encodedImageBytes.Length == 0)
+            try
             {
-                return;
-            }
+                while (!viewer.DisconnectRequested && viewer.IsConnected)
+                {
+                    if (viewer.IsStalled)
+                    {
+                        // Viewer isn't responding.  Abort sending.
+                        _logger.LogWarning("Viewer stalled.  Ending send loop.");
+                        yield break;
+                    }
 
-            await viewer.SendScreenCapture(new ScreenCaptureDto()
+                    viewer.CalculateFps();
+
+                    viewer.ApplyAutoQuality();
+
+                    var result = viewer.Capturer.GetNextFrame();
+
+                    if (!result.IsSuccess || result.Value is null)
+                    {
+                        continue;
+                    }
+
+                    var diffArea = viewer.Capturer.GetFrameDiffArea();
+
+                    if (diffArea.IsEmpty)
+                    {
+                        continue;
+                    }
+
+                    viewer.Capturer.CaptureFullscreen = false;
+
+                    using var croppedFrame = _imageHelper.CropBitmap(result.Value, diffArea);
+
+                    var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
+
+                    if (encodedImageBytes.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    var dto = new ScreenCaptureDto()
+                    {
+                        ImageBytes = encodedImageBytes,
+                        Top = (int)diffArea.Top,
+                        Left = (int)diffArea.Left,
+                        Width = (int)diffArea.Width,
+                        Height = (int)diffArea.Height
+                    };
+
+                    foreach (var chunk in DtoChunker.ChunkDto(dto, DtoType.ScreenCapture))
+                    {
+                        yield return MessagePackSerializer.Serialize(chunk);
+                    }
+                }
+                _logger.LogInformation(
+                    "Ended desktop stream.  " +
+                    "Requester: {viewerName}. " +
+                    "Viewer ID: {viewerConnectionID}. " +
+                    "Viewer WS Connected: {viewerIsConnected}.  " +
+                    "Viewer Stalled: {viewerIsStalled}.  " +
+                    "Viewer Disconnected Requested: {viewerDisconnectRequested}",
+                    viewer.Name,
+                    viewer.ViewerConnectionID,
+                    viewer.IsConnected,
+                    viewer.IsStalled,
+                    viewer.DisconnectRequested);
+
+                _appState.Viewers.TryRemove(viewer.ViewerConnectionID, out _);
+                viewer.Dispose();
+            }
+            finally
             {
-                ImageBytes = encodedImageBytes,
-                Top = (int)diffArea.Top,
-                Left = (int)diffArea.Left,
-                Width = (int)diffArea.Width,
-                Height = (int)diffArea.Height,
-                Sequence = sequence
-            });
+                // Close if no one is viewing.
+                if (_appState.Viewers.IsEmpty && _appState.Mode == AppMode.Unattended)
+                {
+                    _logger.LogInformation("No more viewers.  Calling shutdown service.");
+                    await _shutdownService.Shutdown();
+                }
+            }
+        }
+
+        private async Task LogMetrics(IViewer viewer, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(3_000, cancellationToken);
+                _logger.LogDebug(
+                    "Current Mbps: {currentMbps}.  " +
+                    "Current FPS: {currentFps}.  " +
+                    "Roundtrip Latency: {roundTripLatency}.  " +
+                    "Image Quality: {imageQuality}",
+                    viewer.CurrentMbps,
+                    viewer.CurrentFps,
+                    viewer.RoundTripLatency,
+                    viewer.ImageQuality);
+            }
         }
     }
 }

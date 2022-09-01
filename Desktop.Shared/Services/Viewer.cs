@@ -7,6 +7,7 @@ using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Immense.RemoteControl.Desktop.Shared.Win32;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services
 {
@@ -32,6 +33,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task SendAudioSample(byte[] audioSample);
         Task SendClipboardText(string clipboardText);
         Task SendCursorChange(CursorInfo cursorInfo);
+        Task SendDesktopStream(IAsyncEnumerable<byte[]> asyncEnumerable, Guid streamId);
         Task SendFile(FileUpload fileUpload, CancellationToken cancelToken, Action<double> progressUpdateCallback);
         Task SendScreenCapture(ScreenCaptureDto screenCapture);
         Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
@@ -45,7 +47,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public const int DefaultQuality = 80;
 
         private readonly IAudioCapturer _audioCapturer;
-        private readonly IDesktopHubConnection _casterSocket;
+        private readonly IDesktopHubConnection _desktopHubConnection;
         private readonly IClipboardService _clipboardService;
         private readonly ConcurrentQueue<DateTimeOffset> _fpsQueue = new();
         private readonly ILogger<Viewer> _logger;
@@ -61,7 +63,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             ILogger<Viewer> logger)
         {
             Capturer = screenCapturer;
-            _casterSocket = casterSocket;
+            _desktopHubConnection = casterSocket;
             _clipboardService = clipboardService;
             _audioCapturer = audioCapturer;
             _systemTime = systemTime;
@@ -77,7 +79,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public bool DisconnectRequested { get; set; }
         public bool HasControl { get; set; } = true;
         public int ImageQuality { get; private set; } = DefaultQuality;
-        public bool IsConnected => _casterSocket.IsConnected;
+        public bool IsConnected => _desktopHubConnection.IsConnected;
 
         public bool IsStalled
         {
@@ -113,13 +115,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _ = WaitHelper.WaitFor(() =>
                 !PendingSentFrames.TryPeek(out var result) || DateTimeOffset.Now - result.Timestamp < TimeSpan.FromSeconds(1),
                 TimeSpan.FromSeconds(5));
-
-
-            Debug.WriteLine(
-                $"Current Mbps: {CurrentMbps}.  " +
-                $"Current FPS: {CurrentFps}.  " +
-                $"Roundtrip Latency: {RoundTripLatency}.  " +
-                $"Image Quality: {ImageQuality}");
         }
 
         public void CalculateFps()
@@ -179,6 +174,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             var dto = new CursorChangeDto(cursorInfo.ImageBytes, cursorInfo.HotSpot.X, cursorInfo.HotSpot.Y, cursorInfo.CssOverride);
             await TrySendToViewer(dto, DtoType.CursorChange, ViewerConnectionID);
         }
+
+        public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
+        {
+            await _desktopHubConnection.Connection.SendAsync("SendDesktopStream", stream, streamId);
+        }
+
         public async Task SendFile(FileUpload fileUpload, CancellationToken cancelToken, Action<double> progressUpdateCallback)
         {
             try
@@ -267,7 +268,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public async Task SendViewerConnected()
         {
-            await _casterSocket.SendViewerConnected(ViewerConnectionID);
+            await _desktopHubConnection.SendViewerConnected(ViewerConnectionID);
         }
 
         public async Task SendWindowsSessions()
@@ -295,7 +296,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             {
                 foreach (var chunk in DtoChunker.ChunkDto(dto, type))
                 {
-                    await _casterSocket.SendDtoToViewer(chunk, viewerConnectionId);
+                    await _desktopHubConnection.SendDtoToViewer(chunk, viewerConnectionId);
                 }
             }
             catch (Exception ex)

@@ -30,6 +30,7 @@ namespace Immense.RemoteControl.Server.Extensions
                 })
                 .AddMessagePackProtocol();
 
+            services.AddSingleton<IDesktopStreamCache, DesktopStreamCache>();
             services.AddSingleton<IDesktopHubSessionCache, DesktopHubSessionCache>();
             services.AddScoped<ViewerAuthorizationFilter>();
 
