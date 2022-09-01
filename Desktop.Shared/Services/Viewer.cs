@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services
 {
-    public interface IViewer
+    public interface IViewer : IDisposable
     {
         IScreenCapturer Capturer { get; }
         double CurrentFps { get; }
@@ -38,21 +38,24 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task SendScreenCapture(ScreenCaptureDto screenCapture);
         Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
         Task SendScreenSize(int width, int height);
+        Task SendStreamReady();
+
         Task SendViewerConnected();
         Task SendWindowsSessions();
     }
 
-    public class Viewer : IDisposable, IViewer
+    public class Viewer : IViewer
     {
         public const int DefaultQuality = 80;
 
         private readonly IAudioCapturer _audioCapturer;
-        private readonly IDesktopHubConnection _desktopHubConnection;
         private readonly IClipboardService _clipboardService;
+        private readonly IDesktopHubConnection _desktopHubConnection;
         private readonly ConcurrentQueue<DateTimeOffset> _fpsQueue = new();
         private readonly ILogger<Viewer> _logger;
         private readonly ConcurrentQueue<SentFrame> _receivedFrames = new();
         private readonly ISystemTime _systemTime;
+        private bool _disconnectRequested;
 
         public Viewer(
             IDesktopHubConnection casterSocket,
@@ -76,7 +79,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public IScreenCapturer Capturer { get; }
         public double CurrentFps { get; private set; }
         public double CurrentMbps { get; private set; }
-        public bool DisconnectRequested { get; set; }
+        public bool DisconnectRequested
+        {
+            get => _disconnectRequested;
+            set
+            {
+                _disconnectRequested = value;
+            }
+        }
         public bool HasControl { get; set; } = true;
         public int ImageQuality { get; private set; } = DefaultQuality;
         public bool IsConnected => _desktopHubConnection.IsConnected;
@@ -264,6 +274,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         {
             var dto = new ScreenSizeDto(width, height);
             await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionID);
+        }
+
+        public async Task SendStreamReady()
+        {
+            await _desktopHubConnection.SendStreamReady(ViewerConnectionID);
         }
 
         public async Task SendViewerConnected()

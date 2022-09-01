@@ -27,28 +27,32 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
     public class ScreenCaster : IScreenCaster
     {
+        private static CancellationTokenSource _metricsCts;
         private readonly IAppState _appState;
         private readonly ICursorIconWatcher _cursorIconWatcher;
         private readonly IImageHelper _imageHelper;
         private readonly ILogger<ScreenCaster> _logger;
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ISessionIndicator _sessionIndicator;
         private readonly IShutdownService _shutdownService;
+        private readonly ISystemTime _systemTime;
         public ScreenCaster(
             IAppState appState,
             ICursorIconWatcher cursorIconWatcher,
             ISessionIndicator sessionIndicator,
-            IServiceScopeFactory scopeFactory,
+            IServiceProvider serviceProvider,
             IShutdownService shutdownService,
             IImageHelper imageHelper,
+            ISystemTime systemTime,
             ILogger<ScreenCaster> logger)
         {
             _appState = appState;
             _cursorIconWatcher = cursorIconWatcher;
             _sessionIndicator = sessionIndicator;
-            _scopeFactory = scopeFactory;
+            _serviceProvider = serviceProvider;
             _shutdownService = shutdownService;
             _imageHelper = imageHelper;
+            _systemTime = systemTime;
             _logger = logger;
         }
 
@@ -59,12 +63,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         private async Task BeginScreenCastingImpl(ScreenCastRequest screenCastRequest)
         {
-            var monitorCts = new CancellationTokenSource();
-
             try
             {
-                using var scope = _scopeFactory.CreateScope();
-                var viewer = scope.ServiceProvider.GetRequiredService<IViewer>();
+                var viewer = _serviceProvider.GetRequiredService<IViewer>();
                 viewer.Name = screenCastRequest.RequesterName;
                 viewer.ViewerConnectionID = screenCastRequest.ViewerID;
 
@@ -130,16 +131,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     return;
                 }
 
-                _ = Task.Run(async () => await LogMetrics(viewer, monitorCts.Token));
                 await viewer.SendDesktopStream(GetDesktopStream(screenCastRequest, viewer), screenCastRequest.StreamId);
+                await viewer.SendStreamReady();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while starting screen casting.");
-            }
-            finally
-            {
-                monitorCts.Cancel();
             }
         }
 
@@ -239,8 +236,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         private async IAsyncEnumerable<byte[]> GetDesktopStream(ScreenCastRequest screenCastRequest, IViewer viewer)
         {
+            _metricsCts?.Cancel();
+            _metricsCts?.Dispose();
+            _metricsCts = new CancellationTokenSource();
+
             try
             {
+                _ = Task.Run(async () => await LogMetrics(viewer, _metricsCts.Token));
+
                 while (!viewer.DisconnectRequested && viewer.IsConnected)
                 {
                     if (viewer.IsStalled)
@@ -288,6 +291,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                         Height = (int)diffArea.Height
                     };
 
+                    viewer.PendingSentFrames.Enqueue(new SentFrame(dto.ImageBytes.Length, _systemTime.Now));
+
                     foreach (var chunk in DtoChunker.ChunkDto(dto, DtoType.ScreenCapture))
                     {
                         yield return MessagePackSerializer.Serialize(chunk);
@@ -311,12 +316,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
             finally
             {
+                Disposer.TryDisposeAll(viewer);
                 // Close if no one is viewing.
                 if (_appState.Viewers.IsEmpty && _appState.Mode == AppMode.Unattended)
                 {
                     _logger.LogInformation("No more viewers.  Calling shutdown service.");
                     await _shutdownService.Shutdown();
                 }
+                _metricsCts.Cancel();
             }
         }
 
@@ -330,7 +337,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     "Current FPS: {currentFps}.  " +
                     "Roundtrip Latency: {roundTripLatency}.  " +
                     "Image Quality: {imageQuality}",
-                    viewer.CurrentMbps,
+                    Math.Round(viewer.CurrentMbps, 2),
                     viewer.CurrentFps,
                     viewer.RoundTripLatency,
                     viewer.ImageQuality);

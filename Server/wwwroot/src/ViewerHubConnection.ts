@@ -6,8 +6,10 @@ import { ShowMessage } from "./UI.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
-import { ChunkDto } from "./DtoChunker.js";
+import { ChunkDto, TryComplete } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
+import { DtoWrapper, ScreenCaptureDto } from "./Interfaces/Dtos.js";
+import { HandleCaptureReceived } from "./CaptureProcessor.js";
 
 var signalR = window["signalR"];
 
@@ -63,8 +65,9 @@ export class ViewerHubConnection {
     }
 
 
-    SendScreenCastRequestToDevice() {
-        this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+    async SendScreenCastRequestToDevice() {
+        const streamId = await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+
     }
 
 
@@ -125,6 +128,28 @@ export class ViewerHubConnection {
             ShowMessage("Requesting remote control...");
         });
 
+        hubConnection.on("SendStreamReady", () => {
+            this.Connection.stream("GetDesktopStream")
+                .subscribe({
+                    next: (item: Uint8Array) => {
+                        let wrapper = this.MessagePack.decode<DtoWrapper>(item);
+                        let result = TryComplete<ScreenCaptureDto>(wrapper);
+
+                        if (!result) {
+                            return;
+                        }
+
+                        HandleCaptureReceived(result);
+                    },
+                    complete: () => {
+                        ShowMessage("Desktop stream ended");
+                    },
+                    error: (err) => {
+                        console.error(err);
+                        ShowMessage("Desktop stream error");
+                    },
+                });
+        });
         hubConnection.on("ShowMessage", (message: string) => {
             ShowMessage(message);
         });

@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Desktop.Windows;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using WindowsDesktopExample;
 
 
@@ -16,11 +17,11 @@ var provider = await Startup.UseRemoteControlClient(
     {
         // Add some other services here if I wanted.
 
-        //services.AddLogging(builder =>
-        //{
-        //    builder.ClearProviders();
-        //    // Add file logger, etc.
-        //});
+        services.AddLogging(builder =>
+        {
+            builder.SetMinimumLevel(LogLevel.Debug);
+            // Add file logger, etc.
+        });
     },
     "https://localhost:7024");
 

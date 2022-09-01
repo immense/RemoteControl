@@ -19,13 +19,12 @@ namespace Immense.RemoteControl.Server.Hubs
     [ServiceFilter(typeof(ViewerAuthorizationFilter))]
     public class ViewerHub : Hub
     {
-        private readonly IHubEventHandler _hubEvents;
+        private readonly IHubContext<DesktopHub> _desktopHub;
         private readonly IDesktopHubSessionCache _desktopSessionCache;
+        private readonly IHubEventHandler _hubEvents;
+        private readonly ILogger<ViewerHub> _logger;
         private readonly IDesktopStreamCache _streamCache;
         private readonly IViewerHubDataProvider _viewerHubDataProvider;
-        private readonly IHubContext<DesktopHub> _desktopHub;
-        private readonly ILogger<ViewerHub> _logger;
-
         public ViewerHub(
             IHubEventHandler hubEvents,
             IDesktopHubSessionCache desktopSessionCache,
@@ -40,6 +39,23 @@ namespace Immense.RemoteControl.Server.Hubs
             _viewerHubDataProvider = viewerHubDataProvider;
             _desktopHub = desktopHub;
             _logger = logger;
+        }
+
+        private string RequesterDisplayName
+        {
+            get
+            {
+                if (Context.Items.TryGetValue(nameof(RequesterDisplayName), out var result) &&
+                    result is string requesterName)
+                {
+                    return requesterName;
+                }
+                return string.Empty;
+            }
+            set
+            {
+                Context.Items[nameof(RequesterDisplayName)] = value;
+            }
         }
 
         private RemoteControlSession SessionInfo
@@ -61,21 +77,11 @@ namespace Immense.RemoteControl.Server.Hubs
                 Context.Items[nameof(SessionInfo)] = value;
             }
         }
-
-        private string RequesterDisplayName
+        public async Task ChangeWindowsSession(int sessionID)
         {
-            get
+            if (SessionInfo?.Mode == RemoteControlMode.Unattended)
             {
-                if (Context.Items.TryGetValue(nameof(RequesterDisplayName), out var result) &&
-                    result is string requesterName)
-                {
-                    return requesterName;
-                }
-                return string.Empty;
-            }
-            set
-            {
-                Context.Items[nameof(RequesterDisplayName)] = value;
+                await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, sessionID);
             }
         }
 
@@ -106,13 +112,15 @@ namespace Immense.RemoteControl.Server.Hubs
                 _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
             }
         }
-
-        public async Task ChangeWindowsSession(int sessionID)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            if (SessionInfo?.Mode == RemoteControlMode.Unattended)
+            if (!string.IsNullOrWhiteSpace(SessionInfo.DesktopConnectionId))
             {
-                await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, sessionID);
+                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
             }
+
+            SessionInfo.ViewerList.Remove(Context.ConnectionId);
+            await base.OnDisconnectedAsync(exception);
         }
 
         public Task SendDtoToClient(byte[] dtoWrapper)
@@ -124,18 +132,6 @@ namespace Immense.RemoteControl.Server.Hubs
 
             return _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
         }
-
-        public override async Task OnDisconnectedAsync(Exception? exception)
-        {
-            if (!string.IsNullOrWhiteSpace(SessionInfo.DesktopConnectionId))
-            {
-               await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
-            }
-
-            SessionInfo.ViewerList.Remove(Context.ConnectionId);
-            await base.OnDisconnectedAsync(exception);
-        }
-
         public async Task SendScreenCastRequestToDevice(string sessionId, string accessKey, string requesterName)
         {
             if (string.IsNullOrWhiteSpace(sessionId))
