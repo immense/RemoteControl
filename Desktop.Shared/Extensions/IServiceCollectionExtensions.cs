@@ -61,28 +61,25 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             });
             rootCommand.AddOption(pipeNameOption);
 
-            var requesterIdOption = new Option<string>(
-               new[] { "-r", "--requester-id" },
-               "The ID of the user requesting the remote control session.");
-            rootCommand.AddOption(requesterIdOption);
+            var sessionIdOption = new Option<string>(
+               new[] { "-s", "--session-id" },
+               "In Unattended mode, this unique session ID will be assigned to this connection and " +
+               "shared with the server.  The connection can then be found in the DesktopHubSessionCache " +
+               "using this ID.");
+            rootCommand.AddOption(sessionIdOption);
 
-            var serviceIdOption = new Option<string>(
-                new[] { "-s", "--service-id" },
-                "The SignalR connection ID of the service process that launched this process.");
-            rootCommand.AddOption(serviceIdOption);
+            var accessKeyOption = new Option<string>(
+                new[] { "-a", "--access-key" },
+                "In Unattended mode, secures access to the connection using the provided key.");
+            rootCommand.AddOption(accessKeyOption);
 
-            var deviceIdOption = new Option<string>(
-                new[] { "-d", "--device-id" },
-                "The unique ID (e.g. Entity PK) of this device.");
-            rootCommand.AddOption(deviceIdOption);
-
-            var organizationIdOption = new Option<string>(
-                new[] { "-o", "--org-id" },
-                "The organization ID (e.g. Entity PK) of the technician requesting to connect.");
-            rootCommand.AddOption(organizationIdOption);
+            var requesterNameOption = new Option<string>(
+                new[] { "-r", "--requester-name" },
+                   "The name of the technician requesting to connect.");
+                    rootCommand.AddOption(requesterNameOption);
 
             var organizationNameOption = new Option<string>(
-                new[] { "-n", "--org-name" },
+                new[] { "-o", "--org-name" },
                 "The organization name of the technician requesting to connect.");
             rootCommand.AddOption(organizationNameOption);
            
@@ -91,10 +88,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                     host,
                     mode,
                     pipeName,
-                    requesterId,
-                    serviceId,
-                    deviceId,
-                    organizationId,
+                    sessionId,
+                    accessKey,
+                    requesterName,
                     organizationName) =>
                 {
                  
@@ -108,13 +104,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                         var logger = s.GetRequiredService<ILogger<AppState>>();
                         return new AppState(logger)
                         {
-                            DeviceID = deviceId,
                             Host = host,
                             Mode = mode,
-                            OrganizationId = organizationId,
+                            SessionId = sessionId,
+                            AccessKey = accessKey,
+                            RequesterName = requesterName,
                             OrganizationName = organizationName,
-                            RequesterConnectionId = requesterId,
-                            ServiceConnectionId = serviceId
+                            PipeName = pipeName
                         };
                     });
 
@@ -123,10 +119,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 hostOption,
                 modeOption,
                 pipeNameOption,
-                requesterIdOption,
-                serviceIdOption,
-                deviceIdOption,
-                organizationIdOption,
+                sessionIdOption,
+                accessKeyOption,
+                requesterNameOption,
                 organizationNameOption);
 
             rootCommand.TreatUnmatchedTokensAsErrors = false;

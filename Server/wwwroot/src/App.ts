@@ -18,13 +18,15 @@ export const ViewerApp = {
     ViewerHubConnection: new ViewerHubConnection(),
     DtoMessageHandler: new DtoMessageHandler(),
     SessionRecorder: new SessionRecorder(),
-    CasterID: queryString["casterID"] ? decodeURIComponent(queryString["casterID"]) : "",
-    Otp: queryString["otp"] ? decodeURIComponent(queryString["otp"]) : "",
+    SessionId: queryString["sessionId"] ? decodeURIComponent(queryString["sessionId"]) : "",
+    AccessKey: queryString["accessKey"] ? decodeURIComponent(queryString["accessKey"]) : "",
     RequesterName: queryString["requesterName"] ? decodeURIComponent(queryString["requesterName"]) : "",
     ViewOnlyMode: queryString["viewonly"] ?
         decodeURIComponent(queryString["viewonly"]).toLowerCase() == "true" :
         false,
-    Mode: RemoteControlMode.Unknown,
+    Mode: queryString["mode"] ?
+        RemoteControlMode[decodeURIComponent(queryString["mode"])] :
+        RemoteControlMode.Attended,
     Settings: GetSettings(),
 
     Init: () => {
@@ -42,26 +44,19 @@ export const ViewerApp = {
             ViewerApp.RequesterName = ViewerApp.Settings.displayName;
         }
 
-        if (ViewerApp.CasterID) {
-            ViewerApp.Mode = RemoteControlMode.Unattended;
+        if (ViewerApp.Mode == RemoteControlMode.Unattended) {
             ViewerApp.ViewerHubConnection.Connect();
             UI.StatusMessage.innerHTML = "Connecting to remote device...";
         }
         else {
             UI.ConnectBox.style.removeProperty("display");
-        }
-
-        if (queryString["sessionID"]) {
-            UI.SessionIDInput.value = decodeURIComponent(queryString["sessionID"]);
-            if (queryString["requesterName"]) {
-                UI.RequesterNameInput.value = decodeURIComponent(queryString["requesterName"]);
-                ViewerApp.ConnectToClient();
-            }
+            UI.SessionIDInput.value = ViewerApp.SessionId;
+            UI.RequesterNameInput.value = ViewerApp.RequesterName;
         }
     },
     ConnectToClient: () => {
         UI.ConnectButton.disabled = true;
-        ViewerApp.CasterID = UI.SessionIDInput.value.split(" ").join("");
+        ViewerApp.SessionId = UI.SessionIDInput.value.split(" ").join("");
         ViewerApp.RequesterName = UI.RequesterNameInput.value;
         ViewerApp.Mode = RemoteControlMode.Attended;
         ViewerApp.ViewerHubConnection.Connect();

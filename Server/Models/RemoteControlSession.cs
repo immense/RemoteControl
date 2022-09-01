@@ -10,17 +10,20 @@ namespace Immense.RemoteControl.Server.Models
     {
         public static RemoteControlSession Empty { get; } = new();
 
-        public string AttendedSessionID { get; set; } = string.Empty;
-        public string CasterConnectionId { get; set; } = string.Empty;
-        public string DeviceID { get; set; } = string.Empty;
-        public string MachineName { get; set; } = string.Empty;
-        public RemoteControlMode Mode { get; set; }
-        public string OrganizationID { get; set; } = string.Empty;
-        public string RequesterName { get; set; } = string.Empty;
-        public string RequesterSocketID { get; set; } = string.Empty;
-        public string RequesterUserName { get; set; } = string.Empty;
-        public string ServiceID { get; set; } = string.Empty;
-        public DateTimeOffset StartTime { get; set; }
+        public string AccessKey { get; internal set; } = string.Empty;
+        public string AttendedSessionId { get; internal set; } = string.Empty;
+        public string DesktopConnectionId { get; internal set; } = string.Empty;
+        public string MachineName { get; internal set; } = string.Empty;
+        public RemoteControlMode Mode { get; internal set; }
+        public string OrganizationName { get; internal set; }
+        public string RequesterName { get; internal set; } = string.Empty;
+        public string RequesterUserName { get; internal set; } = string.Empty;
+        public DateTimeOffset StartTime { get; internal set; }
+        public string UnattendedSessionId { get; internal set; } = string.Empty;
+
+        /// <summary>
+        /// Contains a collection of viewer SignalR connection IDs.
+        /// </summary>
         public HashSet<string> ViewerList { get; } = new();
     }
 }

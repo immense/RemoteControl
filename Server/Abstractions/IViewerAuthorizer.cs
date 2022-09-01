@@ -12,11 +12,7 @@ namespace Immense.RemoteControl.Server.Abstractions
         /// <summary>
         /// Example: "/Account/Login"
         /// </summary>
-        string UnauthorizedRedirectPageName { get; }
-        /// <summary>
-        /// Example: "Identity"
-        /// </summary>
-        string? UnauthorizedRedirectArea { get; }
+        string UnauthorizedRedirectUrl { get; }
         bool IsAuthorized(AuthorizationFilterContext context);
     }
 }

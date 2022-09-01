@@ -20,7 +20,7 @@ namespace Immense.RemoteControl.Server.Filters
                 return;
             }
 
-            context.Result = new RedirectToPageResult(_authorizer.UnauthorizedRedirectPageName, new { area = _authorizer.UnauthorizedRedirectArea });
+            context.Result = new RedirectResult(_authorizer.UnauthorizedRedirectUrl);
         }
     }
 }

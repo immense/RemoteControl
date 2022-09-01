@@ -50,7 +50,7 @@ export class ViewerHubConnection {
 
     SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
 
-        if (this.Connection.state != "Connected") {
+        if (this.Connection?.state != "Connected") {
             return;
         }
 
@@ -64,7 +64,7 @@ export class ViewerHubConnection {
 
 
     SendScreenCastRequestToDevice() {
-        this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.CasterID, ViewerApp.RequesterName, ViewerApp.Mode, ViewerApp.Otp);
+        this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
     }
 
 
@@ -106,8 +106,9 @@ export class ViewerHubConnection {
             UI.StatusMessage.innerHTML = "The host has disconnected.";
             this.Connection.stop();
         });
-        hubConnection.on("RelaunchedScreenCasterReady", (newClientID: string) => {
-            ViewerApp.CasterID = newClientID;
+        hubConnection.on("RelaunchedScreenCasterReady", (newSessionId: string, newAccessKey: string) => {
+            ViewerApp.SessionId = newSessionId;
+            ViewerApp.AccessKey = newAccessKey;
             this.Connection.stop();
             this.Connect();
         });

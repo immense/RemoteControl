@@ -20,7 +20,6 @@ namespace Immense.RemoteControl.Server.Hubs
     {
         private readonly IHubEventHandler _hubEvents;
         private readonly IDesktopHubSessionCache _desktopSessionCache;
-        private readonly IServiceHubSessionCache _serviceSessionCache;
         private readonly IViewerHubDataProvider _viewerHubDataProvider;
         private readonly IHubContext<DesktopHub> _desktopHub;
         private readonly ILogger<ViewerHub> _logger;
@@ -28,34 +27,15 @@ namespace Immense.RemoteControl.Server.Hubs
         public ViewerHub(
             IHubEventHandler hubEvents,
             IDesktopHubSessionCache desktopSessionCache,
-            IServiceHubSessionCache serviceSessionCache,
             IViewerHubDataProvider viewerHubDataProvider,
             IHubContext<DesktopHub> desktopHub,
             ILogger<ViewerHub> logger)
         {
             _hubEvents = hubEvents;
             _desktopSessionCache = desktopSessionCache;
-            _serviceSessionCache = serviceSessionCache;
             _viewerHubDataProvider = viewerHubDataProvider;
             _desktopHub = desktopHub;
             _logger = logger;
-        }
-
-        private RemoteControlMode Mode
-        {
-            get
-            {
-                if (Context.Items.TryGetValue(nameof(Mode), out var result) &&
-                    result is RemoteControlMode mode)
-                {
-                    return mode;
-                }
-                return RemoteControlMode.Unknown;
-            }
-            set
-            {
-                Context.Items[nameof(Mode)] = value;
-            }
         }
 
         private RemoteControlSession SessionInfo
@@ -78,11 +58,11 @@ namespace Immense.RemoteControl.Server.Hubs
             }
         }
 
-        private string RequesterName
+        private string RequesterDisplayName
         {
             get
             {
-                if (Context.Items.TryGetValue(nameof(RequesterName), out var result) &&
+                if (Context.Items.TryGetValue(nameof(RequesterDisplayName), out var result) &&
                     result is string requesterName)
                 {
                     return requesterName;
@@ -91,155 +71,103 @@ namespace Immense.RemoteControl.Server.Hubs
             }
             set
             {
-                Context.Items[nameof(RequesterName)] = value;
+                Context.Items[nameof(RequesterDisplayName)] = value;
             }
         }
 
-        private string ScreenCasterID
-        {
-            get
-            {
-                if (Context.Items.TryGetValue(nameof(ScreenCasterID), out var result) &&
-                      result is string casterId)
-                {
-                    return casterId;
-                }
-                return string.Empty;
-            }
-            set
-            {
-                Context.Items[nameof(ScreenCasterID)] = value;
-            }
-        }
 
         public async Task ChangeWindowsSession(int sessionID)
         {
             if (SessionInfo?.Mode == RemoteControlMode.Unattended)
             {
-                await _hubEvents.ChangeWindowsSession(SessionInfo.ServiceID, Context.ConnectionId, sessionID);
+                await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, sessionID);
             }
         }
 
         public Task SendDtoToClient(byte[] dtoWrapper)
         {
-            if (string.IsNullOrWhiteSpace(ScreenCasterID))
+            if (string.IsNullOrWhiteSpace(SessionInfo.DesktopConnectionId))
             {
                 return Task.CompletedTask;
             }
 
-            return _desktopHub.Clients.Client(ScreenCasterID).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
+            return _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            if (!string.IsNullOrWhiteSpace(ScreenCasterID))
+            if (!string.IsNullOrWhiteSpace(SessionInfo.DesktopConnectionId))
             {
-               await _desktopHub.Clients.Client(ScreenCasterID).SendAsync("ViewerDisconnected", Context.ConnectionId);
+               await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
             }
 
+            SessionInfo.ViewerList.Remove(Context.ConnectionId);
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendScreenCastRequestToDevice(string screenCasterID, string requesterName, int remoteControlMode, string otp)
+        public async Task SendScreenCastRequestToDevice(string sessionId, string accessKey, string requesterName)
         {
-            if (string.IsNullOrWhiteSpace(screenCasterID))
+            if (string.IsNullOrWhiteSpace(sessionId))
             {
                 return;
             }
 
-            if ((RemoteControlMode)remoteControlMode == RemoteControlMode.Attended)
-            {
-                if (!_desktopSessionCache.Sessions.Values.Any(x => x.AttendedSessionID == screenCasterID))
-                {
-                    await Clients.Caller.SendAsync("SessionIDNotFound");
-                    return;
-                }
-
-                screenCasterID = _desktopSessionCache.Sessions.Values.First(x => x.AttendedSessionID == screenCasterID).CasterConnectionId;
-            }
-
-            if (!_desktopSessionCache.Sessions.TryGetValue(screenCasterID, out var sessionInfo))
+            if (!_desktopSessionCache.Sessions.TryGetValue(sessionId, out var session))
             {
                 await Clients.Caller.SendAsync("SessionIDNotFound");
                 return;
             }
 
-            SessionInfo = sessionInfo;
-            ScreenCasterID = screenCasterID;
-            RequesterName = requesterName;
-            Mode = (RemoteControlMode)remoteControlMode;
+            if (session.Mode == RemoteControlMode.Unattended &&
+                accessKey != session.AccessKey)
+            {
+                _logger.LogError("Access key does not match for unattended session.  " +
+                    "Session ID: {sessionId}.  " +
+                    "Requester Name: {requesterName}.  " +
+                    "Requester Connection ID: {connectionId}",
+                    sessionId,
+                    requesterName,
+                    Context.ConnectionId);
+                await Clients.Caller.SendAsync("Unauthorized");
+                return;
+            }
 
-            string orgId = string.Empty;
+            SessionInfo = session;
+            SessionInfo.ViewerList.Add(Context.ConnectionId);
+            RequesterDisplayName = requesterName;
 
             if (Context.User?.Identity?.IsAuthenticated == true)
             {
-
-                if (!string.IsNullOrWhiteSpace(Context.UserIdentifier))
-                {
-                    RequesterName = _viewerHubDataProvider.GetRequesterDisplayName(Context.UserIdentifier);
-                }
-
-                orgId = _viewerHubDataProvider.GetRequesterOrganizationId(Context.UserIdentifier);
-
-                var currentUsers = _desktopSessionCache.Sessions.Values.Count(x =>
-                    x.CasterConnectionId != screenCasterID &&
-                    x.OrganizationID == orgId &&
-                    x.ViewerList.Any());
-
-                if (currentUsers >= _viewerHubDataProvider.RemoteControlSessionLimit)
-                {
-                    await Clients.Caller.SendAsync("ShowMessage", "Max number of concurrent sessions reached.");
-                    Context.Abort();
-                    return;
-                }
-                SessionInfo.OrganizationID = orgId;
                 SessionInfo.RequesterUserName = Context.User.Identity.Name ?? string.Empty;
-                SessionInfo.RequesterSocketID = Context.ConnectionId;
             }
 
             var logMessage = $"Remote control session requested.  " +
                                 $"Login ID (if logged in): {Context.User?.Identity?.Name}.  " +
                                 $"Machine Name: {SessionInfo.MachineName}.  " +
-                                $"Requester Name (if specified): {RequesterName}.  " +
+                                $"Requester Name (if specified): {RequesterDisplayName}.  " +
                                 $"Connection ID: {Context.ConnectionId}. User ID: {Context.UserIdentifier}.  " +
-                                $"Screen Caster ID: {screenCasterID}.  " +
-                                $"Mode: {(RemoteControlMode)remoteControlMode}.  " +
+                                $"Screen Caster ID: {SessionInfo.DesktopConnectionId}.  " +
+                                $"Mode: {SessionInfo.Mode}.  " +
                                 $"Requester IP Address: {Context.GetHttpContext()?.Connection?.RemoteIpAddress}";
 
-            _hubEvents.LogRemoteControlStarted(logMessage, orgId);
+            _logger.LogInformation("{msg}", logMessage);
 
-            if (Mode == RemoteControlMode.Unattended)
+            if (SessionInfo.Mode == RemoteControlMode.Unattended)
             {
-                if (!_serviceSessionCache.Sessions.TryGetValue(SessionInfo.ServiceID, out var targetDeviceId))
-                {
-                    _logger.LogError("Target service ID (id) not found in cache.", SessionInfo.ServiceID);
-                    return;
-                }
 
-                SessionInfo.Mode = RemoteControlMode.Unattended;
 
-                if ((!string.IsNullOrWhiteSpace(otp) && _viewerHubDataProvider.OtpMatchesDevice(otp, targetDeviceId))
-                    ||
-                    (Context.User?.Identity?.IsAuthenticated == true && _viewerHubDataProvider.DoesUserHaveAccessToDevice(targetDeviceId, Context.UserIdentifier)))
-                {
-                    var orgName = _viewerHubDataProvider.GetOrganizationNameById(orgId);
-                    await _desktopHub.Clients.Client(screenCasterID).SendAsync("GetScreenCast",
-                        Context.ConnectionId,
-                        RequesterName,
-                        _viewerHubDataProvider.RemoteControlNotifyUser,
-                        _viewerHubDataProvider.EnforceAttendedAccess,
-                        orgName);
-                }
-                else
-                {
-                    await Clients.Caller.SendAsync("Unauthorized");
-                }
+                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("GetScreenCast",
+                      Context.ConnectionId,
+                      RequesterDisplayName,
+                      _viewerHubDataProvider.RemoteControlNotifyUser,
+                      _viewerHubDataProvider.EnforceAttendedAccess,
+                      SessionInfo.OrganizationName);
             }
             else
             {
                 SessionInfo.Mode = RemoteControlMode.Attended;
                 await Clients.Caller.SendAsync("RequestingScreenCast");
-                await _desktopHub.Clients.Client(screenCasterID).SendAsync("RequestScreenCast", Context.ConnectionId, RequesterName, _viewerHubDataProvider.RemoteControlNotifyUser);
+                await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("RequestScreenCast", Context.ConnectionId, RequesterDisplayName, _viewerHubDataProvider.RemoteControlNotifyUser);
             }
         }
 

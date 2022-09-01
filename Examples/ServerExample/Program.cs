@@ -11,7 +11,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddRemoteControlServer(config =>
 {
     config.AddHubEventHandler<HubEventHandler>();
-    config.AddServiceHubSessionCache<ServiceHubSessionCache>();
     config.AddViewerAuthorizer<ViewerAuthorizer>();
     config.AddViewerHubDataProvider<ViewerHubDataProvider>();
     config.AddViewerPageDataProvider<ViewerPageDataProvider>();

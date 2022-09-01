@@ -112,7 +112,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     break;
                 case AppMode.Chat:
                     await _chatHostService
-                        .StartChat(_appState.RequesterConnectionId, _appState.OrganizationName)
+                        .StartChat(_appState.PipeName, _appState.OrganizationName)
                         .ConfigureAwait(false);
                     break;
                 default:
@@ -129,7 +129,19 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 return;
             }
 
-            await _desktopHub.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
+            var result = await _desktopHub.SendUnattendedSessionInfo(
+                _appState.SessionId, 
+                _appState.AccessKey, 
+                Environment.MachineName, 
+                _appState.RequesterName,
+                _appState.OrganizationName);
+
+            if (!result.IsSuccess)
+            {
+                _logger.LogError(result.Exception, "An error occurred while trying to establish a session with the server.");
+                await _shutdownService.Shutdown();
+                return;
+            }
 
             if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
             {
@@ -154,7 +166,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             }
             else
             {
-                await _desktopHub.NotifyRequesterUnattendedReady(_appState.RequesterConnectionId);
+                await _desktopHub.NotifyRequesterUnattendedReady();
             }
 
             _idleTimer.Start();

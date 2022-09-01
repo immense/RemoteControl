@@ -132,10 +132,10 @@ export function ApplyInputHandlers() {
     InviteButton.addEventListener("click", (ev) => {
         var url = "";
         if (ViewerApp.Mode == RemoteControlMode.Attended) {
-            url = `${location.origin}${location.pathname}?sessionID=${ViewerApp.CasterID}`;
+            url = `${location.origin}${location.pathname}?sessionId=${ViewerApp.SessionId}`;
         }
         else {
-            url = `${location.origin}${location.pathname}?casterID=${ViewerApp.CasterID}`;
+            url = `${location.origin}${location.pathname}?mode=Unattended&sessionId=${ViewerApp.SessionId}&accessKey=${ViewerApp.AccessKey}`;
         }
         ViewerApp.ClipboardWatcher.SetClipboardText(url);
         ShowMessage("Link copied to clipboard.");

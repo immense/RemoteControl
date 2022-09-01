@@ -35,7 +35,8 @@ export class ViewerHubConnection {
         }
     }
     SendDtoToClient(dto, type) {
-        if (this.Connection.state != "Connected") {
+        var _a;
+        if (((_a = this.Connection) === null || _a === void 0 ? void 0 : _a.state) != "Connected") {
             return;
         }
         let chunks = ChunkDto(dto, type);
@@ -45,7 +46,7 @@ export class ViewerHubConnection {
         }
     }
     SendScreenCastRequestToDevice() {
-        this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.CasterID, ViewerApp.RequesterName, ViewerApp.Mode, ViewerApp.Otp);
+        this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
     }
     ApplyMessageHandlers(hubConnection) {
         hubConnection.on("SendDtoToViewer", (dto) => {
@@ -83,8 +84,9 @@ export class ViewerHubConnection {
             UI.StatusMessage.innerHTML = "The host has disconnected.";
             this.Connection.stop();
         });
-        hubConnection.on("RelaunchedScreenCasterReady", (newClientID) => {
-            ViewerApp.CasterID = newClientID;
+        hubConnection.on("RelaunchedScreenCasterReady", (newSessionId, newAccessKey) => {
+            ViewerApp.SessionId = newSessionId;
+            ViewerApp.AccessKey = newAccessKey;
             this.Connection.stop();
             this.Connect();
         });

@@ -1,4 +1,5 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,13 +25,17 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task DisconnectAllViewers();
         Task DisconnectViewer(IViewer viewer, bool notifyViewer);
         Task<string> GetSessionID();
-        Task NotifyRequesterUnattendedReady(string requesterID);
+        Task NotifyRequesterUnattendedReady();
         Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs);
+        Task SendAttendedSessionInfo(string machineName);
+
         Task SendConnectionFailedToViewers(List<string> viewerIDs);
         Task SendConnectionRequestDenied(string viewerID);
-        Task SendDeviceInfo(string serviceID, string machineName, string deviceID);
         Task SendDtoToViewer<T>(T dto, string viewerId);
+
         Task SendMessageToViewer(string viewerID, string message);
+
+        Task<Result> SendUnattendedSessionInfo(string sessionId, string accessKey, string machineName, string requesterName, string organizationName);
         Task SendViewerConnected(string viewerConnectionId);
     }
 
@@ -154,14 +159,19 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             return await Connection.InvokeAsync<string>("GetSessionID");
         }
 
-        public Task NotifyRequesterUnattendedReady(string requesterID)
+        public Task NotifyRequesterUnattendedReady()
         {
-            return Connection.SendAsync("NotifyRequesterUnattendedReady", requesterID);
+            return Connection.SendAsync("NotifyRequesterUnattendedReady");
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
         {
             return Connection.SendAsync("NotifyViewersRelaunchedScreenCasterReady", viewerIDs);
+        }
+
+        public Task SendAttendedSessionInfo(string machineName)
+        {
+            return Connection.InvokeAsync("ReceiveAttendedSessionInfo", machineName);
         }
 
         public Task SendConnectionFailedToViewers(List<string> viewerIDs)
@@ -172,11 +182,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public Task SendConnectionRequestDenied(string viewerID)
         {
             return Connection.SendAsync("SendConnectionRequestDenied", viewerID);
-        }
-
-        public Task SendDeviceInfo(string serviceID, string machineName, string deviceID)
-        {
-            return Connection.SendAsync("ReceiveDeviceInfo", serviceID, machineName, deviceID);
         }
 
         public Task SendDtoToViewer<T>(T dto, string viewerId)
@@ -190,6 +195,10 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             return Connection.SendAsync("SendMessageToViewer", viewerID, message);
         }
 
+        public Task<Result> SendUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
+        {
+            return Connection.InvokeAsync<Result>("ReceiveUnattendedSessionInfo", unattendedSessionId, accessKey, machineName, requesterName, organizationName);
+        }
         public Task SendViewerConnected(string viewerConnectionId)
         {
             return Connection.SendAsync("ViewerConnected", viewerConnectionId);

@@ -15,20 +15,19 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         event EventHandler<string> ViewerRemoved;
 
+        string AccessKey { get; }
         Dictionary<string, string> ArgDict { get; }
-        string DeviceID { get; }
         string Host { get; set; }
         AppMode Mode { get; set; }
-        string OrganizationId { get; }
         string OrganizationName { get; }
-        string RequesterConnectionId { get; }
-        string ServiceConnectionId { get; }
+        string PipeName { get; }
+        string RequesterName { get; }
+        string SessionId { get; }
         ConcurrentDictionary<string, IViewer> Viewers { get; }
         void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName);
         void InvokeViewerAdded(IViewer viewer);
         void InvokeViewerRemoved(string viewerID);
         void UpdateHost(string host);
-        void UpdateOrganizationId(string organizationId);
     }
 
     public class AppState : IAppState
@@ -47,24 +46,20 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public event EventHandler<string>? ViewerRemoved;
 
+        public string AccessKey { get; init; } = string.Empty;
         public Dictionary<string, string> ArgDict { get; } = new();
 
-        public string DeviceID { get; init; } = string.Empty;
 
         public string Host { get; set; } = string.Empty;
 
         public AppMode Mode { get; set; }
 
-        public string OrganizationId { get; set; } = string.Empty;
-
         public string OrganizationName { get; init; } = string.Empty;
 
-        public string RequesterConnectionId { get; init; } = string.Empty;
-
-        public string ServiceConnectionId { get; init; } = string.Empty;
-
+        public string PipeName { get; init; } = string.Empty;
+        public string RequesterName { get; init; } = string.Empty;
+        public string SessionId { get; init; } = string.Empty;
         public ConcurrentDictionary<string, IViewer> Viewers { get; } = new();
-
         public void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName)
         {
             ScreenCastRequested?.Invoke(null, viewerIdAndRequesterName);
@@ -83,11 +78,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public void UpdateHost(string host)
         {
             Host = host;
-        }
-
-        public void UpdateOrganizationId(string organizationId)
-        {
-            OrganizationId = organizationId;
         }
 
         private void ProcessArgs()

@@ -1,6 +1,7 @@
 ﻿using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Shared;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -63,51 +64,52 @@ namespace Immense.RemoteControl.Server.Hubs
         {
             using var scope = _logger.BeginScope(nameof(GetSessionID));
 
-            var random = new Random();
-            var sessionId = "";
+            SessionInfo.Mode = RemoteControlMode.Attended;
 
-            while (string.IsNullOrWhiteSpace(sessionId) || _sessionCache.Sessions.ContainsKey(sessionId))
+            var random = new Random();
+            var sessionId = string.Empty;
+
+            while (true)
             {
+                sessionId = "";
                 for (var i = 0; i < 3; i++)
                 {
                     sessionId += random.Next(0, 999).ToString().PadLeft(3, '0');
                 }
+
+                SessionInfo.AttendedSessionId = sessionId;
+                if (_sessionCache.Sessions.TryAdd(sessionId, SessionInfo))
+                {
+                    break;
+                }
+
             }
 
-            if (!_sessionCache.Sessions.TryGetValue(Context.ConnectionId, out var session))
-            {
-                _logger.LogError("Connection not found in cache.");
-                return string.Empty;
-            }
-
-            session.AttendedSessionID = sessionId;
             return sessionId;
         }
 
-        public async Task NotifyRequesterUnattendedReady(string userConnectionId)
+        public async Task NotifyRequesterUnattendedReady()
         {
             using var scope = _logger.BeginScope(nameof(NotifyRequesterUnattendedReady));
 
-            if (!_sessionCache.Sessions.TryGetValue(Context.ConnectionId, out var session))
+            if (!_sessionCache.Sessions.TryGetValue(SessionInfo.UnattendedSessionId, out var session))
             {
                 _logger.LogError("Connection not found in cache.");
                 return;
             }
 
-            await _hubEvents.NotifyUnattendedSessionReady(userConnectionId, Context.ConnectionId, session.DeviceID);
+            var accessLink = $"/RemoteControl/Viewer?mode=Unattended&sessionId={session.UnattendedSessionId}&accessKey={session.AccessKey}&viewonly=False";
+            await _hubEvents.NotifyUnattendedSessionReady(session, accessLink);
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
         {
-            return _viewerHub.Clients.Clients(viewerIDs).SendAsync("RelaunchedScreenCasterReady", Context.ConnectionId);
+            return _viewerHub.Clients.Clients(viewerIDs).SendAsync("RelaunchedScreenCasterReady", SessionInfo.UnattendedSessionId, SessionInfo.AccessKey);
         }
 
         public override async Task OnConnectedAsync()
         {
-            SessionInfo.CasterConnectionId = Context.ConnectionId;
-            SessionInfo.StartTime = DateTimeOffset.Now;
-            _sessionCache.Sessions.AddOrUpdate(Context.ConnectionId, SessionInfo, (id, si) => SessionInfo);
-
+           
             await base.OnConnectedAsync();
         }
 
@@ -124,18 +126,39 @@ namespace Immense.RemoteControl.Server.Hubs
                 if (ViewerList.Count > 0)
                 {
                     await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
-                    await _hubEvents.RestartScreenCaster(Context.ConnectionId, SessionInfo.ServiceID, ViewerList);
+                    await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
                 }
             }
 
             await base.OnDisconnectedAsync(exception);
         }
 
-        public Task ReceiveDeviceInfo(string serviceID, string machineName, string deviceID)
+        public Task<Result> ReceiveUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
         {
-            SessionInfo.ServiceID = serviceID;
+            SessionInfo.Mode = RemoteControlMode.Unattended;
+            SessionInfo.DesktopConnectionId = Context.ConnectionId;
+            SessionInfo.StartTime = DateTimeOffset.Now;
+            SessionInfo.UnattendedSessionId = unattendedSessionId;
+            SessionInfo.AccessKey = accessKey;
             SessionInfo.MachineName = machineName;
-            SessionInfo.DeviceID = deviceID;
+            SessionInfo.RequesterName = requesterName;
+            SessionInfo.OrganizationName = organizationName;
+
+            if (!_sessionCache.Sessions.TryAdd(unattendedSessionId, SessionInfo))
+            {
+                var result = Result.Fail("SessionId already exists on the server.");
+                return Task.FromResult(result);
+            }
+
+            return Task.FromResult(Result.Ok());
+        }
+
+        public Task ReceiveAttendedSessionInfo(string machineName)
+        {
+            SessionInfo.DesktopConnectionId = Context.ConnectionId;
+            SessionInfo.StartTime = DateTimeOffset.Now;
+            SessionInfo.MachineName = machineName;
+
             return Task.CompletedTask;
         }
 

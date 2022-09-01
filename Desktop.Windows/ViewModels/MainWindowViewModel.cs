@@ -121,7 +121,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         public void CopyLink()
         {
-            Clipboard.SetText($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage?.Replace(" ", "")}");
+            Clipboard.SetText($"{Host}/RemoteControl/Viewer?sessionId={StatusMessage?.Replace(" ", "")}");
         }
 
         public async Task Init()
@@ -274,8 +274,8 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         }
         private async Task GetSessionID()
         {
-            await _hubConnection.SendDeviceInfo(_appState.ServiceConnectionId, Environment.MachineName, _appState.DeviceID);
             var sessionId = await _hubConnection.GetSessionID();
+            await _hubConnection.SendAttendedSessionInfo(Environment.MachineName);
 
             var formattedSessionID = "";
             for (var i = 0; i < sessionId.Length; i += 3)

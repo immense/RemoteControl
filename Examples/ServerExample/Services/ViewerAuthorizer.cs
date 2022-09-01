@@ -5,9 +5,7 @@ namespace ServerExample.Services
 {
     internal class ViewerAuthorizer : IViewerAuthorizer
     {
-        public string UnauthorizedRedirectPageName => "Error";
-
-        public string? UnauthorizedRedirectArea => string.Empty;
+        public string UnauthorizedRedirectUrl => "/Error";
 
         public bool IsAuthorized(AuthorizationFilterContext context)
         {

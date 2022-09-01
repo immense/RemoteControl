@@ -1,4 +1,3 @@
-import { DtoType } from "./Enums/DtoType.js";
 import { DtoWrapper } from "./Interfaces/Dtos.js";
 import { CreateGUID } from "./Utilities.js";
 const Chunks = {};
@@ -33,9 +32,6 @@ export function TryComplete(wrapper) {
     Chunks[wrapper.InstanceId].push(wrapper);
     if (!wrapper.IsLastChunk) {
         return;
-    }
-    if (wrapper.DtoType == DtoType.ScreenCapture) {
-        console.log("Chunks: ", Chunks[wrapper.InstanceId]);
     }
     const buffers = Chunks[wrapper.InstanceId]
         .sort((a, b) => a.SequenceId - b.SequenceId)

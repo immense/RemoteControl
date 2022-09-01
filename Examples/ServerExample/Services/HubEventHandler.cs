@@ -1,4 +1,5 @@
 ﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Models;
 using System.Diagnostics;
 
 namespace ServerExample.Services
@@ -6,17 +7,13 @@ namespace ServerExample.Services
     internal class HubEventHandler : IHubEventHandler
     {
         private readonly IHttpContextAccessor _contextAccessor;
-        private readonly IServiceHubSessionCache _serviceSessionCache;
 
-        public HubEventHandler(
-            IHttpContextAccessor contextAccessor,
-            IServiceHubSessionCache serviceSessionCache)
+        public HubEventHandler(IHttpContextAccessor contextAccessor)
         {
             _contextAccessor = contextAccessor;
-            _serviceSessionCache = serviceSessionCache;
         }
 
-        public Task ChangeWindowsSession(string serviceConnectionId, string viewerConnectionId, int targetWindowsSession)
+        public Task ChangeWindowsSession(RemoteControlSession session, string viewerConnectionId, int targetWindowsSession)
         {
             return Task.CompletedTask;
         }
@@ -26,15 +23,15 @@ namespace ServerExample.Services
         
         }
 
-        public Task NotifyUnattendedSessionReady(string userConnectionId, string desktopConnectionId, string deviceId)
-        {
-            var link = $"/RemoteControl/Viewer?casterID={desktopConnectionId}&viewonly=False";
 
+        public Task NotifyUnattendedSessionReady(RemoteControlSession session, string relativeAccessUrl)
+        {
             var request = _contextAccessor.HttpContext?.Request;
+            var link = relativeAccessUrl;
 
             if (request is not null)
             {
-                link = $"{request.Scheme}://{request.Host}{link}";
+                link = $"{request.Scheme}://{request.Host}{relativeAccessUrl}";
             }
 
             Console.WriteLine("Unattended session ready.  URL:");
@@ -52,7 +49,7 @@ namespace ServerExample.Services
             return Task.CompletedTask;
         }
 
-        public Task RestartScreenCaster(string desktopConnectionId, string serviceConnectionId, HashSet<string> viewerList)
+        public Task RestartScreenCaster(RemoteControlSession sessionInfo, HashSet<string> viewerList)
         {
             return Task.CompletedTask;
         }

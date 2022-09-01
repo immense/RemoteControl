@@ -48,10 +48,6 @@ export function TryComplete<T>(wrapper: DtoWrapper) : T {
         return;
     }
 
-    if (wrapper.DtoType == DtoType.ScreenCapture) {
-        console.log("Chunks: ", Chunks[wrapper.InstanceId]);
-    }
-
     const buffers = Chunks[wrapper.InstanceId]
         .sort((a, b) => a.SequenceId - b.SequenceId)
         .map(x => x.DtoChunk)

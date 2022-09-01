@@ -13,9 +13,6 @@ namespace Immense.RemoteControl.Server.Extensions
         void AddHubEventHandler<T>()
             where T : class, IHubEventHandler;
 
-        void AddServiceHubSessionCache<T>()
-            where T : class, IServiceHubSessionCache;
-
         void AddViewerAuthorizer<T>()
             where T : class, IViewerAuthorizer;
 
@@ -41,12 +38,6 @@ namespace Immense.RemoteControl.Server.Extensions
             _services.AddScoped<IHubEventHandler, T>();
         }
 
-        public void AddServiceHubSessionCache<T>() 
-            where T : class, IServiceHubSessionCache
-        {
-            _services.AddSingleton<IServiceHubSessionCache, T>();
-        }
-
         public void AddViewerAuthorizer<T>() 
             where T : class, IViewerAuthorizer
         {
@@ -70,7 +61,6 @@ namespace Immense.RemoteControl.Server.Extensions
             var serviceTypes = new[]
             {
                 typeof(IHubEventHandler),
-                typeof(IServiceHubSessionCache),
                 typeof(IViewerAuthorizer),
                 typeof(IViewerHubDataProvider),
                 typeof(IViewerPageDataProvider)

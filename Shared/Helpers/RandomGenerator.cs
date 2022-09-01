@@ -17,5 +17,10 @@ namespace Immense.RemoteControl.Shared.Helpers
 
             return new string(bytes.Select(x => AllowableCharacters[x % AllowableCharacters.Length]).ToArray());
         }
+
+        public static string GenerateAccessKey()
+        {
+            return GenerateString(64);
+        }
     }
 }
