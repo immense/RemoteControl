@@ -1,6 +1,6 @@
-﻿import { CaptureFrameDto } from "../Interfaces/Dtos.js";
+﻿import { ScreenCaptureDto } from "../Interfaces/Dtos.js";
 
 export class CompletedFrame {
     ImageContent: ImageBitmap;
-    FrameData: CaptureFrameDto;
+    FrameData: ScreenCaptureDto;
 }

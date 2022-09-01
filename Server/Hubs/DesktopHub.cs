@@ -149,14 +149,9 @@ namespace Immense.RemoteControl.Server.Hubs
             return _viewerHub.Clients.Client(viewerID).SendAsync("ConnectionRequestDenied");
         }
 
-        public Task SendCtrlAltDelToAgent()
+        public Task SendDtoToViewer(byte[] dto, string viewerId)
         {
-            return _viewerHub.Clients.Client(SessionInfo.ServiceID).SendAsync("CtrlAltDel");
-        }
-
-        public Task SendDtoToBrowser(byte[] dto, string viewerId)
-        {
-            return _viewerHub.Clients.Client(viewerId).SendAsync("SendDtoToBrowser", dto);
+            return _viewerHub.Clients.Client(viewerId).SendAsync("SendDtoToViewer", dto);
         }
 
         public Task SendMessageToViewer(string viewerId, string message)

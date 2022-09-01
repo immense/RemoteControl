@@ -15,8 +15,8 @@ export class DtoMessageHandler {
             case DtoType.AudioSample:
                 this.HandleAudioSample(wrapper);
                 break;
-            case DtoType.CaptureFrame:
-                this.HandleCaptureFrame(wrapper);
+            case DtoType.ScreenCapture:
+                this.HandleScreenCapture(wrapper);
                 break;
             case DtoType.ClipboardText:
                 this.HandleClipboardText(wrapper);
@@ -46,12 +46,12 @@ export class DtoMessageHandler {
         }
         Sound.Play(audioSample.Buffer);
     }
-    HandleCaptureFrame(wrapper) {
-        let captureFrame = TryComplete(wrapper);
-        if (!captureFrame) {
+    HandleScreenCapture(wrapper) {
+        let screenCapture = TryComplete(wrapper);
+        if (!screenCapture) {
             return;
         }
-        HandleCaptureReceived(captureFrame);
+        HandleCaptureReceived(screenCapture);
     }
     HandleClipboardText(wrapper) {
         let clipboardText = TryComplete(wrapper);

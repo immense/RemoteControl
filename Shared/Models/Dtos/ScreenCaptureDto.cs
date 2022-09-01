@@ -4,11 +4,8 @@ using System.Runtime.Serialization;
 namespace Immense.RemoteControl.Shared.Models.Dtos
 {
     [DataContract]
-    public class CaptureFrameDto
+    public class ScreenCaptureDto
     {
-
-        [DataMember(Name = "EndOfFrame")]
-        public bool EndOfFrame { get; init; }
 
         [DataMember(Name = "Height")]
         public int Height { get; init; }
@@ -24,6 +21,6 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
         public int Width { get; init; }
 
         [DataMember(Name = "Sequence")]
-        public long Sequence { get; init; }
+        public long Sequence { get; set; }
     }
 }

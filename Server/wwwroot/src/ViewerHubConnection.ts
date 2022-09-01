@@ -70,7 +70,7 @@ export class ViewerHubConnection {
 
 
     private ApplyMessageHandlers(hubConnection) {
-        hubConnection.on("SendDtoToBrowser", (dto: ArrayBuffer) => {
+        hubConnection.on("SendDtoToViewer", (dto: ArrayBuffer) => {
             ViewerApp.DtoMessageHandler.ParseBinaryMessage(dto);
         });
 

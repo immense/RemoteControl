@@ -48,7 +48,7 @@ export class ViewerHubConnection {
         this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.CasterID, ViewerApp.RequesterName, ViewerApp.Mode, ViewerApp.Otp);
     }
     ApplyMessageHandlers(hubConnection) {
-        hubConnection.on("SendDtoToBrowser", (dto) => {
+        hubConnection.on("SendDtoToViewer", (dto) => {
             ViewerApp.DtoMessageHandler.ParseBinaryMessage(dto);
         });
         hubConnection.on("ConnectionFailed", () => {

@@ -48,12 +48,17 @@ export function TryComplete<T>(wrapper: DtoWrapper) : T {
         return;
     }
 
+    if (wrapper.DtoType == DtoType.ScreenCapture) {
+        console.log("Chunks: ", Chunks[wrapper.InstanceId]);
+    }
+
     const buffers = Chunks[wrapper.InstanceId]
         .sort((a, b) => a.SequenceId - b.SequenceId)
         .map(x => x.DtoChunk)
-        .reduce(x => x);
+        .reduce((prev,cur) => new Uint8Array([...prev, ...cur]));
 
     delete Chunks[wrapper.InstanceId];
 
-    return MessagePack.decode<T>(buffers);
+    var decoded = MessagePack.decode<T>(buffers);
+    return decoded;
 }

@@ -5,7 +5,7 @@ import { ShowMessage } from "./UI.js";
 import { Sound } from "./Sound.js";
 import {
     AudioSampleDto,
-    CaptureFrameDto,
+    ScreenCaptureDto,
     ClipboardTextDto,
     CursorChangeDto,
     ScreenDataDto,
@@ -28,8 +28,8 @@ export class DtoMessageHandler {
             case DtoType.AudioSample:
                 this.HandleAudioSample(wrapper);
                 break;
-            case DtoType.CaptureFrame:
-                this.HandleCaptureFrame(wrapper);
+            case DtoType.ScreenCapture:
+                this.HandleScreenCapture(wrapper);
                 break;
             case DtoType.ClipboardText:
                 this.HandleClipboardText(wrapper);
@@ -63,14 +63,14 @@ export class DtoMessageHandler {
         Sound.Play(audioSample.Buffer);
     }
 
-    HandleCaptureFrame(wrapper: DtoWrapper) {
-        let captureFrame = TryComplete<CaptureFrameDto>(wrapper);
+    HandleScreenCapture(wrapper: DtoWrapper) {
+        let screenCapture = TryComplete<ScreenCaptureDto>(wrapper);
 
-        if (!captureFrame) {
+        if (!screenCapture) {
             return;
         }
 
-        HandleCaptureReceived(captureFrame);
+        HandleCaptureReceived(screenCapture);
     }
 
     HandleClipboardText(wrapper: DtoWrapper) {

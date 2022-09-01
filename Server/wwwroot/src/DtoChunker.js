@@ -1,3 +1,4 @@
+import { DtoType } from "./Enums/DtoType.js";
 import { DtoWrapper } from "./Interfaces/Dtos.js";
 import { CreateGUID } from "./Utilities.js";
 const Chunks = {};
@@ -33,11 +34,15 @@ export function TryComplete(wrapper) {
     if (!wrapper.IsLastChunk) {
         return;
     }
+    if (wrapper.DtoType == DtoType.ScreenCapture) {
+        console.log("Chunks: ", Chunks[wrapper.InstanceId]);
+    }
     const buffers = Chunks[wrapper.InstanceId]
         .sort((a, b) => a.SequenceId - b.SequenceId)
         .map(x => x.DtoChunk)
-        .reduce(x => x);
+        .reduce((prev, cur) => new Uint8Array([...prev, ...cur]));
     delete Chunks[wrapper.InstanceId];
-    return MessagePack.decode(buffers);
+    var decoded = MessagePack.decode(buffers);
+    return decoded;
 }
 //# sourceMappingURL=DtoChunker.js.map

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Shared.Models;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared.Helpers;
@@ -32,10 +31,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         void Dispose();
         Task SendAudioSample(byte[] audioSample);
         Task SendClipboardText(string clipboardText);
-        Task SendCtrlAltDel();
         Task SendCursorChange(CursorInfo cursorInfo);
         Task SendFile(FileUpload fileUpload, CancellationToken cancelToken, Action<double> progressUpdateCallback);
-        Task SendScreenCapture(CaptureFrame screenFrame);
+        Task SendScreenCapture(ScreenCaptureDto screenCapture);
         Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
         Task SendScreenSize(int width, int height);
         Task SendViewerConnected();
@@ -171,11 +169,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             await TrySendToViewer(dto, DtoType.ClipboardText,ViewerConnectionID);
         }
 
-        public async Task SendCtrlAltDel()
-        {
-            await _casterSocket.SendCtrlAltDelToAgent();
-        }
-
         public async Task SendCursorChange(CursorInfo cursorInfo)
         {
             if (cursorInfo is null)
@@ -240,36 +233,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        public async Task SendScreenCapture(CaptureFrame screenFrame)
+        public async Task SendScreenCapture(ScreenCaptureDto screenCapture)
         {
 
-            PendingSentFrames.Enqueue(new SentFrame(screenFrame.EncodedImageBytes.Length, _systemTime.Now));
+            PendingSentFrames.Enqueue(new SentFrame(screenCapture.ImageBytes.Length, _systemTime.Now));
 
-            var left = screenFrame.Left;
-            var top = screenFrame.Top;
-            var width = screenFrame.Width;
-            var height = screenFrame.Height;
 
-            var chunks = screenFrame.EncodedImageBytes.Chunk(50_000).ToArray();
-            var chunkCount = chunks.Length;
-
-            for (var i = 0; i < chunkCount; i++)
-            {
-                var chunk = chunks[i];
-
-                var dto = new CaptureFrameDto()
-                {
-                    Left = left,
-                    Top = top,
-                    Width = width,
-                    Height = height,
-                    EndOfFrame = i == chunkCount - 1,
-                    Sequence = screenFrame.Sequence,
-                    ImageBytes = chunk
-                };
-
-                await TrySendToViewer(dto, DtoType.CaptureFrame, ViewerConnectionID);
-            }
+            await TrySendToViewer(screenCapture, DtoType.ScreenCapture, ViewerConnectionID);
         }
 
         public async Task SendScreenData(

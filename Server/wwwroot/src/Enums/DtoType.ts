@@ -1,5 +1,5 @@
 ﻿export enum DtoType {
-    CaptureFrame = 0,
+    ScreenCapture = 0,
     ScreenData = 1,
     ScreenSize = 2,
     ClipboardText = 4,

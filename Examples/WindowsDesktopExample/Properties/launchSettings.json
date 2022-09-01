@@ -1,8 +1,12 @@
 {
   "profiles": {
-    "WindowsDesktopExample": {
+    "Attended": {
       "commandName": "Project",
       "commandLineArgs": ""
+    },
+    "Unattended": {
+      "commandName": "Project",
+      "commandLineArgs": "-m Unattended -r some-requester -s some-service-id -d some-device-id -o some-org-id -n Immense"
     }
   }
 }

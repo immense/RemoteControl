@@ -1,40 +1,31 @@
 import { ViewerApp } from "./App.js";
 import { Screen2DContext } from "./UI.js";
 const BitmapQueue = [];
-const ImagePartials = {};
 let CanvasLock = 1;
 let NextSequence = 0;
-export function HandleCaptureReceived(captureFrame) {
-    if (!ImagePartials[captureFrame.Sequence]) {
-        ImagePartials[captureFrame.Sequence] = [];
-    }
-    ImagePartials[captureFrame.Sequence].push(captureFrame.ImageBytes);
-    if (captureFrame.EndOfFrame) {
-        var partials = ImagePartials[captureFrame.Sequence];
-        let completedFrame = new Blob(partials);
-        delete ImagePartials[captureFrame.Sequence];
-        createImageBitmap(completedFrame).then(bitmap => {
-            BitmapQueue.push({
-                ImageContent: bitmap,
-                FrameData: captureFrame
-            });
-            if (CanvasLock < 1) {
-                return;
-            }
-            CanvasLock--;
-            processQueue();
+export function HandleCaptureReceived(screenCapture) {
+    let imageBlob = new Blob([screenCapture.ImageBytes]);
+    createImageBitmap(imageBlob).then(bitmap => {
+        BitmapQueue.push({
+            ImageContent: bitmap,
+            FrameData: screenCapture
         });
-        //let url = window.URL.createObjectURL(completedFrame);
-        //let img = new Image(captureFrame.Width, captureFrame.Height);
-        //img.onload = () => {
-        //    UI.Screen2DContext.drawImage(img,
-        //        captureFrame.Left,
-        //        captureFrame.Top,
-        //        captureFrame.Width,
-        //        captureFrame.Height);
-        //    window.URL.revokeObjectURL(url);
-        //};
-    }
+        if (CanvasLock < 1) {
+            return;
+        }
+        CanvasLock--;
+        processQueue();
+    });
+    //let url = window.URL.createObjectURL(imageBlob);
+    //let img = new Image(captureFrame.Width, captureFrame.Height);
+    //img.onload = () => {
+    //    UI.Screen2DContext.drawImage(img,
+    //        captureFrame.Left,
+    //        captureFrame.Top,
+    //        captureFrame.Width,
+    //        captureFrame.Height);
+    //    window.URL.revokeObjectURL(url);
+    //};
 }
 function processQueue() {
     try {

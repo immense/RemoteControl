@@ -6,7 +6,7 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
     public enum DtoType
     {
         [EnumMember(Value = "CaptureFrame")]
-        CaptureFrame = 0,
+        ScreenCapture = 0,
         [EnumMember(Value = "ScreenData")]
         ScreenData = 1,
         [EnumMember(Value = "ScreenSize")]

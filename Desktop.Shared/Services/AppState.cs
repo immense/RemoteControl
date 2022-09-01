@@ -33,6 +33,13 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
     public class AppState : IAppState
     {
+        private readonly ILogger<AppState> _logger;
+
+        public AppState(ILogger<AppState> logger)
+        {
+            _logger = logger;
+            ProcessArgs();
+        }
 
         public event EventHandler<ScreenCastRequest>? ScreenCastRequested;
 
@@ -41,12 +48,19 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public event EventHandler<string>? ViewerRemoved;
 
         public Dictionary<string, string> ArgDict { get; } = new();
+
         public string DeviceID { get; init; } = string.Empty;
+
         public string Host { get; set; } = string.Empty;
+
         public AppMode Mode { get; set; }
+
         public string OrganizationId { get; set; } = string.Empty;
+
         public string OrganizationName { get; init; } = string.Empty;
+
         public string RequesterConnectionId { get; init; } = string.Empty;
+
         public string ServiceConnectionId { get; init; } = string.Empty;
 
         public ConcurrentDictionary<string, IViewer> Viewers { get; } = new();
@@ -74,6 +88,39 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public void UpdateOrganizationId(string organizationId)
         {
             OrganizationId = organizationId;
+        }
+
+        private void ProcessArgs()
+        {
+            var args = Environment.GetCommandLineArgs()
+                .SkipWhile(x => !x.StartsWith("-"))
+                .ToArray();
+
+            for (var i = 0; i < args.Length; i += 2)
+            {
+                try
+                {
+                    var key = args[i];
+                    if (key != null)
+                    {
+                        if (!key.Contains("-"))
+                        {
+                            _logger.LogWarning("Command line arguments are invalid.  Key: {key}", key);
+                            i -= 1;
+                            continue;
+                        }
+
+                        key = key.Trim().TrimStart('-').TrimStart('-').ToLower();
+
+                        ArgDict.Add(key, args[i + 1].Trim());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while processing args.");
+                }
+
+            }
         }
     }
 }

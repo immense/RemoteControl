@@ -130,7 +130,6 @@ namespace Immense.RemoteControl.Server.Hubs
             return _desktopHub.Clients.Client(ScreenCasterID).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
         }
 
-
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             if (!string.IsNullOrWhiteSpace(ScreenCasterID))

@@ -14,8 +14,8 @@ using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
-using Immense.RemoteControl.Desktop.Shared.Models;
 using Immense.RemoteControl.Shared.Helpers;
+using Immense.RemoteControl.Shared.Models.Dtos;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services
 {
@@ -109,9 +109,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
                 if (result.IsSuccess && result.Value is not null)
                 {
-                    await viewer.SendScreenCapture(new CaptureFrame()
+                    await viewer.SendScreenCapture(new ScreenCaptureDto()
                     {
-                        EncodedImageBytes = _imageHelper.EncodeBitmap(result.Value, SKEncodedImageFormat.Jpeg, viewer.ImageQuality),
+                        ImageBytes = _imageHelper.EncodeBitmap(result.Value, SKEncodedImageFormat.Jpeg, viewer.ImageQuality),
                         Left = screenBounds.Left,
                         Top = screenBounds.Top,
                         Width = screenBounds.Width,
@@ -128,7 +128,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     return;
                 }
 
-                _ = Task.Run(() => CastScreen(screenCastRequest, viewer, 0));
+                await CastScreen(screenCastRequest, viewer, 0);
             }
             catch (Exception ex)
             {
@@ -224,9 +224,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 return;
             }
 
-            await viewer.SendScreenCapture(new CaptureFrame()
+            await viewer.SendScreenCapture(new ScreenCaptureDto()
             {
-                EncodedImageBytes = encodedImageBytes,
+                ImageBytes = encodedImageBytes,
                 Top = (int)diffArea.Top,
                 Left = (int)diffArea.Left,
                 Width = (int)diffArea.Width,

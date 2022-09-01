@@ -1,6 +1,6 @@
 export var DtoType;
 (function (DtoType) {
-    DtoType[DtoType["CaptureFrame"] = 0] = "CaptureFrame";
+    DtoType[DtoType["ScreenCapture"] = 0] = "ScreenCapture";
     DtoType[DtoType["ScreenData"] = 1] = "ScreenData";
     DtoType[DtoType["ScreenSize"] = 2] = "ScreenSize";
     DtoType[DtoType["ClipboardText"] = 4] = "ClipboardText";

@@ -13,10 +13,10 @@ namespace Immense.RemoteControl.Shared.Helpers
     {
         private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
-        public static IEnumerable<DtoWrapper> ChunkDto<T>(T dto, DtoType dtoType, Guid requestId = default, int chunkSize = 50_000)
+        public static IEnumerable<DtoWrapper> ChunkDto<T>(T dto, DtoType dtoType, string requestId = "", int chunkSize = 50_000)
         {
             var dtoBytes = MessagePackSerializer.Serialize(dto);
-            var instanceId = Guid.NewGuid();
+            var instanceId = Guid.NewGuid().ToString();
             var chunks = dtoBytes.Chunk(chunkSize).ToArray();
 
             for (var i = 0; i < chunks.Length; i++)

@@ -100,11 +100,6 @@ export function ApplyInputHandlers() {
         ViewerApp.ConnectToClient();
     });
     CtrlAltDelButton.addEventListener("click", (ev) => {
-        if (!ViewerApp.ServiceID) {
-            ShowMessage("Not available for this session.");
-            return;
-        }
-
         if (ViewerApp.ViewOnlyMode) {
             alert("View-only mode is enabled.");
             return;
@@ -178,7 +173,7 @@ export function ApplyInputHandlers() {
             url = `${location.origin}${location.pathname}?sessionID=${ViewerApp.CasterID}`;
         }
         else {
-            url = `${location.origin}${location.pathname}?casterID=${ViewerApp.CasterID}&serviceID=${ViewerApp.ServiceID}`;
+            url = `${location.origin}${location.pathname}?casterID=${ViewerApp.CasterID}`;
         }
         ViewerApp.ClipboardWatcher.SetClipboardText(url);
         ShowMessage("Link copied to clipboard.");

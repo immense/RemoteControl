@@ -1,53 +1,42 @@
 ﻿import { ViewerApp } from "./App.js";
-import { CaptureFrameDto } from "./Interfaces/Dtos.js";
+import { ScreenCaptureDto } from "./Interfaces/Dtos.js";
 import { CompletedFrame } from "./Models/CompletedFrame.js";
 import { Screen2DContext } from "./UI.js";
 
 
 const BitmapQueue: Array <CompletedFrame> =[];
-const ImagePartials: Record <string, Array<Uint8Array>> = { };
 let CanvasLock: number = 1;
 let NextSequence: number = 0;
 
-export function HandleCaptureReceived(captureFrame: CaptureFrameDto) {
-    if (!ImagePartials[captureFrame.Sequence]) {
-        ImagePartials[captureFrame.Sequence] = [];
-    }
+export function HandleCaptureReceived(screenCapture: ScreenCaptureDto) {
 
-    ImagePartials[captureFrame.Sequence].push(captureFrame.ImageBytes);
+    let imageBlob = new Blob([screenCapture.ImageBytes]);
 
-    if (captureFrame.EndOfFrame) {
-        
-        var partials = ImagePartials[captureFrame.Sequence];
-        let completedFrame = new Blob(partials);
-        delete ImagePartials[captureFrame.Sequence];
-
-        createImageBitmap(completedFrame).then(bitmap => {
-            BitmapQueue.push({
-                ImageContent: bitmap,
-                FrameData: captureFrame
-            });
-
-            if (CanvasLock < 1) {
-                return;
-            }
-
-            CanvasLock--;
-
-            processQueue();
+    createImageBitmap(imageBlob).then(bitmap => {
+        BitmapQueue.push({
+            ImageContent: bitmap,
+            FrameData: screenCapture
         });
 
-        //let url = window.URL.createObjectURL(completedFrame);
-        //let img = new Image(captureFrame.Width, captureFrame.Height);
-        //img.onload = () => {
-        //    UI.Screen2DContext.drawImage(img,
-        //        captureFrame.Left,
-        //        captureFrame.Top,
-        //        captureFrame.Width,
-        //        captureFrame.Height);
-        //    window.URL.revokeObjectURL(url);
-        //};
-    }
+        if (CanvasLock < 1) {
+            return;
+        }
+
+        CanvasLock--;
+
+        processQueue();
+    });
+
+    //let url = window.URL.createObjectURL(imageBlob);
+    //let img = new Image(captureFrame.Width, captureFrame.Height);
+    //img.onload = () => {
+    //    UI.Screen2DContext.drawImage(img,
+    //        captureFrame.Left,
+    //        captureFrame.Top,
+    //        captureFrame.Width,
+    //        captureFrame.Height);
+    //    window.URL.revokeObjectURL(url);
+    //};
 }
 
 

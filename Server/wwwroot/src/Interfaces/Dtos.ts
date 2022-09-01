@@ -19,8 +19,7 @@ export interface AudioSampleDto {
     Buffer: Uint8Array;
 }
 
-export interface CaptureFrameDto {
-    EndOfFrame: boolean;
+export interface ScreenCaptureDto {
     Left: number;
     Top: number;
     Width: number;

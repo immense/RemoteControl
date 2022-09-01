@@ -62,8 +62,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             rootCommand.AddOption(pipeNameOption);
 
             var requesterIdOption = new Option<string>(
-               new[] { "-r", "--requester" },
-               "Attempt to relaunch the process with elevated privileges.");
+               new[] { "-r", "--requester-id" },
+               "The ID of the user requesting the remote control session.");
             rootCommand.AddOption(requesterIdOption);
 
             var serviceIdOption = new Option<string>(
@@ -103,15 +103,19 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                         host = serverUri;
                     }
 
-                    services.AddSingleton<IAppState>(s => new AppState()
+                    services.AddSingleton<IAppState>(s =>
                     {
-                        DeviceID = deviceId,
-                        Host = host,
-                        Mode = mode,
-                        OrganizationId = organizationId,
-                        OrganizationName = organizationName,
-                        RequesterConnectionId = requesterId,
-                        ServiceConnectionId = serviceId
+                        var logger = s.GetRequiredService<ILogger<AppState>>();
+                        return new AppState(logger)
+                        {
+                            DeviceID = deviceId,
+                            Host = host,
+                            Mode = mode,
+                            OrganizationId = organizationId,
+                            OrganizationName = organizationName,
+                            RequesterConnectionId = requesterId,
+                            ServiceConnectionId = serviceId
+                        };
                     });
 
                     AddServices(services, platformServicesConfig);
@@ -125,6 +129,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 organizationIdOption,
                 organizationNameOption);
 
+            rootCommand.TreatUnmatchedTokensAsErrors = false;
             await rootCommand.InvokeAsync(args);
 
             var provider = services.BuildServiceProvider();

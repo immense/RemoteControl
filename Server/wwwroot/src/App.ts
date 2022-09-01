@@ -20,7 +20,6 @@ export const ViewerApp = {
     SessionRecorder: new SessionRecorder(),
     CasterID: queryString["casterID"] ? decodeURIComponent(queryString["casterID"]) : "",
     Otp: queryString["otp"] ? decodeURIComponent(queryString["otp"]) : "",
-    ServiceID: queryString["serviceID"] ? decodeURIComponent(queryString["serviceID"]) : "",
     RequesterName: queryString["requesterName"] ? decodeURIComponent(queryString["requesterName"]) : "",
     ViewOnlyMode: queryString["viewonly"] ?
         decodeURIComponent(queryString["viewonly"]).toLowerCase() == "true" :

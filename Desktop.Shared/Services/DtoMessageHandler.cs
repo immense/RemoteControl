@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
@@ -99,7 +100,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                         KeyUp(wrapper);
                         break;
                     case DtoType.CtrlAltDel:
-                        await viewer.SendCtrlAltDel();
+                        CtrlAltDel();
                         break;
                     case DtoType.ToggleAudio:
                         ToggleAudio(wrapper);
@@ -136,6 +137,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             {
                 _logger.LogError(ex, "Error while parsing message.");
             }
+        }
+
+        private void CtrlAltDel()
+        {
+            User32.SendSAS(false);
         }
 
         private async Task ClipboardTransfer(DtoWrapper wrapper)

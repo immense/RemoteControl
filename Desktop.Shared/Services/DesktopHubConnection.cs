@@ -28,7 +28,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs);
         Task SendConnectionFailedToViewers(List<string> viewerIDs);
         Task SendConnectionRequestDenied(string viewerID);
-        Task SendCtrlAltDelToAgent();
         Task SendDeviceInfo(string serviceID, string machineName, string deviceID);
         Task SendDtoToViewer<T>(T dto, string viewerId);
         Task SendMessageToViewer(string viewerID, string message);
@@ -175,11 +174,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             return Connection.SendAsync("SendConnectionRequestDenied", viewerID);
         }
 
-        public Task SendCtrlAltDelToAgent()
-        {
-            return Connection.SendAsync("SendCtrlAltDelToAgent");
-        }
-
         public Task SendDeviceInfo(string serviceID, string machineName, string deviceID)
         {
             return Connection.SendAsync("ReceiveDeviceInfo", serviceID, machineName, deviceID);
@@ -188,7 +182,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public Task SendDtoToViewer<T>(T dto, string viewerId)
         {
             var serializedDto = MessagePack.MessagePackSerializer.Serialize(dto);
-            return Connection.SendAsync("SendDtoToBrowser", serializedDto, viewerId);
+            return Connection.SendAsync("SendDtoToViewer", serializedDto, viewerId);
         }
 
         public Task SendMessageToViewer(string viewerID, string message)

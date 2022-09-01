@@ -23,10 +23,10 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
         public bool IsLastChunk { get; init; }
 
         [DataMember]
-        public Guid RequestId { get; init; }
+        public string RequestId { get; init; } = string.Empty;
 
         [DataMember]
-        public Guid InstanceId { get; init; }
+        public string InstanceId { get; init; } = string.Empty;
 
         [DataMember]
         public int SequenceId { get; init; }
