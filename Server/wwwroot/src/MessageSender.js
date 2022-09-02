@@ -61,6 +61,7 @@ export class MessageSender {
     SendCtrlAltDel() {
         var dto = new CtrlAltDelDto();
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.CtrlAltDel);
+        ViewerApp.ViewerHubConnection.InvokeCtrlAltDel();
     }
     SendOpenFileTransferWindow() {
         var dto = new EmptyDto();

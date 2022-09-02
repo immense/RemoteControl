@@ -141,7 +141,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         private void CtrlAltDel()
         {
-            User32.SendSAS(false);
+            if (OperatingSystem.IsWindows())
+            {
+                // Might as well try both.
+                User32.SendSAS(false);
+                User32.SendSAS(true);
+            }
         }
 
         private async Task ClipboardTransfer(DtoWrapper wrapper)

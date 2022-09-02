@@ -47,5 +47,22 @@ namespace Immense.RemoteControl.Server.Abstractions
         /// <param name="targetWindowsSession"></param>
         /// <returns></returns>
         Task ChangeWindowsSession(RemoteControlSession session, string viewerConnectionId, int targetWindowsSession);
+
+
+        /// <summary>
+        /// <para>
+        ///     This is called when the viewer invokes "Ctrl+Alt+Del".  On the desktop end, it calls the
+        ///     native function SendSAS (https://docs.microsoft.com/en-us/windows/win32/api/sas/nf-sas-sendsas).
+        /// </para>
+        /// <para>
+        ///     This can (usually?) only be called  from a Windows service, so this event can be routed to one.
+        ///     The desktop process will also try to call it.  I don't believe there are any side effects from
+        ///     calling it multiple times, even if they both succeed.
+        /// </para>
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="viewerConnectionId"></param>
+        /// <returns></returns>
+        Task InvokeCtrlAltDel(RemoteControlSession session, string viewerConnectionId);
     }
 }

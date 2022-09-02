@@ -4,6 +4,7 @@ import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { ShowMessage } from "./UI.js";
 import { ChunkDto, TryComplete } from "./DtoChunker.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
+import { HubConnectionState } from "./Enums/HubConnectionState.js";
 var signalR = window["signalR"];
 export class ViewerHubConnection {
     constructor() {
@@ -35,9 +36,16 @@ export class ViewerHubConnection {
             this.Connection.invoke("ChangeWindowsSession", sessionID);
         }
     }
+    InvokeCtrlAltDel() {
+        var _a;
+        if (((_a = this.Connection) === null || _a === void 0 ? void 0 : _a.state) != HubConnectionState.Connected) {
+            return;
+        }
+        this.Connection.invoke("InvokeCtrlAltDel");
+    }
     SendDtoToClient(dto, type) {
         var _a;
-        if (((_a = this.Connection) === null || _a === void 0 ? void 0 : _a.state) != "Connected") {
+        if (((_a = this.Connection) === null || _a === void 0 ? void 0 : _a.state) != HubConnectionState.Connected) {
             return;
         }
         let chunks = ChunkDto(dto, type);
@@ -47,7 +55,7 @@ export class ViewerHubConnection {
         }
     }
     async SendScreenCastRequestToDevice() {
-        const streamId = await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+        await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
     }
     ApplyMessageHandlers(hubConnection) {
         hubConnection.on("SendDtoToViewer", (dto) => {
