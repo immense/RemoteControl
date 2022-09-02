@@ -29,7 +29,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         void ApplyAutoQuality();
         void CalculateFps();
         void DequeuePendingFrame();
-        void Dispose();
         Task SendAudioSample(byte[] audioSample);
         Task SendClipboardText(string clipboardText);
         Task SendCursorChange(CursorInfo cursorInfo);

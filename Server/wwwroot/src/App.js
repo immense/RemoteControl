@@ -21,11 +21,12 @@ export const ViewerApp = {
     ViewOnlyMode: queryString["viewonly"] ?
         decodeURIComponent(queryString["viewonly"]).toLowerCase() == "true" :
         false,
-    Mode: queryString["mode"] ?
-        RemoteControlMode[decodeURIComponent(queryString["mode"])] :
-        RemoteControlMode.Attended,
+    Mode: RemoteControlMode.Unknown,
     Settings: GetSettings(),
     Init: () => {
+        ViewerApp.Mode = queryString["mode"] ?
+            RemoteControlMode[decodeURIComponent(queryString["mode"])] :
+            RemoteControlMode.Attended;
         if (ViewerApp.ViewOnlyMode) {
             UI.ViewOnlyButton.classList.add("toggled");
         }

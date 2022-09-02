@@ -112,6 +112,12 @@ namespace Immense.RemoteControl.Server.Hubs
                 _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
             }
         }
+
+        public Task InvokeCtrlAltDel()
+        {
+            return _hubEvents.InvokeCtrlAltDel(SessionInfo, Context.ConnectionId);
+        }
+
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             if (!string.IsNullOrWhiteSpace(SessionInfo.DesktopConnectionId))

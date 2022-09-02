@@ -31,9 +31,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseRemoteControlServer();
 
 app.UseAuthorization();
+
+app.UseRemoteControlServer();
 
 //app.MapRazorPages();
 

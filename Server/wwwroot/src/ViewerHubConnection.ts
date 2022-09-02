@@ -10,6 +10,7 @@ import { ChunkDto, TryComplete } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
 import { DtoWrapper, ScreenCaptureDto } from "./Interfaces/Dtos.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
+import { HubConnectionState } from "./Enums/HubConnectionState.js";
 
 var signalR = window["signalR"];
 
@@ -50,9 +51,17 @@ export class ViewerHubConnection {
         }
     }
 
+    InvokeCtrlAltDel() {
+        if (this.Connection?.state != HubConnectionState.Connected) {
+            return;
+        }
+
+        this.Connection.invoke("InvokeCtrlAltDel");
+    }
+
     SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
 
-        if (this.Connection?.state != "Connected") {
+        if (this.Connection?.state != HubConnectionState.Connected) {
             return;
         }
 
@@ -66,10 +75,9 @@ export class ViewerHubConnection {
 
 
     async SendScreenCastRequestToDevice() {
-        const streamId = await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+        await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
 
     }
-
 
 
     private ApplyMessageHandlers(hubConnection) {
