@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Shared.Enums;
 using System.Diagnostics;
 
 namespace ServerExample.Services
@@ -18,11 +19,40 @@ namespace ServerExample.Services
             return Task.CompletedTask;
         }
 
+        public Task InvokeCtrlAltDel(RemoteControlSession session, string viewerConnectionId)
+        {
+            return Task.CompletedTask;
+        }
+
         public void LogRemoteControlStarted(string message, string organizationId)
         {
         
         }
 
+        public Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReason reason, int currentSessionId)
+        {
+            switch (reason)
+            {
+                case SessionSwitchReason.ConsoleDisconnect:
+                case SessionSwitchReason.RemoteConnect:
+                case SessionSwitchReason.RemoteDisconnect:
+                case SessionSwitchReason.SessionLogoff:
+                case SessionSwitchReason.SessionLock:
+                case SessionSwitchReason.SessionRemoteControl:
+                    // These ones will cause remote control to stop working.  We'll need
+                    // to launch a new process in the active session or handle this some
+                    // other way.
+                    break;
+                case SessionSwitchReason.ConsoleConnect:
+                case SessionSwitchReason.SessionLogon:
+                case SessionSwitchReason.SessionUnlock:
+                    break;
+                default:
+                    break;
+            }
+
+            return Task.CompletedTask;
+        }
 
         public Task NotifyUnattendedSessionReady(RemoteControlSession session, string relativeAccessUrl)
         {

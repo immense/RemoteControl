@@ -3,6 +3,7 @@ using Immense.RemoteControl.Desktop.Windows;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using WindowsDesktopExample;
 
 
@@ -24,7 +25,6 @@ var provider = await Startup.UseRemoteControlClient(
         });
     },
     "https://localhost:7024");
-
 
 var shutdownService = provider.GetRequiredService<IShutdownService>();
 Console.CancelKeyPress += async (s, e) =>

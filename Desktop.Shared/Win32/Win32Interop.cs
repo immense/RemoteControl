@@ -1,8 +1,10 @@
-﻿using Immense.RemoteControl.Shared.Models;
+﻿using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using static Immense.RemoteControl.Desktop.Shared.Win32.ADVAPI32;
@@ -188,16 +190,16 @@ namespace Immense.RemoteControl.Desktop.Shared.Win32
 
             // Create a new process in the current user's logon session.
             bool result = CreateProcessAsUser(
-                hUserTokenDup, 
-                string.Empty, 
-                applicationName, 
-                ref sa, 
-                ref sa, 
-                false, 
-                dwCreationFlags, 
-                IntPtr.Zero, 
-                string.Empty, 
-                ref si, 
+                hUserTokenDup,
+                string.Empty,
+                applicationName,
+                ref sa,
+                ref sa,
+                false,
+                dwCreationFlags,
+                IntPtr.Zero,
+                string.Empty,
+                ref si,
                 out procInfo);
 
             // Invalidate the handles.

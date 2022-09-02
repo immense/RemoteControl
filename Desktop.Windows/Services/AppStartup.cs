@@ -4,18 +4,22 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Immense.RemoteControl.Desktop.Windows.Views;
+using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using SessionSwitchReasonLocal = Immense.RemoteControl.Shared.Enums.SessionSwitchReason;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
@@ -65,14 +69,6 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public async Task Initialize()
         {
-            SystemEvents.SessionEnding += async (s, e) =>
-            {
-                if (e.Reason == SessionEndReasons.SystemShutdown)
-                {
-                    await _desktopHub.DisconnectAllViewers();
-                }
-            };
-
             StartWinFormsThread();
 
             var wpfStarted = await _dispatcher.StartWpfThread().ConfigureAwait(false);
@@ -174,6 +170,8 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         private void StartWinFormsThread()
         {
+            _backgroundForm.Load += BackgroundForm_Load;
+            _backgroundForm.FormClosing += BackgroundForm_FormClosing;
             var winformsThread = new Thread(() =>
             {
                 System.Windows.Forms.Application.Run(_backgroundForm);
@@ -185,6 +183,34 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             winformsThread.Start();
 
             _logger.LogInformation("Background WinForms thread started.");
+        }
+
+        private void BackgroundForm_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
+            SystemEvents.SessionEnding -= SystemEvents_SessionEnding;
+        }
+
+        private void BackgroundForm_Load(object? sender, EventArgs e)
+        {
+            SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
+            SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+        }
+
+        private async void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        {
+            if (e.Reason == SessionEndReasons.SystemShutdown)
+            {
+                await _desktopHub.DisconnectAllViewers();
+            }
+        }
+
+        private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
+        {
+            _logger.LogInformation("Session changing.  Reason: {reason}", e.Reason);
+
+            var reason = (SessionSwitchReasonLocal)(int)e.Reason;
+            _desktopHub.NotifySessionChanged(reason, Process.GetCurrentProcess().SessionId);
         }
 
         private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)

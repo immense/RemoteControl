@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task DisconnectViewer(IViewer viewer, bool notifyViewer);
         Task<string> GetSessionID();
         Task NotifyRequesterUnattendedReady();
+        Task NotifySessionChanged(SessionSwitchReason reason, int currentSessionId);
         Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs);
         Task SendAttendedSessionInfo(string machineName);
 
@@ -162,6 +164,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public Task NotifyRequesterUnattendedReady()
         {
             return Connection.SendAsync("NotifyRequesterUnattendedReady");
+        }
+
+        public Task NotifySessionChanged(SessionSwitchReason reason, int currentSessionId)
+        {
+            return Connection.SendAsync("NotifySessionChanged", reason, currentSessionId);
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)

@@ -27,7 +27,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
     public class ScreenCaster : IScreenCaster
     {
-        private static CancellationTokenSource _metricsCts;
+        private static CancellationTokenSource? _metricsCts;
         private readonly IAppState _appState;
         private readonly ICursorIconWatcher _cursorIconWatcher;
         private readonly IImageHelper _imageHelper;

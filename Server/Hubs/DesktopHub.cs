@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -104,6 +105,11 @@ namespace Immense.RemoteControl.Server.Hubs
 
             var accessLink = $"/RemoteControl/Viewer?mode=Unattended&sessionId={session.UnattendedSessionId}&accessKey={session.AccessKey}&viewonly=False";
             await _hubEvents.NotifyUnattendedSessionReady(session, accessLink);
+        }
+
+        public Task NotifySessionChanged(SessionSwitchReason reason, int currentSessionId)
+        {
+            return _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)

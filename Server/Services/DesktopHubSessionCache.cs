@@ -13,10 +13,14 @@ namespace Immense.RemoteControl.Server.Services
         ConcurrentDictionary<string, RemoteControlSession> Sessions { get; }
     }
 
-    public class DesktopHubSessionCache : IDesktopHubSessionCache
+    internal class DesktopHubSessionCache : IDesktopHubSessionCache
     {
         private static readonly ConcurrentDictionary<string, RemoteControlSession> _sessions = new();
 
+        /// <summary>
+        /// Contains the active remote control sessions.  The key is the --session-id param that
+        /// was originally passed int the desktop process.
+        /// </summary>
         public ConcurrentDictionary<string, RemoteControlSession> Sessions => _sessions;
     }
 }
