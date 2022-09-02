@@ -1,6 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
-using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;

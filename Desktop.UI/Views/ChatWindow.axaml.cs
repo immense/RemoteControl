@@ -7,25 +7,26 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
-    public class ChatWindow : Window
+    public partial class ChatWindow : Window
     {
         public ChatWindow()
         {
             InitializeComponent();
         }
 
-        private ChatWindowViewModel ViewModel => DataContext as ChatWindowViewModel;
+        private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
 
-        private void ChatWindow_Closed(object sender, System.EventArgs e)
+        private void ChatWindow_Closed(object? sender, System.EventArgs e)
         {
             Environment.Exit(0);
         }
 
-        private async void ChatWindow_KeyUp(object sender, Avalonia.Input.KeyEventArgs e)
+        private async void ChatWindow_KeyUp(object? sender, Avalonia.Input.KeyEventArgs e)
         {
-            if (e.Key == Avalonia.Input.Key.Enter)
+            if (e.Key == Avalonia.Input.Key.Enter &&
+                DataContext is ChatWindowViewModel viewModel)
             {
-                await ViewModel.SendChatMessage();
+                await viewModel.SendChatMessage();
             }
         }
 
@@ -43,12 +44,12 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             this.FindControl<ItemsControl>("MessagesListBox").ItemContainerGenerator.Materialized += ItemContainerGenerator_Materialized;
         }
 
-        private void ChatWindow_Opened(object sender, EventArgs e)
+        private void ChatWindow_Opened(object? sender, EventArgs e)
         {
             Topmost = false;
         }
 
-        private async void ItemContainerGenerator_Materialized(object sender, Avalonia.Controls.Generators.ItemContainerEventArgs e)
+        private async void ItemContainerGenerator_Materialized(object? sender, Avalonia.Controls.Generators.ItemContainerEventArgs e)
         {
             // Allows listbox height to adjust to content before scrolling the scrollviewer.
             await Task.Delay(1);
@@ -59,7 +60,7 @@ namespace Immense.RemoteControl.Desktop.UI.Views
         }
 
 
-        private void TitleBanner_PointerPressed(object sender, Avalonia.Input.PointerPressedEventArgs e)
+        private void TitleBanner_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {
             if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
             {

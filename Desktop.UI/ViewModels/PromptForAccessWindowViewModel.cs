@@ -1,39 +1,83 @@
 ﻿using Avalonia.Controls;
-using ReactiveUI;
 using Immense.RemoteControl.Desktop.UI.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Microsoft.Extensions.Logging;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
-    public class PromptForAccessWindowViewModel : BrandedViewModelBase
+    public interface IPromptForAccessWindowViewModel
     {
-        private string _organizationName = "your IT provider";
-        private string _requesterName = "a technician";
-        public ICommand CloseCommand => new Executor((param) =>
+        ICommand CloseCommand { get; }
+        ICommand MinimizeCommand { get; }
+        string OrganizationName { get; set; }
+        bool PromptResult { get; set; }
+        string RequesterName { get; set; }
+        string RequestMessage { get; }
+        ICommand SetResultNo { get; }
+        ICommand SetResultYes { get; }
+    }
+
+    public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAccessWindowViewModel
+    {
+        public PromptForAccessWindowViewModel(
+            string requesterName,
+            string organizationName,
+            IBrandingProvider brandingProvider,
+            IAvaloniaDispatcher dispatcher,
+            ILogger<BrandedViewModelBase> logger)
+            : base(brandingProvider, dispatcher, logger)
         {
-            (param as Window)?.Close();
+            if (!string.IsNullOrWhiteSpace(requesterName))
+            {
+                RequesterName = requesterName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(organizationName))
+            {
+                OrganizationName = organizationName;
+            }
+        }
+
+        public ICommand CloseCommand { get; } = new RelayCommand<Window>(window =>
+        {
+            window?.Close();
         });
 
-        public ICommand MinimizeCommand => new Executor((param) =>
+        public ICommand MinimizeCommand { get; } = new RelayCommand<Window>(window =>
         {
-            (param as Window).WindowState = WindowState.Minimized;
+            if (window is not null)
+            {
+                window.WindowState = WindowState.Minimized;
+            }
         });
 
         public string OrganizationName
         {
-            get => _organizationName;
-            set 
+            get => Get<string>() ?? "your IT provider";
+            set
             {
-                this.RaiseAndSetIfChanged(ref _organizationName, value);
-                this.RaisePropertyChanged(nameof(RequestMessage));
+                Set(value);
+                OnPropertyChanged(nameof(RequestMessage));
             }
 
         }
 
         public bool PromptResult { get; set; }
+
+        public string RequesterName
+        {
+            get => Get<string>() ?? "a technician";
+            set
+            {
+                Set(value);
+                OnPropertyChanged(nameof(RequestMessage));
+            }
+        }
 
         public string RequestMessage
         {
@@ -42,31 +86,21 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
                 return $"Would you like to allow {RequesterName} from {OrganizationName} to control your computer?";
             }
         }
-
-        public string RequesterName
+        public ICommand SetResultNo => new RelayCommand<Window>(window =>
         {
-            get => _requesterName;
-            set
+            PromptResult = false;
+            if (window is not null)
             {
-                this.RaiseAndSetIfChanged(ref _requesterName, value);
-                this.RaisePropertyChanged(nameof(RequestMessage));
-            }
-        }
-        public ICommand SetResultNo => new Executor(param =>
-        {
-            if (param is Window promptWindow)
-            {
-                PromptResult = false;
-                promptWindow.Close();
+                window.Close();
             }
         });
 
-        public ICommand SetResultYes => new Executor(param =>
+        public ICommand SetResultYes => new RelayCommand<Window>(window =>
         {
-            if (param is Window promptWindow)
+            PromptResult = true;
+            if (window is not null)
             {
-                PromptResult = true;
-                promptWindow.Close();
+                window.Close();
             }
         });
     }

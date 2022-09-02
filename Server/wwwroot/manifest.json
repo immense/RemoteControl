@@ -1,7 +1,7 @@
 {
-  "id": "Remotely",
-  "name": "Remotely",
-  "short_name": "Remotely",
+  "id": "Immense_Remote_Control",
+  "name": "Immense_Remote_Control",
+  "short_name": "Immense_RC",
   "start_url": "./",
   "display": "standalone",
   "background_color": "black",
@@ -10,12 +10,12 @@
   "description": "Remote access tools designed to get things done quickly.",
   "icons": [
     {
-      "src": "./images/Remotely_Icon_128.png",
+      "src": "./images/DefaultIcon_128.png",
       "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "./images/Remotely_Icon_512.png",
+      "src": "./images/DefaultIcon_512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

@@ -2,305 +2,341 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
-using ReactiveUI;
-using Immense.RemoteControl.Desktop.Shared;
-using Immense.RemoteControl.Desktop.Shared.Interfaces;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.Controls;
-using Immense.RemoteControl.Desktop.UI.Native.Linux;
-using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Desktop.UI.Views;
 using Immense.RemoteControl.Shared.Models;
-using Immense.RemoteControl.Shared.Utilities;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.UI.Services;
+using Microsoft.Extensions.Logging;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.Generic;
+using Immense.RemoteControl.Desktop.Shared.Native.Linux;
+using Immense.RemoteControl.Desktop.UI.Controls;
+using Avalonia.Logging;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
-    public class MainWindowViewModel : BrandedViewModelBase
+    public interface IMainWindowViewModel
     {
-        private readonly ICasterSocket _casterSocket;
-        private readonly Conductor _conductor;
-        private readonly IConfigService _configService;
-        private double _copyMessageOpacity;
-        private string _host;
-        private bool _isCopyMessageVisible;
-        private string _sessionId;
-        private string _statusMessage;
+        ICommand ChangeServerCommand { get; }
+        ICommand CloseCommand { get; }
+        ICommand CopyLinkCommand { get; }
+        double CopyMessageOpacity { get; set; }
+        string Host { get; set; }
+        bool IsCopyMessageVisible { get; set; }
+        ICommand MinimizeCommand { get; }
+        ICommand OpenOptionsMenu { get; }
+        ICommand RemoveViewersCommand { get; }
+        string StatusMessage { get; set; }
+        ObservableCollection<IViewer> Viewers { get; }
 
-        public MainWindowViewModel()
+        Task ChangeServer();
+        Task CopyLink();
+        Task GetSessionID();
+        Task Init();
+        Task PromptForHostName();
+        Task RemoveViewers(AvaloniaList<object>? list);
+    }
+
+    public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
+    {
+        private readonly IAppState _appState;
+        private readonly IAvaloniaDispatcher _dispatcher;
+        private readonly IDesktopHubConnection _hubConnection;
+        private readonly ILogger<MainWindowViewModel> _logger;
+        private readonly IScreenCaster _screenCaster;
+        private readonly IViewModelFactory _viewModelFactory;
+        private readonly IEnvironmentHelper _environment;
+
+        public MainWindowViewModel(
+          IBrandingProvider brandingProvider,
+          IAvaloniaDispatcher dispatcher,
+          IAppState appState,
+          IDesktopHubConnection hubConnection,
+          IScreenCaster screenCaster,
+          IViewModelFactory viewModelFactory,
+          IEnvironmentHelper environmentHelper,
+          ILogger<MainWindowViewModel> logger)
+          : base(brandingProvider, dispatcher, logger)
         {
-            Current = this;
+            _dispatcher = dispatcher;
+            _appState = appState;
+            _hubConnection = hubConnection;
+            _screenCaster = screenCaster;
+            _viewModelFactory = viewModelFactory;
+            _environment = environmentHelper;
+            _logger = logger;
 
-            _configService = Services.GetRequiredService<IConfigService>();
-            _conductor = Services.GetRequiredService<Conductor>();
-            _casterSocket = Services.GetRequiredService<ICasterSocket>();
+            _appState.ViewerRemoved += ViewerRemoved;
+            _appState.ViewerAdded += ViewerAdded;
+            _appState.ScreenCastRequested += ScreenCastRequested;
 
-            _conductor.ViewerRemoved += ViewerRemoved;
-            _conductor.ViewerAdded += ViewerAdded;
-            _conductor.ScreenCastRequested += ScreenCastRequested;
-
-            if (!EnvironmentHelper.IsLinux)
-            {
-                return;
-            }
-
-            Services.GetRequiredService<IClipboardService>().BeginWatching();
-            Services.GetRequiredService<IKeyboardMouseInput>().Init();
+            ChangeServerCommand = new AsyncRelayCommand(ChangeServer);
+            CopyLinkCommand = new AsyncRelayCommand(CopyLink);
+            RemoveViewersCommand = new AsyncRelayCommand<AvaloniaList<object>>(RemoveViewers, CanRemoveViewers);
         }
 
+        public ICommand ChangeServerCommand { get; }
 
-        public static MainWindowViewModel Current { get; private set; }
-
-        public ICommand ChangeServerCommand => new Executor(async (param) =>
+        public ICommand CloseCommand { get; } = new RelayCommand<Window>(window =>
         {
-            await PromptForHostName();
-            await Init();
-        });
-
-        public ICommand CloseCommand => new Executor((param) =>
-        {
-            (param as Window)?.Close();
+            window?.Close();
             Environment.Exit(0);
         });
 
-        public ICommand CopyLinkCommand => new Executor(async (param) =>
+        public ICommand CopyLinkCommand { get; }
+
+        public double CopyMessageOpacity
         {
-            await App.Current.Clipboard.SetTextAsync($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage.Replace(" ", "")}");
+            get => Get<double>();
+            set => Set(value);
+        }
+
+        public string Host
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
+        public bool IsCopyMessageVisible
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
+        public ICommand MinimizeCommand { get; } = new RelayCommand<Window>(window =>
+        {
+            if (window is not null)
+            {
+                window.WindowState = WindowState.Minimized;
+            }
+        });
+
+        public ICommand OpenOptionsMenu { get; } = new RelayCommand<Button>(button =>
+        {
+            button?.ContextMenu?.Open(button);
+        });
+
+        public ICommand RemoveViewersCommand { get; }
+
+        public string StatusMessage
+        {
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
+        public ObservableCollection<IViewer> Viewers { get; } = new();
+
+        public async Task ChangeServer()
+        {
+            await PromptForHostName();
+            await Init();
+        }
+
+        public async Task CopyLink()
+        {
+            if (_dispatcher.CurrentApp?.Clipboard is null)
+            {
+                return;
+            }
+            await _dispatcher.CurrentApp.Clipboard.SetTextAsync($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage.Replace(" ", "")}");
 
             CopyMessageOpacity = 1;
             IsCopyMessageVisible = true;
             await Task.Delay(1000);
-            while (_copyMessageOpacity > 0)
+            while (CopyMessageOpacity > 0)
             {
                 CopyMessageOpacity -= .05;
                 await Task.Delay(25);
             }
             IsCopyMessageVisible = false;
-        });
-
-        public double CopyMessageOpacity
-        {
-            get => _copyMessageOpacity;
-            set => this.RaiseAndSetIfChanged(ref _copyMessageOpacity, value);
         }
-
-        public string Host
-        {
-            get => _host;
-            set => this.RaiseAndSetIfChanged(ref _host, value);
-        }
-
-        public bool IsCopyMessageVisible
-        {
-            get => _isCopyMessageVisible;
-            set => this.RaiseAndSetIfChanged(ref _isCopyMessageVisible, value);
-        }
-
-        public ICommand MinimizeCommand => new Executor((param) =>
-        {
-            (param as Window).WindowState = WindowState.Minimized;
-        });
-
-        public ICommand OpenOptionsMenu => new Executor((param) =>
-        {
-            if (param is Button)
-            {
-                (param as Button).ContextMenu?.Open(param as Button);
-            }
-        });
-
-        public ICommand RemoveViewerCommand => new Executor(async (param) =>
-        {
-            var viewerList = param as AvaloniaList<object> ?? new AvaloniaList<object>();
-            foreach (var viewer in viewerList.Cast<Viewer>())
-            {
-                await _casterSocket.DisconnectViewer(viewer, true);
-            }
-        });
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
-        }
-
-        public ObservableCollection<Viewer> Viewers { get; } = new ObservableCollection<Viewer>();
-        private static IServiceProvider Services => ServiceContainer.Instance;
 
         public async Task GetSessionID()
         {
-            await _casterSocket.SendDeviceInfo(_conductor.ServiceID, Environment.MachineName, _conductor.DeviceID);
-            var sessionId = await _casterSocket.GetSessionID();
+            var sessionId = await _hubConnection.GetSessionID();
+            await _hubConnection.SendAttendedSessionInfo(Environment.MachineName);
 
             var formattedSessionID = "";
             for (var i = 0; i < sessionId.Length; i += 3)
             {
-                formattedSessionID += sessionId.Substring(i, 3) + " ";
+                formattedSessionID += $"{sessionId.Substring(i, 3)} ";
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
-                _sessionId = formattedSessionID.Trim();
-                StatusMessage = _sessionId;
+                StatusMessage = formattedSessionID.Trim();
             });
         }
 
         public async Task Init()
         {
+            if (!_environment.IsDebug && Libc.geteuid() != 0)
+            {
+                await MessageBox.Show("Please run with sudo.", "Sudo Required", MessageBoxType.OK);
+                Environment.Exit(0);
+            }
+
+            StatusMessage = "Initializing...";
+
+            await InstallDependencies();
+
+            StatusMessage = "Retrieving...";
+
+            Host = _appState.Host;
+
+            while (string.IsNullOrWhiteSpace(Host))
+            {
+                Host = "https://";
+                await PromptForHostName();
+            }
+
+            _appState.Host = Host;
+            _appState.Mode = Shared.Enums.AppMode.Attended;
+
             try
             {
-                if (!EnvironmentHelper.IsDebug && Libc.geteuid() != 0)
+                var result = await _hubConnection.Connect(_dispatcher.AppCancellationToken, TimeSpan.FromSeconds(5));
+
+                _hubConnection.Connection.Closed += async (ex) =>
                 {
-                    await MessageBox.Show("Please run with sudo.", "Sudo Required", MessageBoxType.OK);
-                    Environment.Exit(0);
-                }
+                    await _dispatcher.InvokeAsync(() =>
+                    {
+                        Viewers.Clear();
+                        StatusMessage = "Disconnected";
+                    });
+                };
 
-                StatusMessage = "Initializing...";
-
-                await InstallDependencies();
-
-                StatusMessage = "Retrieving...";
-
-                Host = _configService.GetConfig().Host;
-
-                while (string.IsNullOrWhiteSpace(Host))
+                _hubConnection.Connection.Reconnecting += async (ex) =>
                 {
-                    Host = "https://";
-                    await PromptForHostName();
-                }
+                    await _dispatcher.InvokeAsync(() =>
+                    {
+                        Viewers.Clear();
+                        StatusMessage = "Reconnecting";
+                    });
+                };
 
-                _conductor.ProcessArgs(new string[] { "-mode", "Normal", "-host", Host });
-
-                var result = await _casterSocket.Connect(_conductor.Host);
-
-                if (result)
+                _hubConnection.Connection.Reconnected += async (id) =>
                 {
-                    if (_casterSocket.Connection is null)
-                    {
-                        return;
-                    }
-
-                    _casterSocket.Connection.Closed += async (ex) =>
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            StatusMessage = "Disconnected";
-                        });
-                    };
-
-                    _casterSocket.Connection.Reconnecting += async (ex) =>
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            StatusMessage = "Reconnecting";
-                        });
-                    };
-
-                    _casterSocket.Connection.Reconnected += (id) =>
-                    {
-                        StatusMessage = _sessionId;
-                        return Task.CompletedTask;
-                    };
-
-                    await DeviceInitService.GetInitParams();
-                    ApplyBranding();
-
                     await GetSessionID();
+                };
 
-                    return;
-                }
+                await ApplyBranding();
 
+                await GetSessionID();
+
+                return;
             }
             catch (Exception ex)
             {
-                Logger.Write(ex);
+                _logger.LogError(ex, "Error during initialization.");
             }
 
             // If we got here, something went wrong.
-            _statusMessage = "Failed";
+            StatusMessage = "Failed";
             await MessageBox.Show("Failed to connect to server.", "Connection Failed", MessageBoxType.OK);
         }
 
         public async Task PromptForHostName()
         {
-            var prompt = new HostNamePrompt();
+            var viewModel = _viewModelFactory.CreateHostNamePromptViewModel();
+            var prompt = new HostNamePrompt()
+            {
+                DataContext = viewModel
+            };
 
             if (!string.IsNullOrWhiteSpace(Host))
             {
-                prompt.ViewModel.Host = Host;
+                viewModel.Host = Host;
             }
 
-            await prompt.ShowDialog(MainWindow.Current);
-            var result = prompt.ViewModel.Host?.Trim()?.TrimEnd('/');
+            await prompt.ShowDialog(_dispatcher.MainWindow);
+            var result = prompt.ViewModel?.Host?.Trim()?.TrimEnd('/');
 
             if (!Uri.TryCreate(result, UriKind.Absolute, out var serverUri) ||
                 (serverUri.Scheme != Uri.UriSchemeHttp && serverUri.Scheme != Uri.UriSchemeHttps))
             {
-                Logger.Write("Server URL is not valid.");
-                await MessageBox.Show("Server URL must be a valid Uri (e.g. https://app.remotely.one).", "Invalid Server URL", MessageBoxType.OK);
+                _logger.LogWarning("Server URL is not valid.");
+                await MessageBox.Show("Server URL must be a valid Uri (e.g. https://example.com).", "Invalid Server URL", MessageBoxType.OK);
                 return;
             }
 
             Host = result;
-            var config = _configService.GetConfig();
-            config.Host = Host;
-            _configService.Save(config);
         }
 
+        public async Task RemoveViewers(AvaloniaList<object>? list)
+        {
+            if (list is null)
+            {
+                return;
+            }
+            var viewerList = list ?? new AvaloniaList<object>();
+            foreach (var viewer in viewerList.Cast<Viewer>())
+            {
+                await _hubConnection.DisconnectViewer(viewer, true);
+            }
+        }
+
+        private bool CanRemoveViewers(AvaloniaList<object>? obj) => obj?.Any() == true;
 
         private async Task InstallDependencies()
         {
-            try
+            if (OperatingSystem.IsLinux())
             {
-                var psi = new ProcessStartInfo()
+                try
                 {
-                    FileName = "sudo",
-                    Arguments = "bash -c \"apt-get -y install libx11-dev ; " +
-                        "apt-get -y install libxrandr-dev ; " +
-                        "apt-get -y install libc6-dev ; " +
-                        "apt-get -y install libgdiplus ; " +
-                        "apt-get -y install libxtst-dev ; " +
-                        "apt-get -y install xclip\"",
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true
-                };
+                    var psi = new ProcessStartInfo()
+                    {
+                        FileName = "sudo",
+                        Arguments = "bash -c \"apt-get -y install libx11-dev ; " +
+                            "apt-get -y install libxrandr-dev ; " +
+                            "apt-get -y install libc6-dev ; " +
+                            "apt-get -y install libgdiplus ; " +
+                            "apt-get -y install libxtst-dev ; " +
+                            "apt-get -y install xclip\"",
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true
+                    };
 
-                await Task.Run(() => Process.Start(psi).WaitForExit());
+                    await Task.Run(() => Process.Start(psi)?.WaitForExit());
+                }
+                catch
+                {
+                    _logger.LogError("Failed to install dependencies.");
+                }
             }
-            catch
-            {
-                Logger.Write("Failed to install dependencies.", Shared.Enums.EventType.Error);
-            }
-          
+
+
         }
-        private void ScreenCastRequested(object sender, ScreenCastRequest screenCastRequest)
+        private void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
         {
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 var result = await MessageBox.Show($"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxType.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
-                    Services.GetRequiredService<IScreenCaster>().BeginScreenCasting(screenCastRequest);
+                    _screenCaster.BeginScreenCasting(screenCastRequest);
                 }
             });
         }
 
-        private void ViewerAdded(object sender, Viewer viewer)
+        private async void ViewerAdded(object? sender, IViewer viewer)
         {
-
-            Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
                 Viewers.Add(viewer);
             });
         }
 
-        private async void ViewerRemoved(object sender, string viewerID)
+        private async void ViewerRemoved(object? sender, string viewerID)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
                 var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
                 if (viewer != null)

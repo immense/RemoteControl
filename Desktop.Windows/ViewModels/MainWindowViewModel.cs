@@ -15,8 +15,8 @@ using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared.Models;
 using CommunityToolkit.Mvvm.Input;
 using Clipboard = System.Windows.Clipboard;
-using Immense.RemoteControl.Desktop.Shared.Win32;
 using MessageBox = System.Windows.MessageBox;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 
 namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 {
@@ -43,7 +43,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
     public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         private readonly IAppState _appState;
-        private readonly ICursorIconWatcher _cursorIconWatcher;
         private readonly IWpfDispatcher _dispatcher;
         private readonly IDesktopHubConnection _hubConnection;
         private readonly ILogger<MainWindowViewModel> _logger;
@@ -54,7 +53,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         public MainWindowViewModel(
             IBrandingProvider brandingProvider,
             IWpfDispatcher dispatcher,
-            ICursorIconWatcher iconWatcher,
             IAppState appState,
             IDesktopHubConnection hubConnection,
             IScreenCaster screenCaster,
@@ -64,8 +62,6 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             : base(brandingProvider, dispatcher, logger)
         {
             _dispatcher = dispatcher;
-            _cursorIconWatcher = iconWatcher;
-            _cursorIconWatcher.OnChange += CursorIconWatcher_OnChange;
             _appState = appState;
             _hubConnection = hubConnection;
             _screenCaster = screenCaster;
@@ -116,6 +112,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             set => Set(value);
         }
         public ObservableCollection<IViewer> Viewers { get; } = new();
+
         public bool CanRemoveViewers(IList<object>? items) => items?.Any() == true;
 
 
@@ -168,10 +165,9 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                         return Task.CompletedTask;
                     };
 
-                    _hubConnection.Connection.Reconnected += (id) =>
+                    _hubConnection.Connection.Reconnected += async (id) =>
                     {
-                        StatusMessage = SessionId;
-                        return Task.CompletedTask;
+                        await GetSessionID();
                     };
 
                     await ApplyBranding();
@@ -262,7 +258,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                     filePath,
                     arguments);
 
-                psi.Arguments = $"/c sc create Remotely_Temp binPath=\"{filePath} {arguments} --elevate\"";
+                psi.Arguments = $"/c sc create RemoteControl_Temp binPath=\"{filePath} {arguments} --elevate\"";
                 Process.Start(psi)?.WaitForExit();
                 psi.Arguments = "/c sc start RemoteControl_Temp";
                 Process.Start(psi)?.WaitForExit();

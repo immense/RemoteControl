@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
-using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.Logging;
 using System;

@@ -1,7 +1,5 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
-using ReactiveUI;
-using Immense.RemoteControl.Desktop.Shared.Interfaces;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Services;
@@ -12,69 +10,72 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Microsoft.Extensions.Logging;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
-    public class FileTransferWindowViewModel : BrandedViewModelBase
+    public interface IFileTransferWindowViewModel
+    {
+        ObservableCollection<FileUpload> FileUploads { get; }
+        ICommand OpenFileUploadDialogCommand { get; }
+        ICommand RemoveFileUploadCommand { get; }
+        string ViewerConnectionId { get; set; }
+        string ViewerName { get; set; }
+
+        void RemoveFileUpload(FileUpload? fileUpload);
+        Task UploadFile(string filePath);
+    }
+
+    public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWindowViewModel
     {
         private readonly IFileTransferService _fileTransferService;
-        private readonly Viewer _viewer;
-        private string _viewerConnectionId;
-        private string _viewerName;
-
-        public FileTransferWindowViewModel() { }
+        private readonly IViewer _viewer;
 
         public FileTransferWindowViewModel(
-            Viewer viewer,
-            IFileTransferService fileTransferService)
+           IViewer viewer,
+           IBrandingProvider brandingProvider,
+           IAvaloniaDispatcher dispatcher,
+           IFileTransferService fileTransferService,
+           ILogger<FileTransferWindowViewModel> logger)
+           : base(brandingProvider, dispatcher, logger)
         {
-            _fileTransferService = fileTransferService;
             _viewer = viewer;
+            _fileTransferService = fileTransferService;
             ViewerName = viewer.Name;
             ViewerConnectionId = viewer.ViewerConnectionID;
+
+            OpenFileUploadDialogCommand = new AsyncRelayCommand<FileTransferWindow>(OpenFileUploadDialog);
+            RemoveFileUploadCommand = new RelayCommand<FileUpload>(RemoveFileUpload);
         }
 
         public ObservableCollection<FileUpload> FileUploads { get; } = new ObservableCollection<FileUpload>();
 
-        public ICommand OpenFileUploadDialog => new Executor(async (param) =>
-        {
-            var initialDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            if (!Directory.Exists(initialDir))
-            {
-                initialDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "Remotely_Shared")).FullName;
-            }
+        public ICommand OpenFileUploadDialogCommand { get; }
 
-            var ofd = new OpenFileDialog
-            {
-                Title = "Upload File via Remotely",
-                AllowMultiple = true,
-                Directory = initialDir
-            };
-
-            var result = await ofd.ShowAsync(param as FileTransferWindow);
-            if (result?.Any() != true)
-            {
-                return;
-            }
-            foreach (var file in result)
-            {
-                if (File.Exists(file))
-                {
-                    await UploadFile(file);
-                }
-            }
-        });
+        public ICommand RemoveFileUploadCommand { get; }
 
         public string ViewerConnectionId
         {
-            get => _viewerConnectionId;
-            set => this.RaiseAndSetIfChanged(ref _viewerConnectionId, value);
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
         }
 
         public string ViewerName
         {
-            get => _viewerName;
-            set => this.RaiseAndSetIfChanged(ref _viewerName, value);
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
+        }
+
+        public void RemoveFileUpload(FileUpload? fileUpload)
+        {
+            if (fileUpload is null)
+            {
+                return;
+            }
+            FileUploads.Remove(fileUpload);
+            fileUpload.CancellationTokenSource.Cancel();
         }
 
         public async Task UploadFile(string filePath)
@@ -98,13 +99,33 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             });
         }
 
-        public ICommand RemoveFileUpload => new Executor((param) =>
+        private async Task OpenFileUploadDialog(FileTransferWindow? window)
         {
-            if (param is FileUpload fileUpload)
+            var initialDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            if (!Directory.Exists(initialDir))
             {
-                FileUploads.Remove(fileUpload);
-                fileUpload.CancellationTokenSource.Cancel();
+                initialDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "RemoteControl")).FullName;
             }
-        });
+
+            var ofd = new OpenFileDialog
+            {
+                Title = "Upload File via Remotely",
+                AllowMultiple = true,
+                Directory = initialDir
+            };
+
+            var result = await ofd.ShowAsync(window!);
+            if (result?.Any() != true)
+            {
+                return;
+            }
+            foreach (var file in result)
+            {
+                if (File.Exists(file))
+                {
+                    await UploadFile(file);
+                }
+            }
+        }
     }
 }

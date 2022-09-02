@@ -1,14 +1,14 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Shared.Win32;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Immense.RemoteControl.Desktop.Shared.Win32.User32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Win32.User32;
 
 
 namespace Immense.RemoteControl.Desktop.Windows.Services

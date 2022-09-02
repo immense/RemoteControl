@@ -8,7 +8,6 @@ using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ReactiveUI;
 using System;
 using System.IO;
 using System.Linq;
@@ -17,7 +16,19 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
-    public class BrandedViewModelBase : ObservableObjectEx
+    public interface IBrandedViewModelBase
+    {
+        Bitmap? Icon { get; set; }
+        string? ProductName { get; set; }
+        SolidColorBrush? TitleBackgroundColor { get; set; }
+        SolidColorBrush? TitleButtonForegroundColor { get; set; }
+        SolidColorBrush? TitleForegroundColor { get; set; }
+        WindowIcon? WindowIcon { get; set; }
+
+        Task ApplyBranding();
+    }
+
+    public class BrandedViewModelBase : ObservableObjectEx, IBrandedViewModelBase
     {
         private static BrandingInfo? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
@@ -106,7 +117,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
                     }
                     else
                     {
-                        using var imageStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Remotely.Desktop.XPlat.Assets.Remotely_Icon.png");
+                        using var imageStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Immense.RemoteControl.Desktop.UI.Assets.DefaultIcon.png");
                         Icon = new Bitmap(imageStream);
                     }
 

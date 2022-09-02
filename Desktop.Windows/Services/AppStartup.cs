@@ -1,7 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Immense.RemoteControl.Desktop.Windows.Views;
 using Immense.RemoteControl.Shared.Enums;
@@ -33,7 +33,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         private readonly IChatHostService _chatHostService;
         private readonly ICursorIconWatcher _cursorIconWatcher;
         private readonly IWpfDispatcher _dispatcher;
-        private readonly MainWindowViewModel _mainWindowVm;
+        private readonly IMainWindowViewModel _mainWindowVm;
         private readonly IIdleTimer _idleTimer;
         private readonly IShutdownService _shutdownService;
         private readonly ILogger<AppStartup> _logger;
@@ -41,7 +41,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public AppStartup(
             Form backgroundForm,
-            MainWindowViewModel mainWindowVm,
+            IMainWindowViewModel mainWindowVm,
             IAppState appState,
             IKeyboardMouseInput inputService,
             IDesktopHubConnection desktopHub,

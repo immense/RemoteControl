@@ -5,7 +5,7 @@ using System;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
-    public class PromptForAccessWindow : Window
+    public partial class PromptForAccessWindow : Window
     {
         public PromptForAccessWindow()
         {
@@ -20,12 +20,12 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             this.FindControl<Border>("TitleBanner").PointerPressed += TitleBanner_PointerPressed;
         }
 
-        private void Window_Opened(object sender, EventArgs e)
+        private void Window_Opened(object? sender, EventArgs e)
         {
             Topmost = false;
         }
 
-        private void TitleBanner_PointerPressed(object sender, Avalonia.Input.PointerPressedEventArgs e)
+        private void TitleBanner_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {
             if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
             {

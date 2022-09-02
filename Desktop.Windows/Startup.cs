@@ -1,7 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Extensions;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Shared.Win32;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +50,7 @@ namespace Immense.RemoteControl.Desktop.Windows
             services.AddSingleton<IWpfDispatcher, WpfDispatcher>();
             services.AddSingleton<IAppStartup, AppStartup>();
             services.AddSingleton<IViewModelFactory, ViewModelFactory>();
-            services.AddSingleton<MainWindowViewModel>();
+            services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
             services.AddSingleton((serviceProvider) => GetBackgroundForm());
         }
 

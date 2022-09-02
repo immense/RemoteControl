@@ -1,8 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.ReactiveUI;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using Desktop.UI;
+using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 using System;
@@ -18,8 +18,13 @@ namespace Immense.RemoteControl.Desktop.UI.Services
     {
         CancellationToken AppCancellationToken { get; }
 
-        Task InvokeAsync(Func<Task> func);
-        Task<T> InvokeAsync<T>(Func<Task<T>> func);
+        Application? CurrentApp { get; }
+
+        Window? MainWindow { get; }
+
+        Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
+        Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal);
+        Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal);
         void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
         void StartBackground();
         void StartForeground();
@@ -28,24 +33,46 @@ namespace Immense.RemoteControl.Desktop.UI.Services
     internal class AvaloniaDispatcher : IAvaloniaDispatcher
     {
         private static readonly CancellationTokenSource _appCts = new();
+        private static Application? _currentApp;
+        private readonly IAppState _appState;
         private readonly ILogger<AvaloniaDispatcher> _logger;
 
-        public AvaloniaDispatcher(ILogger<AvaloniaDispatcher> logger)
+        public AvaloniaDispatcher(IAppState appState, ILogger<AvaloniaDispatcher> logger)
         {
+            _appState = appState;
             _logger = logger;
         }
 
         public CancellationToken AppCancellationToken => _appCts.Token;
 
-        public Task InvokeAsync(Func<Task> func)
-        {
+        public Application? CurrentApp => _currentApp;
 
-            return Dispatcher.UIThread.InvokeAsync(func);
+        public Window? MainWindow
+        {
+            get
+            {
+                if (_currentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime app)
+                {
+                    return app.MainWindow;
+                }
+                return null;
+            }
         }
 
-        public Task<T> InvokeAsync<T>(Func<Task<T>> func)
+        public Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal)
         {
-            return Dispatcher.UIThread.InvokeAsync(func);
+
+            return Dispatcher.UIThread.InvokeAsync(func, priority);
+        }
+
+        public Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal)
+        {
+            return Dispatcher.UIThread.InvokeAsync(func, priority);
+        }
+
+        public Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
+        {
+            return Dispatcher.UIThread.InvokeAsync(action, priority);
         }
 
         public void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
@@ -62,7 +89,7 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while starting backgroud app.");
+                _logger.LogError(ex, "Error while starting background app.");
                 throw;
             }
         }
@@ -72,7 +99,9 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             try
             {
                 var args = Environment.GetCommandLineArgs();
-                BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+                var builder = BuildAvaloniaApp();
+                _currentApp = builder.Instance;
+                builder.StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)
             {
@@ -81,15 +110,16 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             }
         }
 
+
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .LogToTrace()
-                .UseReactiveUI();
+                .LogToTrace();
 
         private static void MainImpl(Application app, string[] args)
         {
+            _currentApp = app;
             app.Run(_appCts.Token);
         }
     }

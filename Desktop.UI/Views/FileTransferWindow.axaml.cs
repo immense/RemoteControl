@@ -5,11 +5,11 @@ using System;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
-    public class FileTransferWindow : Window
+    public partial class FileTransferWindow : Window
     {
         public FileTransferWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private void InitializeComponent()
@@ -19,7 +19,7 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             Opened += FileTransferWindow_Opened;
         }
 
-        private void FileTransferWindow_Opened(object sender, EventArgs e)
+        private void FileTransferWindow_Opened(object? sender, EventArgs e)
         {
             Topmost = false;
 

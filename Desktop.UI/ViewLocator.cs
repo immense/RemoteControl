@@ -1,9 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Desktop.UI.ViewModels;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 using System;
 
-namespace Desktop.UI
+namespace Immense.RemoteControl.Desktop.UI
 {
     public class ViewLocator : IDataTemplate
     {
@@ -24,7 +24,7 @@ namespace Desktop.UI
 
         public bool Match(object data)
         {
-            return data is ViewModelBase;
+            return data is ObservableObjectEx;
         }
     }
 }

@@ -3,13 +3,13 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Immense.RemoteControl.Desktop.Shared;
-using Immense.RemoteControl.Desktop.Shared.Interfaces;
 using Immense.RemoteControl.Desktop.UI.Controls;
 using System;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
-    public class SessionIndicatorWindow : Window
+    public partial class SessionIndicatorWindow : Window
     {
         public SessionIndicatorWindow()
         {
@@ -25,7 +25,7 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             Opened += SessionIndicatorWindow_Opened;
         }
 
-        private void SessionIndicatorWindow_Opened(object sender, EventArgs e)
+        private void SessionIndicatorWindow_Opened(object? sender, EventArgs e)
         {
             Topmost = false;
 
@@ -36,7 +36,7 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             Position = new PixelPoint((int)left, (int)top);
         }
 
-        private void SessionIndicatorWindow_PointerPressed(object sender, Avalonia.Input.PointerPressedEventArgs e)
+        private void SessionIndicatorWindow_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {
             if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
             {
@@ -44,13 +44,13 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             }
         }
 
-        private async void SessionIndicatorWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void SessionIndicatorWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             e.Cancel = true;
             var result = await MessageBox.Show("Stop the remote control session?", "Stop Session", MessageBoxType.YesNo);
             if (result == MessageBoxResult.Yes)
             {
-                var shutdownService = ServiceContainer.Instance.GetRequiredService<IShutdownService>();
+                var shutdownService = StaticServiceProvider.Instance.GetRequiredService<IShutdownService>();
                 await shutdownService.Shutdown();
             }
         }

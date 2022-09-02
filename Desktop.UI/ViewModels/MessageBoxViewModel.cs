@@ -1,57 +1,76 @@
 ﻿using Avalonia.Controls;
-using ReactiveUI;
 using Immense.RemoteControl.Desktop.UI.Controls;
 using Immense.RemoteControl.Desktop.UI.Services;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
-    public class MessageBoxViewModel : BrandedViewModelBase
+    public interface IMessageBoxViewModel
     {
-        private bool areYesNoButtonsVisible;
-        private string caption;
-        private bool isOkButtonVisible;
-        private string message;
+        bool AreYesNoButtonsVisible { get; set; }
+        string Caption { get; set; }
+        bool IsOkButtonVisible { get; set; }
+        string Message { get; set; }
+        ICommand NoCommand { get; }
+        ICommand OKCommand { get; }
+        MessageBoxResult Result { get; set; }
+        ICommand YesCommand { get; }
+    }
+
+    public class MessageBoxViewModel : BrandedViewModelBase, IMessageBoxViewModel
+    {
+        public MessageBoxViewModel
+            (IBrandingProvider brandingProvider,
+            IAvaloniaDispatcher dispatcher,
+            ILogger<BrandedViewModelBase> logger)
+            : base(brandingProvider, dispatcher, logger)
+        {
+        }
+
         public bool AreYesNoButtonsVisible
         {
-            get => areYesNoButtonsVisible;
-            set => this.RaiseAndSetIfChanged(ref areYesNoButtonsVisible, value);
+            get => Get<bool>();
+            set => Set(value);
         }
 
         public string Caption
         {
-            get => caption;
-            set => this.RaiseAndSetIfChanged(ref caption, value);
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
         }
 
         public bool IsOkButtonVisible
         {
-            get => isOkButtonVisible;
-            set => this.RaiseAndSetIfChanged(ref isOkButtonVisible, value);
+            get => Get<bool>();
+            set => Set(value);
         }
 
         public string Message
         {
-            get => message;
-            set => this.RaiseAndSetIfChanged(ref message, value);
+            get => Get<string>() ?? string.Empty;
+            set => Set(value);
         }
-        public ICommand NoCommand => new Executor((param) =>
+        public ICommand NoCommand => new RelayCommand<Window>(window =>
         {
             Result = MessageBoxResult.No;
-            (param as Window).Close();
+            window?.Close();
         });
 
-        public ICommand OKCommand => new Executor((param) =>
+        public ICommand OKCommand => new RelayCommand<Window>(window =>
         {
             Result = MessageBoxResult.OK;
-            (param as Window).Close();
+            window?.Close();
         });
 
         public MessageBoxResult Result { get; set; } = MessageBoxResult.Cancel;
-        public ICommand YesCommand => new Executor((param) =>
+
+        public ICommand YesCommand => new RelayCommand<Window>(window =>
         {
             Result = MessageBoxResult.Yes;
-            (param as Window).Close();
+            window?.Close();
         });
     }
 }

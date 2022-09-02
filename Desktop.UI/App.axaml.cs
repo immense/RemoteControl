@@ -1,10 +1,9 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Desktop.UI.ViewModels;
-using Desktop.UI.Views;
+using Immense.RemoteControl.Desktop.UI.Views;
 
-namespace Desktop.UI
+namespace Immense.RemoteControl.Desktop.UI
 {
     public partial class App : Application
     {
@@ -15,13 +14,10 @@ namespace Desktop.UI
 
         public override void OnFrameworkInitializationCompleted()
         {
-            //if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            //{
-            //    desktop.MainWindow = new MainWindow
-            //    {
-            //        DataContext = new MainWindowViewModel(),
-            //    };
-            //}
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = new MainWindow();
+            }
 
             base.OnFrameworkInitializationCompleted();
         }

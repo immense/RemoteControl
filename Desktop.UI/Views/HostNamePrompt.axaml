@@ -4,14 +4,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Immense.RemoteControl.Desktop.UI.Views.HostNamePrompt"
-        xmlns:ViewModels="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels;assembly=Remotely_Desktop"
+        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels"
         Title="Host Name" 
         Icon="{Binding WindowIcon}"
         Height="150" Width="350"  
         WindowStartupLocation="CenterScreen">
-  <Window.DataContext>
-    <ViewModels:HostNamePromptViewModel/>
-  </Window.DataContext>
+
   <StackPanel Margin="10">
     <TextBlock Margin="0,0,0,5" Text="Enter the server URL:" Classes="SectionHeader"></TextBlock>
     <TextBox Name="HostTextBox" Height="25" Text="{Binding Host, Mode=TwoWay}"/>

@@ -1,20 +1,21 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Immense.RemoteControl.Desktop.Shared;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Views;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
-    public class HostNamePrompt : Window
+    public partial class HostNamePrompt : Window
     {
         public HostNamePrompt()
         {
-            Owner = MainWindow.Current;
             InitializeComponent();
         }
 
-        public HostNamePromptViewModel ViewModel => DataContext as HostNamePromptViewModel;
+        public HostNamePromptViewModel? ViewModel => DataContext as HostNamePromptViewModel;
 
         private void InitializeComponent()
         {
