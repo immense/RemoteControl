@@ -6,11 +6,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
         xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
+        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes"
         mc:Ignorable="d"
         Title="File Transfer"
         Height="300" Width="400" 
         Topmost="True"
         ContentRendered="Window_ContentRendered"
+        d:DataContext="{d:DesignInstance Type=fakes:FakeFileTransferWindowViewModel, IsDesignTimeCreatable=True}"
         Icon="{Binding Icon}">
 
     <Window.Resources>
@@ -66,7 +68,7 @@
             </ScrollViewer>
         </Border>
 
-        <Button Grid.Row="3" Margin="0,10,0,0" Height="60" Style="{StaticResource NormalButton}" Command="{Binding OpenFileUploadDialog}">
+        <Button Grid.Row="3" Margin="0,10,0,0" Height="60" Style="{StaticResource NormalButton}" Command="{Binding OpenFileDialogCommand}">
             Click here to upload files.
         </Button>
     </Grid>
