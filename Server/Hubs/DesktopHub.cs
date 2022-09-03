@@ -50,6 +50,10 @@ namespace Immense.RemoteControl.Server.Hubs
                 Context.Items[nameof(SessionInfo)] = newSession;
                 return newSession;
             }
+            set
+            {
+                Context.Items[nameof(SessionInfo)] = value;
+            }
         }
 
 
@@ -145,6 +149,11 @@ namespace Immense.RemoteControl.Server.Hubs
 
         public Task<Result> ReceiveUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
         {
+            if (_sessionCache.Sessions.TryGetValue(unattendedSessionId, out var sessionInfo))
+            {
+                SessionInfo = sessionInfo;
+            }
+
             SessionInfo.Mode = RemoteControlMode.Unattended;
             SessionInfo.DesktopConnectionId = Context.ConnectionId;
             SessionInfo.StartTime = DateTimeOffset.Now;
