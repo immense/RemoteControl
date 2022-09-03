@@ -32,7 +32,7 @@ namespace Immense.RemoteControl.Desktop.Linux.Services
             Init();
         }
 
-        public event EventHandler<Rectangle> ScreenChanged;
+        public event EventHandler<Rectangle>? ScreenChanged;
 
         public bool CaptureFullscreen { get; set; } = true;
         public Rectangle CurrentScreenBounds { get; private set; }
