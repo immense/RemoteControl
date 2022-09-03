@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Desktop.UI", "Desktop.UI\De
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Desktop.UI.WPF", "Desktop.UI.WPF\Desktop.UI.WPF.csproj", "{FD1BBB51-9114-4A70-92EE-11C75E808B5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinuxDesktopExample", "LinuxDesktopExample\LinuxDesktopExample.csproj", "{684EED89-E88D-457D-B1C7-C67DBA670ED7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,10 @@ Global
 		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{684EED89-E88D-457D-B1C7-C67DBA670ED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{684EED89-E88D-457D-B1C7-C67DBA670ED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{684EED89-E88D-457D-B1C7-C67DBA670ED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{684EED89-E88D-457D-B1C7-C67DBA670ED7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +93,7 @@ Global
 		{3F08DAE6-07BB-4853-95F6-319F920C4B5E} = {EEAA61A2-1231-472B-B272-018EB0998EA4}
 		{D6A3461E-51A7-4498-9ADD-B283A193457C} = {23D18BF9-6983-44F4-BE35-ECA8CDB141BB}
 		{93B89B66-C226-4BB3-B36B-53FEA1E79C39} = {EEAA61A2-1231-472B-B272-018EB0998EA4}
+		{684EED89-E88D-457D-B1C7-C67DBA670ED7} = {EEAA61A2-1231-472B-B272-018EB0998EA4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9FF6EA83-9252-44BF-8D31-E14BF13C3A8B}

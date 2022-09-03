@@ -9,11 +9,11 @@ namespace Immense.RemoteControl.Desktop.Linux.Services
 {
     public class KeyboardMouseInputLinux : IKeyboardMouseInput
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<KeyboardMouseInputLinux> _logger;
 
         private IntPtr Display { get; set; }
 
-        public KeyboardMouseInputLinux(ILogger logger)
+        public KeyboardMouseInputLinux(ILogger<KeyboardMouseInputLinux> logger)
         {
             _logger = logger;
         }
