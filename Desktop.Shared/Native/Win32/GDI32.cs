@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Shared.Win32
+namespace Immense.RemoteControl.Desktop.Shared.Native.Win32
 {
     public static class GDI32
     {

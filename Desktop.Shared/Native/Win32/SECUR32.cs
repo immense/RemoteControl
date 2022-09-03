@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Win32;
+﻿using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Runtime.ConstrainedExecution;

@@ -41,7 +41,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
             var rootCommand = new RootCommand(
                 $"This app is using the {typeof(IServiceCollectionExtensions).Assembly.GetName().Name} library, " +
-                $"which allows IT administrators to provide remote assistance on this device.");
+                $"which allows IT administrators to provide remote assistance on this device.\n\n");
 
             var hostOption = new Option<string>(
                 new[] { "-h", "--host" },
@@ -137,6 +137,15 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
             rootCommand.TreatUnmatchedTokensAsErrors = false;
             await rootCommand.InvokeAsync(args);
+
+            if (args.Any(x =>
+                x.StartsWith("-h") ||
+                x.StartsWith("--help") ||
+                x.StartsWith("-?") ||
+                x.StartsWith("/?")))
+            {
+                Environment.Exit(0);
+            }
 
             var provider = services.BuildServiceProvider();
             StaticServiceProvider.Instance = provider;

@@ -10,6 +10,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Desktop.Shared\Desktop.Shared.csproj" />
+    <ProjectReference Include="..\Desktop.UI\Desktop.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

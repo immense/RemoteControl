@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Shared.Win32
+namespace Immense.RemoteControl.Desktop.Shared.Native.Win32
 {
     // https://docs.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-isos
     public class Shlwapi

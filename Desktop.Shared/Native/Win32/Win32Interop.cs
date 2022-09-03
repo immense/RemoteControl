@@ -5,10 +5,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using static Immense.RemoteControl.Desktop.Shared.Win32.ADVAPI32;
-using static Immense.RemoteControl.Desktop.Shared.Win32.User32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Win32.ADVAPI32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Win32.User32;
 
-namespace Immense.RemoteControl.Desktop.Shared.Win32
+namespace Immense.RemoteControl.Desktop.Shared.Native.Win32
 {
     // TODO: Use https://github.com/dotnet/pinvoke for all p/invokes.  Remove signatures from this project.
     public class Win32Interop
@@ -188,16 +188,16 @@ namespace Immense.RemoteControl.Desktop.Shared.Win32
 
             // Create a new process in the current user's logon session.
             bool result = CreateProcessAsUser(
-                hUserTokenDup, 
-                string.Empty, 
-                applicationName, 
-                ref sa, 
-                ref sa, 
-                false, 
-                dwCreationFlags, 
-                IntPtr.Zero, 
-                string.Empty, 
-                ref si, 
+                hUserTokenDup,
+                string.Empty,
+                applicationName,
+                ref sa,
+                ref sa,
+                false,
+                dwCreationFlags,
+                IntPtr.Zero,
+                string.Empty,
+                ref si,
                 out procInfo);
 
             // Invalidate the handles.

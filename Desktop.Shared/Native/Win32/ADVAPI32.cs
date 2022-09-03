@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace Immense.RemoteControl.Desktop.Shared.Win32
+namespace Immense.RemoteControl.Desktop.Shared.Native.Win32
 {
     public static class ADVAPI32
     {
