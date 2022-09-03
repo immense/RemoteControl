@@ -9,7 +9,6 @@
     <AssemblyName>Immense.RemoteControl.$(MSBuildProjectName)</AssemblyName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>0.5.10</Version>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -142,15 +141,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="REM powershell.exe -f &quot;$(SolutionDir).build\Post-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
-  </Target>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="REM powershell.exe -f &quot;$(SolutionDir).build\Pre-Build.ps1&quot; -SolutionDir $(SolutionDir)" />
-  </Target>
-
-
-
 </Project>
