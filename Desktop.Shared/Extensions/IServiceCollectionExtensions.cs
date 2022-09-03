@@ -145,7 +145,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
                 organizationNameOption);
 
             rootCommand.TreatUnmatchedTokensAsErrors = false;
-            await rootCommand.InvokeAsync(args);
+            var result = await rootCommand.InvokeAsync(args);
+
+            if (result > 0)
+            {
+                Environment.Exit(result);
+            }
 
             if (args.Any(x =>
                 x.StartsWith("-h") ||
