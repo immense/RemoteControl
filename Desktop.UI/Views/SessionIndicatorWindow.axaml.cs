@@ -50,7 +50,11 @@ namespace Immense.RemoteControl.Desktop.UI.Views
             var result = await MessageBox.Show("Stop the remote control session?", "Stop Session", MessageBoxType.YesNo);
             if (result == MessageBoxResult.Yes)
             {
-                var shutdownService = StaticServiceProvider.Instance.GetRequiredService<IShutdownService>();
+                var shutdownService = StaticServiceProvider.Instance?.GetRequiredService<IShutdownService>();
+                if (shutdownService is null)
+                {
+                    return;
+                }
                 await shutdownService.Shutdown();
             }
         }
