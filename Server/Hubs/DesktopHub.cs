@@ -129,14 +129,14 @@ namespace Immense.RemoteControl.Server.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            _sessionCache.Sessions.TryRemove(Context.ConnectionId, out _);
-
             if (SessionInfo.Mode == RemoteControlMode.Attended)
             {
+                _sessionCache.Sessions.TryRemove(SessionInfo.AttendedSessionId, out _);
                 await _viewerHub.Clients.Clients(ViewerList).SendAsync("ScreenCasterDisconnected");
             }
             else if (SessionInfo.Mode == RemoteControlMode.Unattended)
             {
+                _sessionCache.Sessions.TryRemove(SessionInfo.UnattendedSessionId, out _);
                 if (ViewerList.Count > 0)
                 {
                     await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
