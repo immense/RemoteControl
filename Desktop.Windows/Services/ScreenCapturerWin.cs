@@ -40,7 +40,7 @@ using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Result = Immense.RemoteControl.Shared.Result;
-using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {

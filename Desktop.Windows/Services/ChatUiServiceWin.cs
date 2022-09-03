@@ -1,6 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.Views;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using Immense.RemoteControl.Desktop.UI.WPF.Views;
 using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -15,16 +16,16 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class ChatUiServiceWin : IChatUiService
     {
-        private readonly IWpfDispatcher _wpfDispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IShutdownService _shutdownService;
         private readonly IViewModelFactory _viewModelFactory;
 
         public ChatUiServiceWin(
-            IWpfDispatcher wpfDispatcher, 
+            IWindowsUiDispatcher dispatcher, 
             IShutdownService shutdownService,
             IViewModelFactory viewModelFactory)
         {
-            _wpfDispatcher = wpfDispatcher;
+            _dispatcher = dispatcher;
             _shutdownService = shutdownService;
             _viewModelFactory = viewModelFactory;
         }
@@ -33,9 +34,9 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public event EventHandler? ChatWindowClosed;
 
-        public void ReceiveChat(ChatMessage chatMessage)
+        public Task ReceiveChat(ChatMessage chatMessage)
         {
-            _wpfDispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 if (chatMessage.Disconnected)
                 {
@@ -51,11 +52,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     _chatViewModel.ChatMessages.Add(chatMessage);
                 }
             });
+            return Task.CompletedTask;
         }
 
         public void ShowChatWindow(string organizationName, StreamWriter writer)
         {
-            _wpfDispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 _chatViewModel = _viewModelFactory.CreateChatWindowViewModel(organizationName, writer);
                 var chatWindow = new ChatWindow();

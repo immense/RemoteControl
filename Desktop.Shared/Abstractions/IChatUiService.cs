@@ -14,6 +14,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Abstractions
         event EventHandler ChatWindowClosed;
 
         void ShowChatWindow(string organizationName, StreamWriter writer);
-        void ReceiveChat(ChatMessage chatMessage);
+        Task ReceiveChat(ChatMessage chatMessage);
     }
 }

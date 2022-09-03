@@ -1,6 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Desktop.Windows;
-using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -32,7 +32,7 @@ Console.CancelKeyPress += async (s, e) =>
     await shutdownService.Shutdown();
 };
 
-var dispatcher = provider.GetRequiredService<IWpfDispatcher>();
+var dispatcher = provider.GetRequiredService<IWindowsUiDispatcher>();
 
 Console.WriteLine("Press Ctrl + C to exit.");
 await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.ApplicationExitingToken);

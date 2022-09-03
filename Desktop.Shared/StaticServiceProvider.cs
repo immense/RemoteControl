@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Immense.RemoteControl.Shared.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,6 @@ namespace Immense.RemoteControl.Desktop.Shared
 {
     public static class StaticServiceProvider
     {
-        public static IServiceProvider? Instance { get; internal set; }
+        public static IServiceProvider? Instance { get; set; }
     }
 }

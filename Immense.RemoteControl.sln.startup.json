@@ -52,7 +52,7 @@
         }
     */
   "MultiProjectConfigurations": {
-    "Attended": {
+    "Windows Attended": {
       "Projects": {
         "ServerExample": {
           "ProfileName": "ServerExample"
@@ -62,12 +62,32 @@
         }
       }
     },
-    "Unattended": {
+    "Windows Unattended": {
       "Projects": {
         "ServerExample": {
           "ProfileName": "ServerExample"
         },
         "WindowsDesktopExample": {
+          "ProfileName": "Unattended"
+        }
+      }
+    },
+    "Linux Attended": {
+      "Projects": {
+        "ServerExample": {
+          "ProfileName": "ServerExample"
+        },
+        "LinuxDesktopExample": {
+          "ProfileName": "Attended"
+        }
+      }
+    },
+    "Linux Unattended": {
+      "Projects": {
+        "ServerExample": {
+          "ProfileName": "ServerExample"
+        },
+        "LinuxDesktopExample": {
           "ProfileName": "Unattended"
         }
       }

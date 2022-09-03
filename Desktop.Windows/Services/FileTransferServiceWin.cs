@@ -1,8 +1,9 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.Views;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using Immense.RemoteControl.Desktop.UI.WPF.Views;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -28,12 +29,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         private static readonly SemaphoreSlim _writeLock = new(1, 1);
         private static MessageBoxResult? _result;
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IViewModelFactory _viewModelFactory;
         private readonly ILogger<FileTransferServiceWin> _logger;
 
         public FileTransferServiceWin(
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             IViewModelFactory viewModelFactory,
             ILogger<FileTransferServiceWin> logger)
         {
@@ -50,7 +51,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void OpenFileTransferWindow(IViewer viewer)
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionID, out var window))
                 {

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Attended": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    },
+    "Unattended": {
+      "commandName": "Project",
+      "commandLineArgs": "-m Unattended -s some-session-id -a vERyLonGAndCOMpleXKeY -o Immense -r Han"
+    }
+  }
+}

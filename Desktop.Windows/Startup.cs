@@ -1,9 +1,10 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Extensions;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using Immense.RemoteControl.Desktop.Windows.Services;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -51,16 +52,15 @@ namespace Immense.RemoteControl.Desktop.Windows
             services.AddSingleton<IClipboardService, ClipboardServiceWin>();
             services.AddSingleton<IAudioCapturer, AudioCapturerWin>();
             services.AddSingleton<IChatUiService, ChatUiServiceWin>();
-            services.AddTransient<IScreenCapturer, ScreenCapturerWin>();
-            services.AddScoped<IFileTransferService, FileTransferServiceWin>();
             services.AddSingleton<ISessionIndicator, SessionIndicatorWin>();
             services.AddSingleton<IShutdownService, ShutdownServiceWin>();
-            services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
-            services.AddSingleton<IWpfDispatcher, WpfDispatcher>();
+            services.AddSingleton<IWindowsUiDispatcher, WindowsUiDispatcher>();
             services.AddSingleton<IAppStartup, AppStartup>();
             services.AddSingleton<IViewModelFactory, ViewModelFactory>();
-            services.AddSingleton<MainWindowViewModel>();
-            services.AddSingleton((serviceProvider) => GetBackgroundForm());
+            services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
+            services.AddTransient<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
+            services.AddTransient<IFileTransferService, FileTransferServiceWin>();
+            services.AddTransient<IScreenCapturer, ScreenCapturerWin>();
         }
 
         private static void RelaunchElevated()
@@ -77,18 +77,6 @@ namespace Immense.RemoteControl.Desktop.Windows
                 out var procInfo);
             Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
             Environment.Exit(0);
-        }
-
-        private static Form GetBackgroundForm()
-        {
-            return new Form()
-            {
-                Visible = false,
-                Opacity = 0,
-                ShowIcon = false,
-                ShowInTaskbar = false,
-                WindowState = FormWindowState.Minimized
-            };
         }
     }
 }

@@ -1,14 +1,15 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Shared.Win32;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Immense.RemoteControl.Desktop.Shared.Win32.User32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Win32.User32;
 
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
@@ -16,14 +17,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
     public class KeyboardMouseInputWin : IKeyboardMouseInput
     {
         private readonly ConcurrentQueue<Action> _inputActions = new();
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly ILogger<KeyboardMouseInputWin> _logger;
         private CancellationTokenSource? _cancelTokenSource;
         private volatile bool _inputBlocked;
         private Thread? _inputProcessingThread;
 
         public KeyboardMouseInputWin(
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<KeyboardMouseInputWin> logger)
         {
             _dispatcher = dispatcher;
@@ -46,7 +47,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void Init()
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 _dispatcher.CurrentApp.Exit -= App_Exit;
                 _dispatcher.CurrentApp.Exit += App_Exit;

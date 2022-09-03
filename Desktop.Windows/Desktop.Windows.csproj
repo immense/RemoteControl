@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Desktop.Shared\Desktop.Shared.csproj" />
+    <ProjectReference Include="..\Desktop.UI.WPF\Desktop.UI.WPF.csproj" />
   </ItemGroup>
 	
 </Project>

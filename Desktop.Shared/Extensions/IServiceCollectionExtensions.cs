@@ -1,7 +1,7 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Shared.Win32;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,7 +42,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
             var rootCommand = new RootCommand(
                 $"This app is using the {typeof(IServiceCollectionExtensions).Assembly.GetName().Name} library, " +
-                $"which allows IT administrators to provide remote assistance on this device.");
+                "which allows IT administrators to provide remote assistance on this device.\n\n" +
+                "Internal arguments include the following:\n\n" +
+                "--relaunch    Used to indicate that process is being relaunched from a previous session\n" +
+                "              and should notify viewers when it's ready.\n" +
+                "--viewers     Used with --relaunch.  Should be a comma-separated list of viewers'\n" +
+                "              SignalR connection IDs.\n" +
+                "--elevate     Must be called from a Windows service.  The process will relaunch itself\n" +
+                "              in the console session with elevated rights.");
 
             var hostOption = new Option<string>(
                 new[] { "-h", "--host" },
@@ -139,6 +146,15 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             rootCommand.TreatUnmatchedTokensAsErrors = false;
             await rootCommand.InvokeAsync(args);
 
+            if (args.Any(x =>
+                x.StartsWith("-h") ||
+                x.StartsWith("--help") ||
+                x.StartsWith("-?") ||
+                x.StartsWith("/?")))
+            {
+                Environment.Exit(0);
+            }
+
             var provider = services.BuildServiceProvider();
             StaticServiceProvider.Instance = provider;
 
@@ -160,6 +176,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             services.AddSingleton<IIdleTimer, IdleTimer>();
             services.AddSingleton<IImageHelper, ImageHelper>();
             services.AddSingleton<IChatHostService, ChatHostService>();
+            services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
+            services.AddSingleton<IEnvironmentHelper, EnvironmentHelper>();
             services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
             services.AddTransient<IViewer, Viewer>();
             services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
