@@ -120,8 +120,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
                     services.AddSingleton<IAppState>(s =>
                     {
+                        var messenger = s.GetRequiredService<IMessenger>();
                         var logger = s.GetRequiredService<ILogger<AppState>>();
-                        return new AppState(logger)
+                        return new AppState(messenger, logger)
                         {
                             Host = host,
                             Mode = mode,

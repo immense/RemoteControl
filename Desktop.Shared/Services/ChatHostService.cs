@@ -80,7 +80,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                             _logger.LogWarning("Deserialized message was null.  Value: {value}", messageJson);
                             continue;
                         }
-                        _chatUiService.ReceiveChat(chatMessage);
+                        await _chatUiService.ReceiveChat(chatMessage);
 
                     }
                 }
