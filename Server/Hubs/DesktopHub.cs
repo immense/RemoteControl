@@ -163,11 +163,23 @@ namespace Immense.RemoteControl.Server.Hubs
             SessionInfo.RequesterName = requesterName;
             SessionInfo.OrganizationName = organizationName;
 
-            if (!_sessionCache.Sessions.TryAdd(unattendedSessionId, SessionInfo))
+            if (_sessionCache.Sessions.TryGetValue(unattendedSessionId, out var existingSession) &&
+                accessKey != SessionInfo.AccessKey)
             {
+                _logger.LogWarning("A desktop session tried to connect, but the access key didn't match.");
                 var result = Result.Fail("SessionId already exists on the server.");
                 return Task.FromResult(result);
             }
+
+            SessionInfo = _sessionCache.Sessions.AddOrUpdate(unattendedSessionId, SessionInfo, (k, v) =>
+            {
+                v.DesktopConnectionId = Context.ConnectionId;
+                v.StartTime = DateTimeOffset.Now;
+                v.MachineName = machineName;
+                v.RequesterName = requesterName;
+                v.OrganizationName = organizationName;
+                return v;
+            });
 
             return Task.FromResult(Result.Ok());
         }
