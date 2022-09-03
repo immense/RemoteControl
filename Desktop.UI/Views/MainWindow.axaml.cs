@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Immense.RemoteControl.Desktop.Shared;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
@@ -8,12 +10,9 @@ namespace Immense.RemoteControl.Desktop.UI.Views
     {
         public MainWindow()
         {
-            Current = this;
-
+            DataContext = StaticServiceProvider.Instance?.GetService<IMainWindowViewModel>();
             InitializeComponent();
         }
-
-        public static MainWindow? Current { get; set; }
 
         private void InitializeComponent()
         {

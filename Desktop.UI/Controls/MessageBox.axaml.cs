@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using CommunityToolkit.Diagnostics;
 using Immense.RemoteControl.Desktop.Shared;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
@@ -11,12 +12,15 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace Immense.RemoteControl.Desktop.UI.Controls
 {
     public partial class MessageBox : Window
     {
         public static async Task<MessageBoxResult> Show(string message, string caption, MessageBoxType type)
         {
+            Guard.IsNotNull(StaticServiceProvider.Instance, nameof(StaticServiceProvider.Instance));
+
             var messageBox = new MessageBox();
             var viewModel = StaticServiceProvider.Instance.GetRequiredService<IMessageBoxViewModel>();
             viewModel.Caption = caption;

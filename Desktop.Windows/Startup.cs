@@ -51,15 +51,15 @@ namespace Immense.RemoteControl.Desktop.Windows
             services.AddSingleton<IClipboardService, ClipboardServiceWin>();
             services.AddSingleton<IAudioCapturer, AudioCapturerWin>();
             services.AddSingleton<IChatUiService, ChatUiServiceWin>();
-            services.AddTransient<IScreenCapturer, ScreenCapturerWin>();
-            services.AddScoped<IFileTransferService, FileTransferServiceWin>();
             services.AddSingleton<ISessionIndicator, SessionIndicatorWin>();
             services.AddSingleton<IShutdownService, ShutdownServiceWin>();
-            services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
             services.AddSingleton<IWindowsUiDispatcher, WindowsUiDispatcher>();
             services.AddSingleton<IAppStartup, AppStartup>();
             services.AddSingleton<IViewModelFactory, ViewModelFactory>();
             services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
+            services.AddTransient<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
+            services.AddTransient<IFileTransferService, FileTransferServiceWin>();
+            services.AddTransient<IScreenCapturer, ScreenCapturerWin>();
         }
 
         private static void RelaunchElevated()

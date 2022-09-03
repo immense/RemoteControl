@@ -1,6 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.Services;
+using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.UI.ViewModels
+namespace Immense.RemoteControl.Desktop.UI.Services
 {
     // Normally, I'd use a view model locator.  But enough view models require a factory pattern
     // that I thought it more consistent to put them all here.

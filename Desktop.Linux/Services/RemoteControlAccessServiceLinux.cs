@@ -1,7 +1,6 @@
 ﻿using Avalonia.Threading;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.Services;
-using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Views;
 using System;
 using System.Collections.Generic;

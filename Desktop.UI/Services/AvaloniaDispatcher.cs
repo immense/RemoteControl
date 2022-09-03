@@ -27,8 +27,8 @@ namespace Immense.RemoteControl.Desktop.UI.Services
         Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal);
         void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
         void Shutdown();
-        void StartBackground();
-        void StartForeground();
+        void StartUnattended();
+        void StartAttended();
     }
 
     internal class AvaloniaDispatcher : IAvaloniaDispatcher
@@ -93,7 +93,7 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             }
         }
 
-        public void StartBackground()
+        public void StartUnattended()
         {
             try
             {
@@ -107,7 +107,7 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             }
         }
 
-        public void StartForeground()
+        public void StartAttended()
         {
             try
             {

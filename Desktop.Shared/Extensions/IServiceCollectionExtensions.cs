@@ -176,9 +176,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             services.AddSingleton<IIdleTimer, IdleTimer>();
             services.AddSingleton<IImageHelper, ImageHelper>();
             services.AddSingleton<IChatHostService, ChatHostService>();
+            services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
             services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
             services.AddTransient<IViewer, Viewer>();
-            services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
             services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
             platformServicesConfig.Invoke(services);
         }
