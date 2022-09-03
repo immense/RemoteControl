@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -41,7 +42,14 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
             var rootCommand = new RootCommand(
                 $"This app is using the {typeof(IServiceCollectionExtensions).Assembly.GetName().Name} library, " +
-                $"which allows IT administrators to provide remote assistance on this device.\n\n");
+                "which allows IT administrators to provide remote assistance on this device.\n\n" +
+                "Internal arguments include the following:\n\n" +
+                "--relaunch    Used to indicate that process is being relaunched from a previous session\n" +
+                "              and should notify viewers when it's ready.\n" +
+                "--viewers     Used with --relaunch.  Should be a comma-separated list of viewers'\n" +
+                "              SignalR connection IDs.\n" +
+                "--elevate     Must be called from a Windows service.  The process will relaunch itself\n" +
+                "              in the console session with elevated rights.");
 
             var hostOption = new Option<string>(
                 new[] { "-h", "--host" },
@@ -170,6 +178,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             services.AddSingleton<IChatHostService, ChatHostService>();
             services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
             services.AddTransient<IViewer, Viewer>();
+            services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
             services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
             platformServicesConfig.Invoke(services);
         }

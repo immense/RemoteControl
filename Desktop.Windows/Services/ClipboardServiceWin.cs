@@ -11,12 +11,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class ClipboardServiceWin : IClipboardService
     {
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly ILogger<ClipboardServiceWin> _logger;
         private CancellationTokenSource? _cancelTokenSource;
         private string _clipboardText = string.Empty;
 
-        public ClipboardServiceWin(IWpfDispatcher dispatcher, ILogger<ClipboardServiceWin> logger)
+        public ClipboardServiceWin(IWindowsUiDispatcher dispatcher, ILogger<ClipboardServiceWin> logger)
         {
             _dispatcher = dispatcher;
             _logger = logger;
@@ -26,7 +26,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void BeginWatching()
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 _dispatcher.CurrentApp.Exit -= App_Exit;
                 _dispatcher.CurrentApp.Exit += App_Exit;

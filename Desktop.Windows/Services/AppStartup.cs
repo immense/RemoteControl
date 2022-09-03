@@ -19,20 +19,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
-using SessionSwitchReasonLocal = Immense.RemoteControl.Shared.Enums.SessionSwitchReason;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     internal class AppStartup : IAppStartup
     {
-        private readonly Form _backgroundForm;
         private readonly IAppState _appState;
         private readonly IKeyboardMouseInput _inputService;
         private readonly IDesktopHubConnection _desktopHub;
         private readonly IClipboardService _clipboardService;
         private readonly IChatHostService _chatHostService;
         private readonly ICursorIconWatcher _cursorIconWatcher;
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IMainWindowViewModel _mainWindowVm;
         private readonly IIdleTimer _idleTimer;
         private readonly IShutdownService _shutdownService;
@@ -40,7 +38,6 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         private MainWindow? _mainWindow;
 
         public AppStartup(
-            Form backgroundForm,
             IMainWindowViewModel mainWindowVm,
             IAppState appState,
             IKeyboardMouseInput inputService,
@@ -48,12 +45,11 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             IClipboardService clipboardService,
             IChatHostService chatHostService,
             ICursorIconWatcher iconWatcher,
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             IIdleTimer idleTimer,
             IShutdownService shutdownService,
             ILogger<AppStartup> logger)
         {
-            _backgroundForm = backgroundForm;
             _appState = appState;
             _inputService = inputService;
             _desktopHub = desktopHub;
@@ -69,7 +65,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public async Task Initialize()
         {
-            StartWinFormsThread();
+            _dispatcher.StartWinFormsThread();
 
             var wpfStarted = await _dispatcher.StartWpfThread().ConfigureAwait(false);
 
@@ -90,14 +86,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             switch (_appState.Mode)
             {
                 case AppMode.Unattended:
-                    _dispatcher.Invoke(() =>
+                    _dispatcher.InvokeWpf(() =>
                     {
                         System.Windows.Application.Current!.ShutdownMode = ShutdownMode.OnExplicitShutdown;
                     });
                     await StartScreenCasting().ConfigureAwait(false);
                     break;
                 case AppMode.Attended:
-                    _dispatcher.Invoke(() =>
+                    _dispatcher.InvokeWpf(() =>
                     {
                         _mainWindow = new MainWindow
                         {
@@ -168,50 +164,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             _idleTimer.Start();
         }
 
-        private void StartWinFormsThread()
-        {
-            _backgroundForm.Load += BackgroundForm_Load;
-            _backgroundForm.FormClosing += BackgroundForm_FormClosing;
-            var winformsThread = new Thread(() =>
-            {
-                System.Windows.Forms.Application.Run(_backgroundForm);
-            })
-            {
-                IsBackground = true
-            };
-            winformsThread.TrySetApartmentState(ApartmentState.STA);
-            winformsThread.Start();
 
-            _logger.LogInformation("Background WinForms thread started.");
-        }
-
-        private void BackgroundForm_FormClosing(object? sender, FormClosingEventArgs e)
-        {
-            SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
-            SystemEvents.SessionEnding -= SystemEvents_SessionEnding;
-        }
-
-        private void BackgroundForm_Load(object? sender, EventArgs e)
-        {
-            SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
-            SystemEvents.SessionEnding += SystemEvents_SessionEnding;
-        }
-
-        private async void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
-        {
-            if (e.Reason == SessionEndReasons.SystemShutdown)
-            {
-                await _desktopHub.DisconnectAllViewers();
-            }
-        }
-
-        private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
-        {
-            _logger.LogInformation("Session changing.  Reason: {reason}", e.Reason);
-
-            var reason = (SessionSwitchReasonLocal)(int)e.Reason;
-            _desktopHub.NotifySessionChanged(reason, Process.GetCurrentProcess().SessionId);
-        }
 
         private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)
         {

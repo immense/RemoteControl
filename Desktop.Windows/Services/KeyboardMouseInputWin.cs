@@ -16,14 +16,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
     public class KeyboardMouseInputWin : IKeyboardMouseInput
     {
         private readonly ConcurrentQueue<Action> _inputActions = new();
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly ILogger<KeyboardMouseInputWin> _logger;
         private CancellationTokenSource? _cancelTokenSource;
         private volatile bool _inputBlocked;
         private Thread? _inputProcessingThread;
 
         public KeyboardMouseInputWin(
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<KeyboardMouseInputWin> logger)
         {
             _dispatcher = dispatcher;
@@ -46,7 +46,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void Init()
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 _dispatcher.CurrentApp.Exit -= App_Exit;
                 _dispatcher.CurrentApp.Exit += App_Exit;

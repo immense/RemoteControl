@@ -31,7 +31,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
     public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWindowViewModel
     {
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IFileTransferService _fileTransferService;
         private readonly IViewer _viewer;
 
@@ -39,14 +39,14 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         public FileTransferWindowViewModel(
             IViewer viewer,
             IBrandingProvider brandingProvider,
-            IWpfDispatcher wpfDispatcher,
+            IWindowsUiDispatcher dispatcher,
             IFileTransferService fileTransferService,
             ILogger<FileTransferWindowViewModel> logger)
-            : base(brandingProvider, wpfDispatcher, logger)
+            : base(brandingProvider, dispatcher, logger)
         {
             _fileTransferService = fileTransferService;
             _viewer = viewer;
-            _dispatcher = wpfDispatcher;
+            _dispatcher = dispatcher;
             ViewerName = viewer.Name;
             ViewerConnectionId = viewer.ViewerConnectionID;
 
@@ -128,14 +128,14 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 FilePath = filePath
             };
 
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 FileUploads.Add(fileUpload);
             });
 
             await _fileTransferService.UploadFile(fileUpload, _viewer, fileUpload.CancellationTokenSource.Token, (double progress) =>
             {
-                _dispatcher.Invoke(() => fileUpload.PercentProgress = progress);
+                _dispatcher.InvokeWpf(() => fileUpload.PercentProgress = progress);
             });
         }
     }

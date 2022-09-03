@@ -28,9 +28,9 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             StreamWriter streamWriter,
             string organizationName,
             IBrandingProvider brandingProvider,
-            IWpfDispatcher wpfDispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<BrandedViewModelBase> logger)
-            : base(brandingProvider, wpfDispatcher, logger)
+            : base(brandingProvider, dispatcher, logger)
         {
             _streamWriter = streamWriter;
             if (!string.IsNullOrWhiteSpace(organizationName))

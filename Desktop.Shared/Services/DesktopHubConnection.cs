@@ -1,4 +1,6 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Models;
@@ -57,6 +59,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             IServiceScopeFactory scopeFactory,
             IAppState appState,
             IRemoteControlAccessService remoteControlAccessService,
+            IMessenger messenger,
             ILogger<DesktopHubConnection> logger)
         {
             _idleTimer = idleTimer;
@@ -66,12 +69,16 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _appState = appState;
             _logger = logger;
 
+            messenger.Register<DisconnectAllViewersMessage>(this, HandleDisconnectAllViewers);
+            messenger.Register<NotifySessionChangedMessage>(this, HandleNotifySessionChanged);
 
             Connection = BuildConnection();
         }
 
         public HubConnection Connection { get; private set; }
+
         public bool IsConnected => Connection?.State == HubConnectionState.Connected;
+
         public async Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout)
         {
             try
@@ -211,6 +218,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         {
             return Connection.InvokeAsync<Result>("ReceiveUnattendedSessionInfo", unattendedSessionId, accessKey, machineName, requesterName, organizationName);
         }
+
         public Task SendViewerConnected(string viewerConnectionId)
         {
             return Connection.SendAsync("ViewerConnected", viewerConnectionId);
@@ -316,6 +324,16 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 .WithAutomaticReconnect(new RetryPolicy())
                 .Build();
             return connection;
+        }
+
+        private async void HandleDisconnectAllViewers(object recipient, DisconnectAllViewersMessage message)
+        {
+            await DisconnectAllViewers();
+        }
+
+        private async void HandleNotifySessionChanged(object recipient, NotifySessionChangedMessage message)
+        {
+            await NotifySessionChanged(message.Reason, message.SessionId);
         }
         private class RetryPolicy : IRetryPolicy
         {

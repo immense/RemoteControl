@@ -14,9 +14,9 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
     {
         public HostNamePromptViewModel(
             IBrandingProvider brandingProvider,
-            IWpfDispatcher wpfDispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<BrandedViewModelBase> logger)
-            : base(brandingProvider, wpfDispatcher, logger)
+            : base(brandingProvider, dispatcher, logger)
         {
         }
 

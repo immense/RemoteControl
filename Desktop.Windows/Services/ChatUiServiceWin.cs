@@ -15,16 +15,16 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class ChatUiServiceWin : IChatUiService
     {
-        private readonly IWpfDispatcher _wpfDispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IShutdownService _shutdownService;
         private readonly IViewModelFactory _viewModelFactory;
 
         public ChatUiServiceWin(
-            IWpfDispatcher wpfDispatcher, 
+            IWindowsUiDispatcher dispatcher, 
             IShutdownService shutdownService,
             IViewModelFactory viewModelFactory)
         {
-            _wpfDispatcher = wpfDispatcher;
+            _dispatcher = dispatcher;
             _shutdownService = shutdownService;
             _viewModelFactory = viewModelFactory;
         }
@@ -35,7 +35,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void ReceiveChat(ChatMessage chatMessage)
         {
-            _wpfDispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 if (chatMessage.Disconnected)
                 {
@@ -55,7 +55,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public void ShowChatWindow(string organizationName, StreamWriter writer)
         {
-            _wpfDispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 _chatViewModel = _viewModelFactory.CreateChatWindowViewModel(organizationName, writer);
                 var chatWindow = new ChatWindow();

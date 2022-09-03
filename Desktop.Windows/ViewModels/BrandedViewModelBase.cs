@@ -31,15 +31,15 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         private static BrandingInfo? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
         private readonly ILogger<BrandedViewModelBase> _logger;
-        private readonly IWpfDispatcher _wpfDispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
 
         public BrandedViewModelBase(
             IBrandingProvider brandingProvider,
-            IWpfDispatcher wpfDispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<BrandedViewModelBase> logger)
         {
             _brandingProvider = brandingProvider;
-            _wpfDispatcher = wpfDispatcher;
+            _dispatcher = dispatcher;
             _logger = logger;
             _ = Task.Run(ApplyBranding);
         }
@@ -76,7 +76,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         public async Task ApplyBranding()
         {
-            await _wpfDispatcher.InvokeAsync(async () =>
+            await _dispatcher.InvokeWpfAsync(async () =>
             {
                 try
                 {

@@ -16,8 +16,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 {
     public class SessionIndicatorWin : ISessionIndicator
     {
-        private readonly Form _backgroundForm;
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IDesktopHubConnection _hubConnection;
         private readonly IBrandingProvider _brandingProvider;
         private readonly ILogger<SessionIndicatorWin> _logger;
@@ -26,13 +25,11 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         private NotifyIcon? _notifyIcon;
 
         public SessionIndicatorWin(
-            Form backgroundForm, 
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             IDesktopHubConnection hubConnection,
             IBrandingProvider brandingProvider,
             ILogger<SessionIndicatorWin> logger)
         {
-            _backgroundForm = backgroundForm;
             _dispatcher = dispatcher;
             _hubConnection = hubConnection;
             _brandingProvider = brandingProvider;
@@ -48,12 +45,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     return;
                 }
 
-                _dispatcher.Invoke(() =>
+                _dispatcher.InvokeWpf(() =>
                 {
                     _dispatcher.CurrentApp.Exit += App_Exit;
                 });
 
-                _backgroundForm.Invoke(async () =>
+                _dispatcher.InvokeWinForms(async () =>
                 {
                     _container = new Container();
                     _contextMenuStrip = new ContextMenuStrip(_container);

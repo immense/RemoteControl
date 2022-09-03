@@ -56,11 +56,10 @@ namespace Immense.RemoteControl.Desktop.Windows
             services.AddSingleton<ISessionIndicator, SessionIndicatorWin>();
             services.AddSingleton<IShutdownService, ShutdownServiceWin>();
             services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceWin>();
-            services.AddSingleton<IWpfDispatcher, WpfDispatcher>();
+            services.AddSingleton<IWindowsUiDispatcher, WindowsUiDispatcher>();
             services.AddSingleton<IAppStartup, AppStartup>();
             services.AddSingleton<IViewModelFactory, ViewModelFactory>();
             services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
-            services.AddSingleton((serviceProvider) => GetBackgroundForm());
         }
 
         private static void RelaunchElevated()
@@ -77,18 +76,6 @@ namespace Immense.RemoteControl.Desktop.Windows
                 out var procInfo);
             Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
             Environment.Exit(0);
-        }
-
-        private static Form GetBackgroundForm()
-        {
-            return new Form()
-            {
-                Visible = false,
-                Opacity = 0,
-                ShowIcon = false,
-                ShowInTaskbar = false,
-                WindowState = FormWindowState.Minimized
-            };
         }
     }
 }

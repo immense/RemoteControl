@@ -12,12 +12,12 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
     public class ShutdownServiceWin : IShutdownService
     {
         private readonly IDesktopHubConnection _hubConnection;
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly ILogger<ShutdownServiceWin> _logger;
 
         public ShutdownServiceWin(
             IDesktopHubConnection hubConnection,
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<ShutdownServiceWin> logger)
         {
             _hubConnection = hubConnection;
@@ -33,7 +33,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 await _hubConnection.DisconnectAllViewers();
                 await _hubConnection.Disconnect();
                 System.Windows.Forms.Application.Exit();
-                _dispatcher.Invoke(() =>
+                _dispatcher.InvokeWpf(() =>
                 {
                     _dispatcher.CurrentApp.Shutdown();
                 });

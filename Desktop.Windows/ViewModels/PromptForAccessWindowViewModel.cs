@@ -29,9 +29,9 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
             string requesterName,
             string organizationName,
             IBrandingProvider brandingProvider,
-            IWpfDispatcher wpfDispatcher,
+            IWindowsUiDispatcher dispatcher,
             ILogger<PromptForAccessWindowViewModel> logger)
-            : base(brandingProvider, wpfDispatcher, logger)
+            : base(brandingProvider, dispatcher, logger)
         {
             if (!string.IsNullOrWhiteSpace(requesterName))
             {

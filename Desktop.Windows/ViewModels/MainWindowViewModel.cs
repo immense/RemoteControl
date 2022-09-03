@@ -43,7 +43,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
     public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         private readonly IAppState _appState;
-        private readonly IWpfDispatcher _dispatcher;
+        private readonly IWindowsUiDispatcher _dispatcher;
         private readonly IDesktopHubConnection _hubConnection;
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly IScreenCaster _screenCaster;
@@ -52,7 +52,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         public MainWindowViewModel(
             IBrandingProvider brandingProvider,
-            IWpfDispatcher dispatcher,
+            IWindowsUiDispatcher dispatcher,
             IAppState appState,
             IDesktopHubConnection hubConnection,
             IScreenCaster screenCaster,
@@ -147,7 +147,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 {
                     _hubConnection.Connection.Closed += (ex) =>
                     {
-                        _dispatcher.Invoke(() =>
+                        _dispatcher.InvokeWpf(() =>
                         {
                             Viewers.Clear();
                             StatusMessage = "Disconnected";
@@ -157,7 +157,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
                     _hubConnection.Connection.Reconnecting += (ex) =>
                     {
-                        _dispatcher.Invoke(() =>
+                        _dispatcher.InvokeWpf(() =>
                         {
                             Viewers.Clear();
                             StatusMessage = "Reconnecting";
@@ -194,7 +194,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         private void Application_Exit(object sender, ExitEventArgs e)
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 Viewers.Clear();
             });
@@ -279,7 +279,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
                 formattedSessionID += $"{sessionId.Substring(i, 3)} ";
             }
 
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 SessionId = formattedSessionID.Trim();
                 StatusMessage = SessionId;
@@ -328,7 +328,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
         }
         private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
         {
-            await _dispatcher.InvokeAsync(async () =>
+            await _dispatcher.InvokeWpfAsync(async () =>
             {
                 _dispatcher.CurrentApp.MainWindow.Activate();
                 var result = MessageBox.Show(_dispatcher.CurrentApp.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -345,7 +345,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         private void ViewerAdded(object? sender, IViewer viewer)
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 Viewers.Add(viewer);
             });
@@ -353,7 +353,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels
 
         private void ViewerRemoved(object? sender, string viewerID)
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeWpf(() =>
             {
                 var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
                 if (viewer != null)
