@@ -141,7 +141,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 
             try
             {
-                var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(5));
+                var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(10));
 
                 if (result)
                 {

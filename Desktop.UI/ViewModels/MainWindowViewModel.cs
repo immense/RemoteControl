@@ -202,7 +202,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
 
             try
             {
-                var result = await _hubConnection.Connect(_dispatcher.AppCancellationToken, TimeSpan.FromSeconds(5));
+                var result = await _hubConnection.Connect(_dispatcher.AppCancellationToken, TimeSpan.FromSeconds(10));
 
                 _hubConnection.Connection.Closed += async (ex) =>
                 {
