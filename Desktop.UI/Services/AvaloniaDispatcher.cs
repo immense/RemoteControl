@@ -26,6 +26,7 @@ namespace Immense.RemoteControl.Desktop.UI.Services
         Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal);
         Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal);
         void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
+        void Shutdown();
         void StartBackground();
         void StartForeground();
     }
@@ -78,6 +79,18 @@ namespace Immense.RemoteControl.Desktop.UI.Services
         public void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
         {
             Dispatcher.UIThread.Post(action, priority);
+        }
+
+        public void Shutdown()
+        {
+            _appCts.Cancel();
+            if (_currentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+            {
+                if (!lifetime.TryShutdown())
+                {
+                    Environment.Exit(0);
+                }
+            }
         }
 
         public void StartBackground()

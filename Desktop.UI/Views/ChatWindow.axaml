@@ -15,7 +15,11 @@
         MinWidth="200"
         Topmost="True"
         Title="Chat Session" Height="450" Width="450">
-  
+
+	<Design.DataContext>
+		<fakes:FakeChatWindowViewModel />
+	</Design.DataContext>
+	
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />

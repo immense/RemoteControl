@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels"
 		xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels.Fakes"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="275"
         x:Class="Immense.RemoteControl.Desktop.UI.Views.PromptForAccessWindow"
         HasSystemDecorations="False"
         BorderBrush="DimGray"
@@ -15,9 +15,12 @@
         Height="275" 
         Width="450"
         Icon="{Binding WindowIcon}">
-  
 
-  <Grid>
+	<Design.DataContext>
+		<fakes:FakePromptForAccessViewModel />
+	</Design.DataContext>
+
+	<Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition />

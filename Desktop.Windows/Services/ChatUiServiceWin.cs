@@ -33,7 +33,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
 
         public event EventHandler? ChatWindowClosed;
 
-        public void ReceiveChat(ChatMessage chatMessage)
+        public Task ReceiveChat(ChatMessage chatMessage)
         {
             _dispatcher.InvokeWpf(() =>
             {
@@ -51,6 +51,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                     _chatViewModel.ChatMessages.Add(chatMessage);
                 }
             });
+            return Task.CompletedTask;
         }
 
         public void ShowChatWindow(string organizationName, StreamWriter writer)
