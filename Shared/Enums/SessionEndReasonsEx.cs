@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Shared.Messages
+namespace Immense.RemoteControl.Shared.Enums
 {
-    public class DisconnectAllViewersMessage
+    public enum SessionEndReasonsEx
     {
+        Logoff = 1,
+        SystemShutdown = 2
     }
 }

@@ -107,7 +107,7 @@ namespace Immense.RemoteControl.Server.Hubs
             await _hubEvents.NotifyUnattendedSessionReady(session, accessLink);
         }
 
-        public Task NotifySessionChanged(SessionSwitchReason reason, int currentSessionId)
+        public Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
         {
             return _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
         }

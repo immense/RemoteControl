@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Desktop.Shared.Messages
 {
-    public class NotifySessionChangedMessage
+    public class WindowsSessionSwitched
     {
-        public NotifySessionChangedMessage(SessionSwitchReason reason, int sessionId)
+        public WindowsSessionSwitched(SessionSwitchReasonEx reason, int sessionId)
         {
             Reason = reason;
             SessionId = sessionId;
         }
 
-        public SessionSwitchReason Reason { get; }
+        public SessionSwitchReasonEx Reason { get; }
         public int SessionId { get; }
     }
 }

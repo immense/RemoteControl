@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Shared.Enums
 {
-    public enum SessionSwitchReason
+    public enum SessionSwitchReasonEx
     {
         ConsoleConnect = 1,
         ConsoleDisconnect = 2,

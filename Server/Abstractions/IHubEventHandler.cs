@@ -48,7 +48,7 @@ namespace Immense.RemoteControl.Server.Abstractions
         /// <param name="reason">The type of change that's occurring.</param>
         /// <param name="currentSessionId">The current session ID of the remote control process.</param>
         /// <returns></returns>
-        Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReason reason, int currentSessionId);
+        Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReasonEx reason, int currentSessionId);
 
         /// <summary>
         /// This will be called when an unattended session is ready for a viewer to connect.

@@ -29,23 +29,23 @@ namespace ServerExample.Services
         
         }
 
-        public Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReason reason, int currentSessionId)
+        public Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReasonEx reason, int currentSessionId)
         {
             switch (reason)
             {
-                case SessionSwitchReason.ConsoleDisconnect:
-                case SessionSwitchReason.RemoteConnect:
-                case SessionSwitchReason.RemoteDisconnect:
-                case SessionSwitchReason.SessionLogoff:
-                case SessionSwitchReason.SessionLock:
-                case SessionSwitchReason.SessionRemoteControl:
+                case SessionSwitchReasonEx.ConsoleDisconnect:
+                case SessionSwitchReasonEx.RemoteConnect:
+                case SessionSwitchReasonEx.RemoteDisconnect:
+                case SessionSwitchReasonEx.SessionLogoff:
+                case SessionSwitchReasonEx.SessionLock:
+                case SessionSwitchReasonEx.SessionRemoteControl:
                     // These ones will cause remote control to stop working.  We'll need
                     // to launch a new process in the active session or handle this some
                     // other way.
                     break;
-                case SessionSwitchReason.ConsoleConnect:
-                case SessionSwitchReason.SessionLogon:
-                case SessionSwitchReason.SessionUnlock:
+                case SessionSwitchReasonEx.ConsoleConnect:
+                case SessionSwitchReasonEx.SessionLogon:
+                case SessionSwitchReasonEx.SessionUnlock:
                     break;
                 default:
                     break;

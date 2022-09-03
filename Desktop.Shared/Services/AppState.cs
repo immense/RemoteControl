@@ -1,4 +1,6 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Enums;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
@@ -32,10 +34,15 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
     public class AppState : IAppState
     {
+        private readonly IMessenger _messenger;
         private readonly ILogger<AppState> _logger;
+        private string _host = string.Empty;
 
-        public AppState(ILogger<AppState> logger)
+        public AppState(
+            IMessenger messenger,
+            ILogger<AppState> logger)
         {
+            _messenger = messenger;
             _logger = logger;
             ProcessArgs();
         }
@@ -50,7 +57,15 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public Dictionary<string, string> ArgDict { get; } = new();
 
 
-        public string Host { get; set; } = string.Empty;
+        public string Host
+        {
+            get => _host;
+            set
+            {
+                _host = value;
+                _messenger.Send(new AppStateHostChangedMessage(value));
+            }
+        }
 
         public AppMode Mode { get; set; }
 
@@ -93,7 +108,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     var key = args[i];
                     if (key != null)
                     {
-                        if (!key.Contains("-"))
+                        if (!key.Contains('-'))
                         {
                             _logger.LogWarning("Command line arguments are invalid.  Key: {key}", key);
                             i -= 1;

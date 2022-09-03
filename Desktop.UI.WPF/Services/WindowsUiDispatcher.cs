@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -13,7 +14,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Application = System.Windows.Application;
-using SessionSwitchReasonLocal = Immense.RemoteControl.Shared.Enums.SessionSwitchReason;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.Services
 {
@@ -194,18 +194,16 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.Services
 
         private void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
         {
-            if (e.Reason == SessionEndReasons.SystemShutdown)
-            {
-                _messenger.Send<DisconnectAllViewersMessage>();
-            }
+            var reason = (SessionEndReasonsEx)e.Reason;
+            _messenger.Send(new WindowsSessionEndingMessage(reason));
         }
 
         private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
         {
             _logger.LogInformation("Session changing.  Reason: {reason}", e.Reason);
 
-            var reason = (SessionSwitchReasonLocal)(int)e.Reason;
-            _messenger.Send(new NotifySessionChangedMessage(reason, Process.GetCurrentProcess().SessionId));
+            var reason = (SessionSwitchReasonEx)(int)e.Reason;
+            _messenger.Send(new WindowsSessionSwitched(reason, Process.GetCurrentProcess().SessionId));
         }
     }
 }

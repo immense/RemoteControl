@@ -29,7 +29,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task DisconnectViewer(IViewer viewer, bool notifyViewer);
         Task<string> GetSessionID();
         Task NotifyRequesterUnattendedReady();
-        Task NotifySessionChanged(SessionSwitchReason reason, int currentSessionId);
+        Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId);
         Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs);
         Task SendAttendedSessionInfo(string machineName);
 
@@ -69,8 +69,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             _appState = appState;
             _logger = logger;
 
-            messenger.Register<DisconnectAllViewersMessage>(this, HandleDisconnectAllViewers);
-            messenger.Register<NotifySessionChangedMessage>(this, HandleNotifySessionChanged);
+            messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEnding);
+            messenger.Register<WindowsSessionSwitched>(this, HandleWindowsSessionChanged);
 
             Connection = BuildConnection();
         }
@@ -173,7 +173,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             return Connection.SendAsync("NotifyRequesterUnattendedReady");
         }
 
-        public Task NotifySessionChanged(SessionSwitchReason reason, int currentSessionId)
+        public Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
         {
             return Connection.SendAsync("NotifySessionChanged", reason, currentSessionId);
         }
@@ -326,12 +326,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             return connection;
         }
 
-        private async void HandleDisconnectAllViewers(object recipient, DisconnectAllViewersMessage message)
+        private async void HandleWindowsSessionEnding(object recipient, WindowsSessionEndingMessage message)
         {
             await DisconnectAllViewers();
         }
 
-        private async void HandleNotifySessionChanged(object recipient, NotifySessionChangedMessage message)
+        private async void HandleWindowsSessionChanged(object recipient, WindowsSessionSwitched message)
         {
             await NotifySessionChanged(message.Reason, message.SessionId);
         }
