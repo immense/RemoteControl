@@ -2,8 +2,9 @@
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.Views;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using Immense.RemoteControl.Desktop.UI.WPF.Views;
 using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models;

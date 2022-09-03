@@ -15,7 +15,7 @@ using System.Windows;
 using Application = System.Windows.Application;
 using SessionSwitchReasonLocal = Immense.RemoteControl.Shared.Enums.SessionSwitchReason;
 
-namespace Immense.RemoteControl.Desktop.Windows.Services
+namespace Immense.RemoteControl.Desktop.UI.WPF.Services
 {
     public interface IWindowsUiDispatcher
     {
@@ -31,7 +31,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         Task<bool> StartWpfThread();
     }
 
-    internal class WindowsUiDispatcher : IWindowsUiDispatcher
+    public class WindowsUiDispatcher : IWindowsUiDispatcher
     {
         private readonly CancellationTokenSource _appExitCts = new();
         private readonly ManualResetEvent _initSignal = new(false);

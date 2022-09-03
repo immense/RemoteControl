@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
-using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,7 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Color = System.Windows.Media.Color;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 {
     public interface IBrandedViewModelBase
     {

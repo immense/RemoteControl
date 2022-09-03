@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Shared.Models;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Color = System.Windows.Media.Color;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
 {
     public class FakeBrandedViewModelBase : IBrandedViewModelBase
     {

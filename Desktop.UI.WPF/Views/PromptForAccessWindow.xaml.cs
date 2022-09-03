@@ -9,9 +9,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 
-namespace Immense.RemoteControl.Desktop.Windows.Views
+namespace Immense.RemoteControl.Desktop.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for PromptForAccessWindow.xaml

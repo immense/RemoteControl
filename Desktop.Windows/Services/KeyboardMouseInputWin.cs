@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;

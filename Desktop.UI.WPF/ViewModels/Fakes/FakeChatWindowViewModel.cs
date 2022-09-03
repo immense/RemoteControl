@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Shared.Models;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
 {
     public class FakeChatWindowViewModel : FakeBrandedViewModelBase, IChatWindowViewModel
     {

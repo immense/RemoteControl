@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Forms;
 
-namespace Immense.RemoteControl.Desktop.Windows.Views
+namespace Immense.RemoteControl.Desktop.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for FileTransferWindow.xaml

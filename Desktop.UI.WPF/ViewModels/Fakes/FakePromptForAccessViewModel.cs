@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
 {
     public class FakePromptForAccessViewModel : FakeBrandedViewModelBase, IPromptForAccessWindowViewModel
     {
@@ -20,12 +21,12 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
 
         public void SetResultNo(Window? promptWindow)
         {
-            
+
         }
 
         public void SetResultYes(Window? promptWindow)
         {
-            
+
         }
     }
 }

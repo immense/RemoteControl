@@ -1,8 +1,9 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.Views;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using Immense.RemoteControl.Desktop.UI.WPF.Views;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;

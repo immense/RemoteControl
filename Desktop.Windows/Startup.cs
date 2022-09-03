@@ -2,8 +2,9 @@
 using Immense.RemoteControl.Desktop.Shared.Extensions;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using Immense.RemoteControl.Desktop.Windows.Services;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;

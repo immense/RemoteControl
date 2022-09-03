@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 {
     public interface IPromptForAccessWindowViewModel : IBrandedViewModelBase
     {

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
 {
     public class FakeMainWindowViewModel : FakeBrandedViewModelBase, IMainWindowViewModel
     {
@@ -48,7 +49,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
 
         public void ShutdownApp()
         {
-            
+
         }
     }
 }

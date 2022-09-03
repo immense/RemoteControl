@@ -1,6 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Desktop.Windows;
-using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;

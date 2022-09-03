@@ -1,7 +1,7 @@
-﻿using Immense.RemoteControl.Desktop.Windows.ViewModels;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using System.Windows;
 
-namespace Immense.RemoteControl.Desktop.Windows.Views
+namespace Immense.RemoteControl.Desktop.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for HostNamePrompt.xaml

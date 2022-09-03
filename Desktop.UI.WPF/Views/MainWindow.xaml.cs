@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Windows.ViewModels;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -11,7 +11,7 @@ using Button = System.Windows.Controls.Button;
 using MessageBox = System.Windows.MessageBox;
 using ToolTip = System.Windows.Controls.ToolTip;
 
-namespace Immense.RemoteControl.Desktop.Windows.Views
+namespace Immense.RemoteControl.Desktop.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

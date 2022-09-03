@@ -1,10 +1,10 @@
-﻿using Immense.RemoteControl.Desktop.Windows.ViewModels;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using System;
 using System.Windows;
 using System.Windows.Input;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
-namespace Immense.RemoteControl.Desktop.Windows.Views
+namespace Immense.RemoteControl.Desktop.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for ChatWindow.xaml

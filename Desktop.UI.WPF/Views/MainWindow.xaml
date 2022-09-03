@@ -1,12 +1,12 @@
-﻿<Window x:Class="Immense.RemoteControl.Desktop.Windows.Views.MainWindow"
+﻿<Window x:Class="Immense.RemoteControl.Desktop.UI.WPF.Views.MainWindow"
         x:Name="ThisWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
-        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels"
-        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes"
+        xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.UI.WPF.Views"
+        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.UI.WPF.ViewModels"
+        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes"
         xmlns:shared="clr-namespace:Immense.RemoteControl.Shared;assembly=Immense.RemoteControl.Shared"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=fakes:FakeMainWindowViewModel, IsDesignTimeCreatable=True}"
@@ -22,7 +22,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Immense.RemoteControl.Desktop.Windows;component/Resources/Styles.xaml" />
+                <ResourceDictionary Source="/Immense.RemoteControl.Desktop.UI.WPF;component/Resources/Styles.xaml" />
 
                 <ResourceDictionary>
                     <DrawingBrush x:Key="GearBrush">

@@ -4,7 +4,7 @@ using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
-using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.ObjectModel;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 {
     public interface IFileTransferWindowViewModel
     {

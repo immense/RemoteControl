@@ -1,10 +1,10 @@
-﻿<Window x:Class="Immense.RemoteControl.Desktop.Windows.Views.ChatWindow"
+﻿<Window x:Class="Immense.RemoteControl.Desktop.UI.WPF.Views.ChatWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.Windows.Views"
-        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes"
+        xmlns:local="clr-namespace:Immense.RemoteControl.Desktop.UI.WPF.Views"
+        xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes"
         xmlns:Models="clr-namespace:Immense.RemoteControl.Shared.Models;assembly=Immense.RemoteControl.Shared"
         mc:Ignorable="d"
         WindowStyle="None"
@@ -26,7 +26,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Immense.RemoteControl.Desktop.Windows;component/Resources/Styles.xaml" />
+                <ResourceDictionary Source="/Immense.RemoteControl.Desktop.UI.WPF;component/Resources/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>

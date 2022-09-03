@@ -1,6 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.Windows.ViewModels;
+using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Windows.Services
+namespace Immense.RemoteControl.Desktop.UI.WPF.Services
 {
     // Normally, I'd use a view model locator.  But enough view models require a factory pattern
     // that I thought it more consistent to put them all here.
@@ -22,7 +22,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
         PromptForAccessWindowViewModel CreatePromptForAccessViewModel(string requesterName, string organizationName);
     }
 
-    internal class ViewModelFactory : IViewModelFactory
+    public class ViewModelFactory : IViewModelFactory
     {
         private readonly IServiceProvider _serviceProvider;
 

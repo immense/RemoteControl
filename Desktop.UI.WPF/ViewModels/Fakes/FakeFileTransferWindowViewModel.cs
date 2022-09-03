@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
 {
     public class FakeFileTransferWindowViewModel : FakeBrandedViewModelBase, IFileTransferWindowViewModel
     {
@@ -27,7 +27,7 @@ namespace Immense.RemoteControl.Desktop.Windows.ViewModels.Fakes
 
         public void RemoveFileUpload(FileUpload? fileUpload)
         {
-            
+
         }
 
         public Task UploadFile(string filePath)

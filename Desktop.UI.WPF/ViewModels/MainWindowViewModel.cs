@@ -1,5 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Windows.Services;
-using Immense.RemoteControl.Desktop.Windows.Views;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,8 +16,9 @@ using CommunityToolkit.Mvvm.Input;
 using Clipboard = System.Windows.Clipboard;
 using MessageBox = System.Windows.MessageBox;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 {
     public interface IMainWindowViewModel
     {

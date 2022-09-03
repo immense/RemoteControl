@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;

@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Immense.RemoteControl.Desktop.Windows.ViewModels
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 {
     public interface IHostNamePromptViewModel
     {
