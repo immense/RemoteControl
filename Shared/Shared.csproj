@@ -18,8 +18,4 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if not exist &quot;$(SolutionDir)dist&quot; mkdir &quot;$(SolutionDir)dist&quot;&#xD;&#xA;if exist &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; copy /Y &quot;$(ProjectDir)bin\$(Configuration)\*.nupkg&quot; &quot;$(SolutionDir)dist&quot;" />
-  </Target>
-
 </Project>
