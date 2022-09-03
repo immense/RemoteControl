@@ -15,6 +15,15 @@ namespace Immense.RemoteControl.Desktop.Windows
 {
     public static class Startup
     {
+        /// <summary>
+        /// Adds remote control services to a console or WPF app.  This will also apply command line
+        /// argument parsing.
+        /// </summary>
+        /// <param name="args">The command line args that were originally passed into the process.</param>
+        /// <param name="clientConfig">Provides methods for adding required service implementations.</param>
+        /// <param name="serviceConfig">Allows registering additional services needed by the parent app.</param>
+        /// <param name="serverUri">Optional.  This will be used as a fallback URI if --host parameter isn't specified.</param>
+        /// <returns>The configured <see cref="IServiceProvider"/>, in case it's needed by the parent app.</returns>
         public static async Task<IServiceProvider> UseRemoteControlClient(
             string[] args,
             Action<IRemoteControlClientBuilder> clientConfig,
@@ -78,7 +87,7 @@ namespace Immense.RemoteControl.Desktop.Windows
                 Opacity = 0,
                 ShowIcon = false,
                 ShowInTaskbar = false,
-                WindowState = System.Windows.Forms.FormWindowState.Minimized
+                WindowState = FormWindowState.Minimized
             };
         }
     }

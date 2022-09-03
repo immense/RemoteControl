@@ -11,6 +11,14 @@ namespace Immense.RemoteControl.Server.Extensions
 {
     public static class ServiceCollectionExtensions
     {
+        /// <summary>
+        /// Adds remote control services to an ASP.NET Core web app.  Remember to call
+        /// <see cref="WebApplicationExtensions.UseRemoteControlServer(Microsoft.AspNetCore.Builder.WebApplication)"/>
+        /// after the WebApplication has been built.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="configure">Provides methods for adding required service implementations.</param>
+        /// <returns></returns>
         public static IServiceCollection AddRemoteControlServer(
             this IServiceCollection services, 
             Action<IRemoteControlServerBuilder> configure)
@@ -18,10 +26,6 @@ namespace Immense.RemoteControl.Server.Extensions
             var builder = new RemoteControlServerBuilder(services);
             configure(builder);
             builder.Validate();
-
-            //services
-            //    .AddRazorPages()
-            //    .AddApplicationPart(typeof(ServiceCollectionExtensions).Assembly);
 
             services
                 .AddSignalR(options => {

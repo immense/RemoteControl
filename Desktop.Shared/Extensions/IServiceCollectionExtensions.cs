@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +17,17 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 {
     public static class IServiceCollectionExtensions
     {
+        /// <summary>
+        /// For internal use only.  I'd normally make this internal instead of public, 
+        /// but for some reason, <see cref="InternalsVisibleToAttribute"/> in this
+        /// project's AssemblyInfo isn't working.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="args"></param>
+        /// <param name="clientConfig"></param>
+        /// <param name="platformServicesConfig"></param>
+        /// <param name="serverUri"></param>
+        /// <returns></returns>
         public static async Task<IServiceProvider> BuildRemoteControlServiceProvider(
             this IServiceCollection services,
             string[] args,
