@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,7 @@ namespace Immense.RemoteControl.Server.Extensions
 
             services.AddSingleton<IDesktopStreamCache, DesktopStreamCache>();
             services.AddSingleton<IDesktopHubSessionCache, DesktopHubSessionCache>();
+            services.AddSingleton<ISystemTime, SystemTime>();
             services.AddScoped<ViewerAuthorizationFilter>();
 
             return services;
