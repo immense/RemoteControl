@@ -8,10 +8,15 @@ namespace Immense.RemoteControl.Server.Models
 {
     public class RemoteControlSession
     {
-        public static RemoteControlSession Empty { get; } = new();
+        public RemoteControlSession()
+        {
+            Created = DateTimeOffset.Now;
+        }
 
+        public static RemoteControlSession Empty { get; } = new();
         public string AccessKey { get; internal set; } = string.Empty;
         public string AttendedSessionId { get; set; } = string.Empty;
+        public DateTimeOffset Created { get; }
         public string DesktopConnectionId { get; internal set; } = string.Empty;
         public string MachineName { get; internal set; } = string.Empty;
         public RemoteControlMode Mode { get; internal set; }
@@ -19,12 +24,12 @@ namespace Immense.RemoteControl.Server.Models
         public string RequesterName { get; internal set; } = string.Empty;
         public string RequesterUserName { get; internal set; } = string.Empty;
         public DateTimeOffset StartTime { get; internal set; }
+        public Guid StreamId { get; internal set; }
         public string UnattendedSessionId { get; set; } = string.Empty;
 
         /// <summary>
         /// Contains a collection of viewer SignalR connection IDs.
         /// </summary>
         public HashSet<string> ViewerList { get; } = new();
-        public Guid StreamId { get; internal set; }
     }
 }

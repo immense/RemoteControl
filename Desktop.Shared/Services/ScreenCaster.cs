@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
+using Immense.RemoteControl.Shared.Services;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services
 {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Shared.Services
+namespace Immense.RemoteControl.Shared.Services
 {
     public interface ISystemTime
     {
