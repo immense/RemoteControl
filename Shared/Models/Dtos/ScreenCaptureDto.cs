@@ -7,20 +7,25 @@ namespace Immense.RemoteControl.Shared.Models.Dtos
     public class ScreenCaptureDto
     {
 
-        [DataMember(Name = "Height")]
+        [DataMember]
         public int Height { get; init; }
 
-        [DataMember(Name = "ImageBytes")]
+        [DataMember]
         public byte[] ImageBytes { get; init; } = Array.Empty<byte>();
 
-        [DataMember(Name = "Left")]
-        public int Left { get; init; }
-        [DataMember(Name = "Top")]
-        public int Top { get; init; }
-        [DataMember(Name = "Width")]
-        public int Width { get; init; }
+        [DataMember]
+        public Guid InstanceId { get; init; }
 
-        [DataMember(Name = "Sequence")]
-        public long Sequence { get; set; }
+        [DataMember]
+        public bool IsLastChunk { get; init; }
+
+        [DataMember]
+        public int Left { get; init; }
+
+        [DataMember]
+        public int Top { get; init; }
+
+        [DataMember]
+        public int Width { get; init; }
     }
 }

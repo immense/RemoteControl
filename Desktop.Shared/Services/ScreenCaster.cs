@@ -119,7 +119,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                         Left = screenBounds.Left,
                         Top = screenBounds.Top,
                         Width = screenBounds.Width,
-                        Height = screenBounds.Height
+                        Height = screenBounds.Height,
+                        IsLastChunk = true,
+                        InstanceId = Guid.NewGuid()
                     });
                 }
 
@@ -132,7 +134,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     return;
                 }
 
-                await viewer.SendDesktopStream(GetDesktopStream(screenCastRequest, viewer), screenCastRequest.StreamId);
+                await viewer.SendDesktopStream(GetDesktopStream(viewer), screenCastRequest.StreamId);
                 await viewer.SendStreamReady();
             }
             catch (Exception ex)
@@ -141,101 +143,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             }
         }
 
-        private async Task CastScreen(ScreenCastRequest screenCastRequest, IViewer viewer, int sequence)
-        {
-            try
-            {
-                while (!viewer.DisconnectRequested && viewer.IsConnected)
-                {
-                    try
-                    {
-                        if (viewer.IsStalled)
-                        {
-                            // Viewer isn't responding.  Abort sending.
-                            _logger.LogWarning("Viewer stalled.  Ending send loop.");
-                            break;
-                        }
-
-                        viewer.CalculateFps();
-
-                        viewer.ApplyAutoQuality();
-
-                        var result = viewer.Capturer.GetNextFrame();
-
-                        // Try to restart on a new thread if capturing failed.
-                        if (!result.IsSuccess || result.Value is null)
-                        {
-                            _ = Task.Run(() => CastScreen(screenCastRequest, viewer, sequence));
-                            return;
-                        }
-
-                        var diffArea = viewer.Capturer.GetFrameDiffArea();
-
-                        if (diffArea.IsEmpty)
-                        {
-                            continue;
-                        }
-
-                        viewer.Capturer.CaptureFullscreen = false;
-
-                        using var croppedFrame = _imageHelper.CropBitmap(result.Value, diffArea);
-
-                        var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
-
-                        if (encodedImageBytes.Length == 0)
-                        {
-                            continue;
-                        }
-
-                        await viewer.SendScreenCapture(new ScreenCaptureDto()
-                        {
-                            ImageBytes = encodedImageBytes,
-                            Top = (int)diffArea.Top,
-                            Left = (int)diffArea.Left,
-                            Width = (int)diffArea.Width,
-                            Height = (int)diffArea.Height,
-                            Sequence = sequence++
-                        });
-
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error while casting screen.");
-                    }
-                }
-
-                _logger.LogInformation(
-                    "Ended screen cast.  " +
-                    "Requester: {viewerName}. " +
-                    "Viewer ID: {viewerConnectionID}. " +
-                    "Viewer WS Connected: {viewerIsConnected}.  " +
-                    "Viewer Stalled: {viewerIsStalled}.  " +
-                    "Viewer Disconnected Requested: {viewerDisconnectRequested}",
-                    viewer.Name,
-                    viewer.ViewerConnectionID,
-                    viewer.IsConnected,
-                    viewer.IsStalled,
-                    viewer.DisconnectRequested);
-
-                _appState.Viewers.TryRemove(viewer.ViewerConnectionID, out _);
-                viewer.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while casting screen.");
-            }
-            finally
-            {
-                // Close if no one is viewing.
-                if (_appState.Viewers.IsEmpty && _appState.Mode == AppMode.Unattended)
-                {
-                    _logger.LogInformation("No more viewers.  Calling shutdown service.");
-                    await _shutdownService.Shutdown();
-                }
-            }
-        }
-
-        private async IAsyncEnumerable<byte[]> GetDesktopStream(ScreenCastRequest screenCastRequest, IViewer viewer)
+        private async IAsyncEnumerable<byte[]> GetDesktopStream(IViewer viewer)
         {
             _metricsCts?.Cancel();
             _metricsCts?.Dispose();
@@ -283,22 +191,27 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                         continue;
                     }
 
-                    var dto = new ScreenCaptureDto()
-                    {
-                        ImageBytes = encodedImageBytes,
-                        Top = (int)diffArea.Top,
-                        Left = (int)diffArea.Left,
-                        Width = (int)diffArea.Width,
-                        Height = (int)diffArea.Height
-                    };
+                    viewer.PendingSentFrames.Enqueue(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
 
-                    viewer.PendingSentFrames.Enqueue(new SentFrame(dto.ImageBytes.Length, _systemTime.Now));
-
-                    foreach (var chunk in DtoChunker.ChunkDto(dto, DtoType.ScreenCapture))
+                    var instanceId = Guid.NewGuid();
+                    var chunks = encodedImageBytes.Chunk(50_000).ToArray();
+                    for (int i = 0; i < chunks.Length; i++)
                     {
-                        yield return MessagePackSerializer.Serialize(chunk);
+                        var chunk = chunks[i];
+                        var dto = new ScreenCaptureDto()
+                        {
+                            ImageBytes = chunk,
+                            Top = (int)diffArea.Top,
+                            Left = (int)diffArea.Left,
+                            Width = (int)diffArea.Width,
+                            Height = (int)diffArea.Height,
+                            InstanceId = instanceId,
+                            IsLastChunk = i == chunks.Length - 1
+                        };
+                        yield return MessagePackSerializer.Serialize(dto);
                     }
                 }
+
                 _logger.LogInformation(
                     "Ended desktop stream.  " +
                     "Requester: {viewerName}. " +

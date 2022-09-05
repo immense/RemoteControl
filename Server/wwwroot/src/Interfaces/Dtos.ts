@@ -25,7 +25,8 @@ export interface ScreenCaptureDto {
     Width: number;
     Height: number;
     ImageBytes: Uint8Array;
-    Sequence: number;
+    IsLastChunk: boolean;
+    InstanceId: string;
 }
 
 export interface ClipboardTextDto {

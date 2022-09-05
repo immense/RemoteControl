@@ -3,10 +3,23 @@ import { ScreenCaptureDto } from "./Interfaces/Dtos.js";
 import { CompletedFrame } from "./Models/CompletedFrame.js";
 import { Screen2DContext } from "./UI.js";
 
+const Partials: Record<string, Array<Uint8Array>> = {};
 
 export function HandleCaptureReceived(screenCapture: ScreenCaptureDto) {
 
-    let imageBlob = new Blob([screenCapture.ImageBytes]);
+    if (!Partials[screenCapture.InstanceId]) {
+        Partials[screenCapture.InstanceId] = [];
+    }
+
+    Partials[screenCapture.InstanceId].push(screenCapture.ImageBytes);
+
+    if (!screenCapture.IsLastChunk) {
+        return;
+    }
+
+    let imageBlob = new Blob(Partials[screenCapture.InstanceId]);
+    delete Partials[screenCapture.InstanceId];
+    ViewerApp.MessageSender.SendFrameReceived();
 
     createImageBitmap(imageBlob).then(bitmap => {
         Screen2DContext.drawImage(bitmap,
@@ -16,19 +29,18 @@ export function HandleCaptureReceived(screenCapture: ScreenCaptureDto) {
             screenCapture.Height);
 
         bitmap.close();
-
-        ViewerApp.MessageSender.SendFrameReceived();
     });
 
     //let url = window.URL.createObjectURL(imageBlob);
-    //let img = new Image(captureFrame.Width, captureFrame.Height);
+    //let img = new Image(screenCapture.Width, screenCapture.Height);
     //img.onload = () => {
-    //    UI.Screen2DContext.drawImage(img,
-    //        captureFrame.Left,
-    //        captureFrame.Top,
-    //        captureFrame.Width,
-    //        captureFrame.Height);
+    //    Screen2DContext.drawImage(img,
+    //        screenCapture.Left,
+    //        screenCapture.Top,
+    //        screenCapture.Width,
+    //        screenCapture.Height);
     //    window.URL.revokeObjectURL(url);
     //};
+    //img.src = url;
 }
 

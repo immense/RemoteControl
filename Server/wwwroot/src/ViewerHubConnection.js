@@ -2,7 +2,7 @@ import * as UI from "./UI.js";
 import { ViewerApp } from "./App.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { ShowMessage } from "./UI.js";
-import { ChunkDto, TryComplete } from "./DtoChunker.js";
+import { ChunkDto } from "./DtoChunker.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
 var signalR = window["signalR"];
@@ -113,11 +113,7 @@ export class ViewerHubConnection {
                 .subscribe({
                 next: (item) => {
                     let wrapper = this.MessagePack.decode(item);
-                    let result = TryComplete(wrapper);
-                    if (!result) {
-                        return;
-                    }
-                    HandleCaptureReceived(result);
+                    HandleCaptureReceived(wrapper);
                 },
                 complete: () => {
                     ShowMessage("Desktop stream ended");
