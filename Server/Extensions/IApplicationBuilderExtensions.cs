@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Server.Extensions
 {
-    public static class WebApplicationExtensions
+    public static class IApplicationBuilderExtensions
     {
         /// <summary>
         /// <para>
@@ -23,12 +23,11 @@ namespace Immense.RemoteControl.Server.Extensions
         /// </summary>
         /// <param name="app"></param>
         /// <returns></returns>
-        public static WebApplication UseRemoteControlServer(this WebApplication app)
+        public static IApplicationBuilder UseRemoteControlServer(this IApplicationBuilder app)
         {
-            app.MapRazorPages();
-
             app.UseEndpoints(config =>
             {
+                config.MapRazorPages();
                 config.MapHub<DesktopHub>("/hubs/desktop");
                 config.MapHub<ViewerHub>("/hubs/viewer");
             });

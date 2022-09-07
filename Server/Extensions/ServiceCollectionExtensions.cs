@@ -14,7 +14,7 @@ namespace Immense.RemoteControl.Server.Extensions
     {
         /// <summary>
         /// Adds remote control services to an ASP.NET Core web app.  Remember to call
-        /// <see cref="WebApplicationExtensions.UseRemoteControlServer(Microsoft.AspNetCore.Builder.WebApplication)"/>
+        /// <see cref="IApplicationBuilderExtensions.UseRemoteControlServer(Microsoft.AspNetCore.Builder.WebApplication)"/>
         /// after the WebApplication has been built.
         /// </summary>
         /// <param name="services"></param>
