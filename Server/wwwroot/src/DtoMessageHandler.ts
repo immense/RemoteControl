@@ -17,13 +17,14 @@ import {
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { TryComplete } from "./DtoChunker.js";
+import { MessagePack } from "./Interfaces/MessagePack.js";
+
+const MsgPack: MessagePack = window["MessagePack"];
 
 export class DtoMessageHandler {
 
-    MessagePack: any = window['msgpack5']();
-
     ParseBinaryMessage(data: ArrayBuffer) {
-        var wrapper = this.MessagePack.decode(data) as DtoWrapper;
+        var wrapper = MsgPack.decode(data) as DtoWrapper;
         switch (wrapper.DtoType) {
             case DtoType.AudioSample:
                 this.HandleAudioSample(wrapper);

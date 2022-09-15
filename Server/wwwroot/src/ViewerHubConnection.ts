@@ -12,11 +12,12 @@ import { DtoWrapper, ScreenCaptureDto } from "./Interfaces/Dtos.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
 
+const MsgPack: MessagePack = window["MessagePack"];
+
 var signalR = window["signalR"];
 
 export class ViewerHubConnection {
     Connection: HubConnection;
-    MessagePack: MessagePack = window['msgpack5']();
     PartialCaptureFrames: Uint8Array[] = [];
 
  
@@ -68,7 +69,7 @@ export class ViewerHubConnection {
         let chunks = ChunkDto(dto, type);
 
         for (var i = 0; i < chunks.length; i++) {
-            const chunk = this.MessagePack.encode(chunks[i]);
+            const chunk = MsgPack.encode(chunks[i]);
             this.Connection.invoke("SendDtoToClient", chunk);
         }
     }
@@ -140,7 +141,7 @@ export class ViewerHubConnection {
             this.Connection.stream("GetDesktopStream")
                 .subscribe({
                     next: async (item: Uint8Array) => {
-                        let wrapper = this.MessagePack.decode<ScreenCaptureDto>(item);
+                        let wrapper = MsgPack.decode<ScreenCaptureDto>(item) as ScreenCaptureDto;
                         await HandleCaptureReceived(wrapper);
                     },
                     complete: () => {

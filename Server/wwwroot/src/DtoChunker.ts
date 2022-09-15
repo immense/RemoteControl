@@ -4,14 +4,14 @@ import { MessagePack } from "./Interfaces/MessagePack.js";
 import { CreateGUID } from "./Utilities.js";
 
 const Chunks: Record<string, DtoWrapper[]> = {};
-const MessagePack: MessagePack = window['msgpack5']();
+const MsgPack: MessagePack = window["MessagePack"];
 
 export function ChunkDto<T>(dto: T, dtoType: DtoType, requestId = null, chunkSize = 50000) : DtoWrapper[] {
-    const messageBytes = MessagePack.encode(dto);
+    const messageBytes = MsgPack.encode(dto);
     const instanceId = CreateGUID();
     const chunks: Array<Uint8Array> = [];
     const wrappers: Array<DtoWrapper> = [];
-
+    
     for (let i = 0; i < messageBytes.length; i += chunkSize) {
 
         const chunk = messageBytes.subarray(i, i + chunkSize);
@@ -55,6 +55,6 @@ export function TryComplete<T>(wrapper: DtoWrapper) : T {
 
     delete Chunks[wrapper.InstanceId];
 
-    var decoded = MessagePack.decode<T>(buffers);
-    return decoded;
+    var decoded = MsgPack.decode<T>(buffers);
+    return decoded as T;
 }

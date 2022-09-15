@@ -7,8 +7,15 @@
       "destination": "lib/microsoft-signalr/"
     },
     {
-      "library": "msgpack5@6.0.2",
-      "destination": "lib/msgpack5/"
+      "library": "@msgpack/msgpack@2.7.2",
+      "destination": "lib/msgpack/",
+      "provider": "unpkg",
+      "files": [
+        "dist.es5+umd/msgpack.js",
+        "dist.es5+umd/msgpack.min.js",
+        "dist.es5+umd/msgpack.js.map",
+        "dist.es5+umd/msgpack.min.js.map"
+      ]
     },
     {
       "provider": "unpkg",

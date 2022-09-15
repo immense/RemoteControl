@@ -5,12 +5,10 @@ import { Sound } from "./Sound.js";
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { TryComplete } from "./DtoChunker.js";
+const MsgPack = window["MessagePack"];
 export class DtoMessageHandler {
-    constructor() {
-        this.MessagePack = window['msgpack5']();
-    }
     ParseBinaryMessage(data) {
-        var wrapper = this.MessagePack.decode(data);
+        var wrapper = MsgPack.decode(data);
         switch (wrapper.DtoType) {
             case DtoType.AudioSample:
                 this.HandleAudioSample(wrapper);

@@ -1,9 +1,9 @@
 import { DtoWrapper } from "./Interfaces/Dtos.js";
 import { CreateGUID } from "./Utilities.js";
 const Chunks = {};
-const MessagePack = window['msgpack5']();
+const MsgPack = window["MessagePack"];
 export function ChunkDto(dto, dtoType, requestId = null, chunkSize = 50000) {
-    const messageBytes = MessagePack.encode(dto);
+    const messageBytes = MsgPack.encode(dto);
     const instanceId = CreateGUID();
     const chunks = [];
     const wrappers = [];
@@ -38,7 +38,7 @@ export function TryComplete(wrapper) {
         .map(x => x.DtoChunk)
         .reduce((prev, cur) => new Uint8Array([...prev, ...cur]));
     delete Chunks[wrapper.InstanceId];
-    var decoded = MessagePack.decode(buffers);
+    var decoded = MsgPack.decode(buffers);
     return decoded;
 }
 //# sourceMappingURL=DtoChunker.js.map

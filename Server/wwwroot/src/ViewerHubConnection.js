@@ -5,10 +5,10 @@ import { ShowMessage } from "./UI.js";
 import { ChunkDto } from "./DtoChunker.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
+const MsgPack = window["MessagePack"];
 var signalR = window["signalR"];
 export class ViewerHubConnection {
     constructor() {
-        this.MessagePack = window['msgpack5']();
         this.PartialCaptureFrames = [];
     }
     Connect() {
@@ -50,7 +50,7 @@ export class ViewerHubConnection {
         }
         let chunks = ChunkDto(dto, type);
         for (var i = 0; i < chunks.length; i++) {
-            const chunk = this.MessagePack.encode(chunks[i]);
+            const chunk = MsgPack.encode(chunks[i]);
             this.Connection.invoke("SendDtoToClient", chunk);
         }
     }
@@ -112,7 +112,7 @@ export class ViewerHubConnection {
             this.Connection.stream("GetDesktopStream")
                 .subscribe({
                 next: async (item) => {
-                    let wrapper = this.MessagePack.decode(item);
+                    let wrapper = MsgPack.decode(item);
                     await HandleCaptureReceived(wrapper);
                 },
                 complete: () => {
