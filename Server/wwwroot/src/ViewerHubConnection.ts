@@ -139,9 +139,9 @@ export class ViewerHubConnection {
         hubConnection.on("SendStreamReady", () => {
             this.Connection.stream("GetDesktopStream")
                 .subscribe({
-                    next: (item: Uint8Array) => {
+                    next: async (item: Uint8Array) => {
                         let wrapper = this.MessagePack.decode<ScreenCaptureDto>(item);
-                        HandleCaptureReceived(wrapper);
+                        await HandleCaptureReceived(wrapper);
                     },
                     complete: () => {
                         ShowMessage("Desktop stream ended");

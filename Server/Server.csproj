@@ -82,9 +82,6 @@
     <None Include="wwwroot\src\MessageSender.js" />
     <None Include="wwwroot\src\MessageSender.js.map" />
     <None Include="wwwroot\src\MessageSender.ts" />
-    <None Include="wwwroot\src\Models\CompletedFrame.js" />
-    <None Include="wwwroot\src\Models\CompletedFrame.js.map" />
-    <None Include="wwwroot\src\Models\CompletedFrame.ts" />
     <None Include="wwwroot\src\Models\CursorInfo.js" />
     <None Include="wwwroot\src\Models\CursorInfo.js.map" />
     <None Include="wwwroot\src\Models\CursorInfo.ts" />

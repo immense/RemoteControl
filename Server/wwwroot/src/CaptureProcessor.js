@@ -1,7 +1,7 @@
 import { ViewerApp } from "./App.js";
 import { Screen2DContext } from "./UI.js";
 const Partials = {};
-export function HandleCaptureReceived(screenCapture) {
+export async function HandleCaptureReceived(screenCapture) {
     if (!Partials[screenCapture.InstanceId]) {
         Partials[screenCapture.InstanceId] = [];
     }
@@ -12,10 +12,9 @@ export function HandleCaptureReceived(screenCapture) {
     let imageBlob = new Blob(Partials[screenCapture.InstanceId]);
     delete Partials[screenCapture.InstanceId];
     ViewerApp.MessageSender.SendFrameReceived();
-    createImageBitmap(imageBlob).then(bitmap => {
-        Screen2DContext.drawImage(bitmap, screenCapture.Left, screenCapture.Top, screenCapture.Width, screenCapture.Height);
-        bitmap.close();
-    });
+    let bitmap = await createImageBitmap(imageBlob);
+    Screen2DContext.drawImage(bitmap, screenCapture.Left, screenCapture.Top, screenCapture.Width, screenCapture.Height);
+    bitmap.close();
     //let url = window.URL.createObjectURL(imageBlob);
     //let img = new Image(screenCapture.Width, screenCapture.Height);
     //img.onload = () => {
