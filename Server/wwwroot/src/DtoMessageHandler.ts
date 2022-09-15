@@ -24,7 +24,7 @@ const MsgPack: MessagePack = window["MessagePack"];
 export class DtoMessageHandler {
 
     ParseBinaryMessage(data: ArrayBuffer) {
-        var wrapper = MsgPack.decode(data) as DtoWrapper;
+        var wrapper = MsgPack.decode<DtoWrapper>(data);
         switch (wrapper.DtoType) {
             case DtoType.AudioSample:
                 this.HandleAudioSample(wrapper);
