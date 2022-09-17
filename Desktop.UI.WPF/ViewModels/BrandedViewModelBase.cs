@@ -28,7 +28,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 
     public abstract class BrandedViewModelBase : ObservableObjectEx, IBrandedViewModelBase
     {
-        private static BrandingInfo? _brandingInfo;
+        private static BrandingInfoBase? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
         private readonly ILogger<BrandedViewModelBase> _logger;
         private readonly IWindowsUiDispatcher _dispatcher;
@@ -119,7 +119,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
             });
 
         }
-        private BitmapImage GetBitmapImageIcon(BrandingInfo bi)
+        private BitmapImage GetBitmapImageIcon(BrandingInfoBase bi)
         {
             try
             {

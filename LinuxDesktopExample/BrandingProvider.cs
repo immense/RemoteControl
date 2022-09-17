@@ -11,7 +11,7 @@ namespace WindowsDesktopExample
 {
     internal class BrandingProvider : IBrandingProvider
     {
-        private BrandingInfo _brandingInfo = new()
+        private BrandingInfoBase _brandingInfo = new()
         {
             Product = "Immy Remote"
         };
@@ -25,12 +25,12 @@ namespace WindowsDesktopExample
             _brandingInfo.Icon = ms.ToArray();
         }
 
-        public Task<BrandingInfo> GetBrandingInfo()
+        public Task<BrandingInfoBase> GetBrandingInfo()
         {
             return Task.FromResult(_brandingInfo);
         }
 
-        public void SetBrandingInfo(BrandingInfo brandingInfo)
+        public void SetBrandingInfo(BrandingInfoBase brandingInfo)
         {
             _brandingInfo = brandingInfo;
         }

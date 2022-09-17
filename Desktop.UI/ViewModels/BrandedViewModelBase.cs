@@ -30,7 +30,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
 
     public class BrandedViewModelBase : ObservableObjectEx, IBrandedViewModelBase
     {
-        private static BrandingInfo? _brandingInfo;
+        private static BrandingInfoBase? _brandingInfo;
         private readonly IBrandingProvider _brandingProvider;
         private readonly ILogger<BrandedViewModelBase> _logger;
         private readonly IAvaloniaDispatcher _dispatcher;

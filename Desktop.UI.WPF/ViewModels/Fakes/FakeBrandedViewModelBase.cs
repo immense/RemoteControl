@@ -14,12 +14,12 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
 {
     public class FakeBrandedViewModelBase : IBrandedViewModelBase
     {
-        private readonly BrandingInfo _brandingInfo;
+        private readonly BrandingInfoBase _brandingInfo;
         private BitmapImage? _icon;
 
         public FakeBrandedViewModelBase()
         {
-            _brandingInfo = new BrandingInfo();
+            _brandingInfo = new BrandingInfoBase();
             _icon = GetBitmapImageIcon(_brandingInfo);
 
             TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
@@ -52,7 +52,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
             return Task.CompletedTask;
         }
 
-        private BitmapImage GetBitmapImageIcon(BrandingInfo bi)
+        private BitmapImage GetBitmapImageIcon(BrandingInfoBase bi)
         {
             try
             {

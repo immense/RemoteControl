@@ -9,7 +9,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Abstractions
 {
     public interface IBrandingProvider
     {
-        Task<BrandingInfo> GetBrandingInfo();
-        void SetBrandingInfo(BrandingInfo brandingInfo);
+        Task<BrandingInfoBase> GetBrandingInfo();
+        void SetBrandingInfo(BrandingInfoBase brandingInfo);
     }
 }

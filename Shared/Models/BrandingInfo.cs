@@ -8,16 +8,14 @@ using System.Threading.Tasks;
 
 namespace Immense.RemoteControl.Shared.Models
 {
-    public class BrandingInfo
+    public class BrandingInfoBase
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; } = string.Empty;
+        public static BrandingInfoBase Default => new();
+
+        public byte[] Icon { get; set; } = Array.Empty<byte>();
 
         [StringLength(25)]
         public string Product { get; set; } = "Remote Control";
-
-        public byte[] Icon { get; set; } = Array.Empty<byte>();
 
         public byte TitleForegroundRed { get; set; } = 29;
 

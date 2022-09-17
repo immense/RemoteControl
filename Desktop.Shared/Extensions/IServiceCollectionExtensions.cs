@@ -34,6 +34,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             string[] args,
             Action<IRemoteControlClientBuilder> clientConfig,
             Action<IServiceCollection> platformServicesConfig,
+            Func<IServiceProvider, Task>? startupConfig = null,
             string serverUri = "")
         {
             var builder = new RemoteControlClientBuilder(services);
@@ -164,6 +165,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
 
             var provider = services.BuildServiceProvider();
             StaticServiceProvider.Instance = provider;
+
+            if (startupConfig is not null)
+            {
+                await startupConfig.Invoke(provider);
+            }
 
             var appStartup = provider.GetRequiredService<IAppStartup>();
             await appStartup.Initialize();
