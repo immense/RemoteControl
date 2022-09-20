@@ -38,7 +38,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task SendScreenCapture(ScreenCaptureDto screenCapture);
         Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
         Task SendScreenSize(int width, int height);
-        Task SendStreamReady();
 
         Task SendViewerConnected();
         Task SendWindowsSessions();
@@ -276,10 +275,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionID);
         }
 
-        public async Task SendStreamReady()
-        {
-            await _desktopHubConnection.SendStreamReady(ViewerConnectionID);
-        }
 
         public async Task SendViewerConnected()
         {

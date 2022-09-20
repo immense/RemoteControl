@@ -129,5 +129,13 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.Views
                 }
             }
         }
+
+        private void ViewerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+            {
+                viewModel.RemoveViewersCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 }

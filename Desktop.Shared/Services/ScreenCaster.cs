@@ -135,7 +135,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 }
 
                 await viewer.SendDesktopStream(GetDesktopStream(viewer), screenCastRequest.StreamId);
-                await viewer.SendStreamReady();
             }
             catch (Exception ex)
             {

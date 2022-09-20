@@ -78,6 +78,25 @@ export class ViewerHubConnection {
     async SendScreenCastRequestToDevice() {
         await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
 
+        this.Connection.stream("GetDesktopStream")
+            .subscribe({
+                next: async (item: Uint8Array) => {
+                    let wrapper = MsgPack.decode<ScreenCaptureDto>(item) as ScreenCaptureDto;
+                    await HandleCaptureReceived(wrapper);
+                },
+                complete: () => {
+                    ShowMessage("Desktop stream ended");
+                    UI.StatusMessage.innerHTML = "Desktop stream ended";
+                    UI.ToggleConnectUI(true);
+                },
+                error: (err) => {
+                    console.error(err);
+                    ShowMessage("Desktop stream error");
+                    UI.StatusMessage.innerHTML = "Desktop stream error";
+                    UI.ToggleConnectUI(true);
+                },
+            });
+
     }
 
 
@@ -137,22 +156,6 @@ export class ViewerHubConnection {
             ShowMessage("Requesting remote control...");
         });
 
-        hubConnection.on("SendStreamReady", () => {
-            this.Connection.stream("GetDesktopStream")
-                .subscribe({
-                    next: async (item: Uint8Array) => {
-                        let wrapper = MsgPack.decode<ScreenCaptureDto>(item) as ScreenCaptureDto;
-                        await HandleCaptureReceived(wrapper);
-                    },
-                    complete: () => {
-                        ShowMessage("Desktop stream ended");
-                    },
-                    error: (err) => {
-                        console.error(err);
-                        ShowMessage("Desktop stream error");
-                    },
-                });
-        });
         hubConnection.on("ShowMessage", (message: string) => {
             ShowMessage(message);
         });

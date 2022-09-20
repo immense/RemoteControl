@@ -24,6 +24,7 @@ var provider = await Startup.UseRemoteControlClient(
             // Add file logger, etc.
         });
     },
+    null,
     "https://localhost:7024");
 
 var shutdownService = provider.GetRequiredService<IShutdownService>();

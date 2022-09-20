@@ -38,7 +38,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         Task SendDtoToViewer<T>(T dto, string viewerId);
 
         Task SendMessageToViewer(string viewerID, string message);
-        Task SendStreamReady(string viewerConnectionID);
         Task<Result> SendUnattendedSessionInfo(string sessionId, string accessKey, string machineName, string requesterName, string organizationName);
         Task SendViewerConnected(string viewerConnectionId);
     }
@@ -207,11 +206,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         public Task SendMessageToViewer(string viewerID, string message)
         {
             return Connection.SendAsync("SendMessageToViewer", viewerID, message);
-        }
-
-        public Task SendStreamReady(string viewerConnectionId)
-        {
-            return Connection.InvokeAsync("SendStreamReady", viewerConnectionId);
         }
 
         public Task<Result> SendUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)

@@ -213,10 +213,7 @@ namespace Immense.RemoteControl.Server.Hubs
             return _viewerHub.Clients.Client(viewerId).SendAsync("ShowMessage", message);
         }
 
-        public Task SendStreamReady(string viewerConnectionId)
-        {
-            return _viewerHub.Clients.Client(viewerConnectionId).SendAsync("SendStreamReady");
-        }
+
         public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
         {
             var session = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));

@@ -205,16 +205,6 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
             PromptForHostName();
             await Init();
         }
-        private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)
-        {
-            if (_appState?.Viewers?.Count > 0)
-            {
-                foreach (var viewer in _appState.Viewers.Values)
-                {
-                    await viewer.SendCursorChange(cursor);
-                }
-            }
-        }
 
         private void ElevateToAdmin()
         {

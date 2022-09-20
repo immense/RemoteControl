@@ -2,8 +2,6 @@
 using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
-using Immense.RemoteControl.Shared;
-using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -87,13 +85,18 @@ namespace Immense.RemoteControl.Server.Hubs
 
         public async IAsyncEnumerable<byte[]> GetDesktopStream()
         {
-            if (!_streamCache.TryGet(SessionInfo.StreamId, out var signaler))
+            var result = await _streamCache.WaitForStreamSession(SessionInfo.StreamId, TimeSpan.FromSeconds(30));
+
+            if (!result.IsSuccess)
             {
-                _logger.LogError("Stream session was not found in the cache.");
+                _logger.LogError("Timed out while waiting for desktop stream.");
+                await Clients.Caller.SendAsync("ShowMessage", "Request timed out");
                 yield break;
             }
 
-            if (signaler.Stream is null)
+            var signaler = result.Value;
+
+            if (signaler?.Stream is null)
             {
                 _logger.LogError("Stream was null.");
                 yield break;

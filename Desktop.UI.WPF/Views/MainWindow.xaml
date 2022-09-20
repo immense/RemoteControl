@@ -83,7 +83,11 @@
                         <TextBlock FontSize="8" Margin="5,0,0,0">Name</TextBlock>
                         <TextBlock FontSize="8" Margin="0,0,5,0" HorizontalAlignment="Right">Has Control</TextBlock>
                     </Grid>
-                    <ListBox x:Name="ViewerListBox" Height="90" HorizontalContentAlignment="Stretch" ItemsSource="{Binding Viewers}" SelectionMode="Extended">
+                    <ListBox x:Name="ViewerListBox" Height="90" 
+                             HorizontalContentAlignment="Stretch" 
+                             ItemsSource="{Binding Viewers}"
+                             SelectionChanged="ViewerListBox_SelectionChanged"
+                             SelectionMode="Extended">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel>
