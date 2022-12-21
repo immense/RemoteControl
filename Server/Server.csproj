@@ -79,7 +79,7 @@
   <ItemGroup>
     <PackageReference Include="ConcurrentList" Version="1.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.9" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.8.3">
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.9.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
