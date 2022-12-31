@@ -93,7 +93,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
         public string Host
         {
             get => Get<string>() ?? string.Empty;
-            set => Set(value);
+            set => Set(value?.Trim()?.TrimEnd('/'));
         }
 
         public bool IsAdministrator { get; } = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);

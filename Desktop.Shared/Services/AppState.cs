@@ -62,7 +62,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             get => _host;
             set
             {
-                _host = value ?? string.Empty;
+                _host = value?.Trim()?.TrimEnd('/') ?? string.Empty;
                 _messenger.Send(new AppStateHostChangedMessage(_host));
             }
         }
