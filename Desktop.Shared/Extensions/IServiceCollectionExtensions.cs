@@ -56,10 +56,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Extensions
             var hostOption = new Option<string>(
                 new[] { "-h", "--host" },
                 "The hostname of the server to which to connect (e.g. https://example.com).");
-            if (string.IsNullOrWhiteSpace(serverUri))
-            {
-                hostOption.IsRequired = true;
-            }
             rootCommand.AddOption(hostOption);
 
             var modeOption = new Option<AppMode>(
