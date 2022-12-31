@@ -360,7 +360,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
             connection.On("ViewerDisconnected", async (string viewerID) =>
             {
-                await Connection.SendAsync("DisconnectViewer", viewerID, false);
+                await connection.SendAsync("DisconnectViewer", viewerID, false);
                 if (_appState.Viewers.TryGetValue(viewerID, out var viewer))
                 {
                     viewer.DisconnectRequested = true;
