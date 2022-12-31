@@ -186,7 +186,10 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
         {
-            await _desktopHubConnection.Connection.SendAsync("SendDesktopStream", stream, streamId);
+            if (_desktopHubConnection.Connection is not null)
+            {
+                await _desktopHubConnection.Connection.SendAsync("SendDesktopStream", stream, streamId);
+            }
         }
 
         public async Task SendFile(FileUpload fileUpload, CancellationToken cancelToken, Action<double> progressUpdateCallback)
