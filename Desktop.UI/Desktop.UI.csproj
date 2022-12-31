@@ -11,9 +11,15 @@
 	<ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
-    <Folder Include="Native\" />
+    <AvaloniaXaml Remove="Models\**" />
+    <AvaloniaXaml Remove="Native\**" />
+    <Compile Remove="Models\**" />
+    <Compile Remove="Native\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="Native\**" />
+    <None Remove="Models\**" />
+    <None Remove="Native\**" />
     <None Remove=".gitignore" />
     <None Remove="Assets\DefaultIcon.ico" />
     <None Remove="Assets\DefaultIcon.png" />

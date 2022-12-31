@@ -20,7 +20,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 {
     public interface IDesktopHubConnection
     {
-        HubConnection Connection { get; }
+        HubConnection? Connection { get; }
         bool IsConnected { get; }
 
         Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout);
@@ -70,11 +70,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
             messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEnding);
             messenger.Register<WindowsSessionSwitched>(this, HandleWindowsSessionChanged);
-
-            Connection = BuildConnection();
         }
 
-        public HubConnection Connection { get; private set; }
+        public HubConnection? Connection { get; private set; }
 
         public bool IsConnected => Connection?.State == HubConnectionState.Connected;
 
@@ -88,9 +86,15 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                     return true;
                 }
 
-                Connection = BuildConnection();
+                var result = BuildConnection();
+                if (!result.IsSuccess)
+                {
+                    return false;
+                }
 
-                ApplyConnectionHandlers();
+                Connection = result.Value!;
+
+                ApplyConnectionHandlers(result.Value!);
 
                 var sw = Stopwatch.StartNew();
                 while (!cancellationToken.IsCancellationRequested)
@@ -157,6 +161,11 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public Task DisconnectViewer(IViewer viewer, bool notifyViewer)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             viewer.DisconnectRequested = true;
             viewer.Dispose();
             return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionID, notifyViewer);
@@ -164,75 +173,130 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
 
         public async Task<string> GetSessionID()
         {
+            if (Connection is null)
+            {
+                return string.Empty;
+            }
+
             return await Connection.InvokeAsync<string>("GetSessionID");
         }
 
         public Task NotifyRequesterUnattendedReady()
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("NotifyRequesterUnattendedReady");
         }
 
         public Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("NotifySessionChanged", reason, currentSessionId);
         }
 
         public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("NotifyViewersRelaunchedScreenCasterReady", viewerIDs);
         }
 
         public Task SendAttendedSessionInfo(string machineName)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.InvokeAsync("ReceiveAttendedSessionInfo", machineName);
         }
 
         public Task SendConnectionFailedToViewers(List<string> viewerIDs)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("SendConnectionFailedToViewers", viewerIDs);
         }
 
         public Task SendConnectionRequestDenied(string viewerID)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("SendConnectionRequestDenied", viewerID);
         }
 
         public Task SendDtoToViewer<T>(T dto, string viewerId)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             var serializedDto = MessagePack.MessagePackSerializer.Serialize(dto);
             return Connection.SendAsync("SendDtoToViewer", serializedDto, viewerId);
         }
 
         public Task SendMessageToViewer(string viewerID, string message)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("SendMessageToViewer", viewerID, message);
         }
 
-        public Task<Result> SendUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
+        public async Task<Result> SendUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
         {
-            return Connection.InvokeAsync<Result>("ReceiveUnattendedSessionInfo", unattendedSessionId, accessKey, machineName, requesterName, organizationName);
+            if (Connection is null)
+            {
+                return Result.Fail("Connection hasn't been made yet.");
+            }
+
+            return await Connection.InvokeAsync<Result>("ReceiveUnattendedSessionInfo", unattendedSessionId, accessKey, machineName, requesterName, organizationName);
         }
 
         public Task SendViewerConnected(string viewerConnectionId)
         {
+            if (Connection is null)
+            {
+                return Task.CompletedTask;
+            }
+
             return Connection.SendAsync("ViewerConnected", viewerConnectionId);
         }
 
-        private void ApplyConnectionHandlers()
+        private void ApplyConnectionHandlers(HubConnection connection)
         {
-            Connection.Closed += (ex) =>
+            connection.Closed += (ex) =>
             {
                 _logger.LogWarning(ex, "Connection closed.");
                 return Task.CompletedTask;
             };
 
-            Connection.On("Disconnect", async (string reason) =>
+            connection.On("Disconnect", async (string reason) =>
             {
                 _logger.LogInformation("Disconnecting caster socket.  Reason: {reason}", reason);
                 await DisconnectAllViewers();
             });
 
-            Connection.On("GetScreenCast", async (
+            connection.On("GetScreenCast", async (
                 string viewerID,
                 string requesterName,
                 bool notifyUser,
@@ -275,7 +339,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             });
 
 
-            Connection.On("RequestScreenCast", (string viewerID, string requesterName, bool notifyUser, Guid streamId) =>
+            connection.On("RequestScreenCast", (string viewerID, string requesterName, bool notifyUser, Guid streamId) =>
             {
                 _appState.InvokeScreenCastRequested(new ScreenCastRequest()
                 {
@@ -286,7 +350,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 });
             });
 
-            Connection.On("SendDtoToClient", (byte[] dtoWrapper, string viewerConnectionId) =>
+            connection.On("SendDtoToClient", (byte[] dtoWrapper, string viewerConnectionId) =>
             {
                 if (_appState.Viewers.TryGetValue(viewerConnectionId, out var viewer))
                 {
@@ -294,7 +358,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
                 }
             });
 
-            Connection.On("ViewerDisconnected", async (string viewerID) =>
+            connection.On("ViewerDisconnected", async (string viewerID) =>
             {
                 await Connection.SendAsync("DisconnectViewer", viewerID, false);
                 if (_appState.Viewers.TryGetValue(viewerID, out var viewer))
@@ -307,17 +371,29 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             });
         }
 
-        private HubConnection BuildConnection()
+        private Result<HubConnection> BuildConnection()
         {
-            using var scope = _scopeFactory.CreateScope();
-            var builder = scope.ServiceProvider.GetRequiredService<IHubConnectionBuilder>();
+            try
+            {
+                if (!Uri.TryCreate(_appState.Host, UriKind.Absolute, out _))
+                {
+                    return Result.Fail<HubConnection>("Invalid server URI.");
+                }
 
-            var connection = builder
-                .WithUrl($"{_appState.Host.Trim().TrimEnd('/')}/hubs/desktop")
-                .AddMessagePackProtocol()
-                .WithAutomaticReconnect(new RetryPolicy())
-                .Build();
-            return connection;
+                using var scope = _scopeFactory.CreateScope();
+                var builder = scope.ServiceProvider.GetRequiredService<IHubConnectionBuilder>();
+
+                var connection = builder
+                    .WithUrl($"{_appState.Host.Trim().TrimEnd('/')}/hubs/desktop")
+                    .AddMessagePackProtocol()
+                    .WithAutomaticReconnect(new RetryPolicy())
+                    .Build();
+                return Result.Ok(connection);
+            }
+            catch (Exception ex)
+            {
+                return Result.Fail<HubConnection>(ex);
+            }
         }
 
         private async void HandleWindowsSessionEnding(object recipient, WindowsSessionEndingMessage message)

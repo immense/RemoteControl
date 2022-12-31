@@ -62,8 +62,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
             get => _host;
             set
             {
-                _host = value;
-                _messenger.Send(new AppStateHostChangedMessage(value));
+                _host = value ?? string.Empty;
+                _messenger.Send(new AppStateHostChangedMessage(_host));
             }
         }
 
