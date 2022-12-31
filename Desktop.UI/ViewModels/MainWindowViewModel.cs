@@ -204,29 +204,32 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             {
                 var result = await _hubConnection.Connect(_dispatcher.AppCancellationToken, TimeSpan.FromSeconds(10));
 
-                _hubConnection.Connection.Closed += async (ex) =>
+                if (result && _hubConnection.Connection is not null)
                 {
-                    await _dispatcher.InvokeAsync(() =>
+                    _hubConnection.Connection.Closed += async (ex) =>
                     {
-                        Viewers.Clear();
-                        StatusMessage = "Disconnected";
-                    });
-                };
+                        await _dispatcher.InvokeAsync(() =>
+                        {
+                            Viewers.Clear();
+                            StatusMessage = "Disconnected";
+                        });
+                    };
 
-                _hubConnection.Connection.Reconnecting += async (ex) =>
-                {
-                    await _dispatcher.InvokeAsync(() =>
+                    _hubConnection.Connection.Reconnecting += async (ex) =>
                     {
-                        Viewers.Clear();
-                        StatusMessage = "Reconnecting";
-                    });
-                };
+                        await _dispatcher.InvokeAsync(() =>
+                        {
+                            Viewers.Clear();
+                            StatusMessage = "Reconnecting";
+                        });
+                    };
 
-                _hubConnection.Connection.Reconnected += async (id) =>
-                {
-                    await GetSessionID();
-                };
+                    _hubConnection.Connection.Reconnected += async (id) =>
+                    {
+                        await GetSessionID();
+                    };
 
+                }
                 await ApplyBranding();
 
                 await GetSessionID();
