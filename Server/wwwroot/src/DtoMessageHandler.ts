@@ -23,11 +23,11 @@ const MsgPack: MessagePack = window["MessagePack"];
 
 export class DtoMessageHandler {
 
-    ParseBinaryMessage(data: ArrayBuffer) {
+    async ParseBinaryMessage(data: ArrayBuffer) {
         var wrapper = MsgPack.decode<DtoWrapper>(data);
         switch (wrapper.DtoType) {
             case DtoType.AudioSample:
-                this.HandleAudioSample(wrapper);
+                await this.HandleAudioSample(wrapper);
                 break;
             case DtoType.ScreenCapture:
                 this.HandleScreenCapture(wrapper);
@@ -54,14 +54,14 @@ export class DtoMessageHandler {
         }
     }
 
-    HandleAudioSample(wrapper: DtoWrapper) {
+    async HandleAudioSample(wrapper: DtoWrapper) {
         let audioSample = TryComplete<AudioSampleDto>(wrapper);
 
         if (!audioSample) {
             return;
         }
 
-        Sound.Play(audioSample.Buffer);
+        await Sound.Play(audioSample.Buffer);
     }
 
     HandleScreenCapture(wrapper: DtoWrapper) {

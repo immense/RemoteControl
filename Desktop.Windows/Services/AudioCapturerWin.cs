@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Interop;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services
 {
@@ -66,13 +67,21 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
                 return;
             }
 
-            using var ms = new MemoryStream();
-            using (var wfw = new WaveFileWriter(ms, _capturer.WaveFormat))
+            using var ms1 = new MemoryStream();
+            using (var wfw = new WaveFileWriter(ms1, _capturer.WaveFormat))
             {
                 await wfw.WriteAsync(buffer);
             }
 
-            AudioSampleReady?.Invoke(this, ms.ToArray());
+            // Resample to 16-bit.
+            using var ms2 = new MemoryStream(ms1.ToArray());
+            using var wfr = new WaveFileReader(ms2);
+            using var ms3 = new MemoryStream();
+            using (var resampler = new MediaFoundationResampler(wfr, _targetFormat))
+            {
+                WaveFileWriter.WriteWavFileToStream(ms3, resampler);
+            }
+            AudioSampleReady?.Invoke(this, ms3.ToArray());
         }
 
         private void Start()
@@ -81,6 +90,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services
             {
                 _capturer?.Dispose();
                 _capturer = new WasapiLoopbackCapture();
+                _targetFormat ??= new WaveFormat(16000, 8, 1);
                 _capturer.DataAvailable += Capturer_DataAvailable;
 
                 _capturer.StartRecording();

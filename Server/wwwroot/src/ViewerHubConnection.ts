@@ -101,8 +101,8 @@ export class ViewerHubConnection {
 
 
     private ApplyMessageHandlers(hubConnection) {
-        hubConnection.on("SendDtoToViewer", (dto: ArrayBuffer) => {
-            ViewerApp.DtoMessageHandler.ParseBinaryMessage(dto);
+        hubConnection.on("SendDtoToViewer", async (dto: ArrayBuffer) => {
+            await ViewerApp.DtoMessageHandler.ParseBinaryMessage(dto);
         });
 
         hubConnection.on("ConnectionFailed", () => {
