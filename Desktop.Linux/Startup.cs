@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Windows
+namespace Immense.RemoteControl.Desktop.Linux
 {
     public static class Startup
     {
