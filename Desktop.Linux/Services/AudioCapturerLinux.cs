@@ -1,15 +1,13 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using System;
 
-namespace Immense.RemoteControl.Desktop.Linux.Services
+namespace Immense.RemoteControl.Desktop.Linux.Services;
+
+public class AudioCapturerLinux : IAudioCapturer
 {
-    public class AudioCapturerLinux : IAudioCapturer
-    {
-        public event EventHandler<byte[]>? AudioSampleReady;
+    public event EventHandler<byte[]>? AudioSampleReady;
 
-        public void ToggleAudio(bool toggleOn)
-        {
-            // Not implemented.
-        }
+    public void ToggleAudio(bool toggleOn)
+    {
+        // Not implemented.
     }
 }
