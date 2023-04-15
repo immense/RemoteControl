@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 using Immense.RemoteControl.Desktop.UI.Controls;
 using Avalonia.Logging;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
@@ -300,7 +301,6 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
                         Arguments = "bash -c \"apt-get -y install libx11-dev ; " +
                             "apt-get -y install libxrandr-dev ; " +
                             "apt-get -y install libc6-dev ; " +
-                            "apt-get -y install libgdiplus ; " +
                             "apt-get -y install libxtst-dev ; " +
                             "apt-get -y install xclip\"",
                         WindowStyle = ProcessWindowStyle.Hidden,

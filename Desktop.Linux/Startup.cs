@@ -36,11 +36,11 @@ namespace Immense.RemoteControl.Desktop.Windows
 
             serviceConfig?.Invoke(services);
 
-            return await services.BuildRemoteControlServiceProvider(args, clientConfig, AddWindowsServices, startupConfig, serverUri);
+            return await services.BuildRemoteControlServiceProvider(args, clientConfig, AddLinuxServices, startupConfig, serverUri);
         }
 
 
-        private static void AddWindowsServices(IServiceCollection services)
+        private static void AddLinuxServices(IServiceCollection services)
         {
             services.AddSingleton<ICursorIconWatcher, CursorIconWatcherLinux>();
             services.AddSingleton<IKeyboardMouseInput, KeyboardMouseInputLinux>();
@@ -56,6 +56,7 @@ namespace Immense.RemoteControl.Desktop.Windows
             services.AddSingleton<IAppStartup, AppStartup>();
             services.AddSingleton<IViewModelFactory, ViewModelFactory>();
             services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
+            services.AddTransient<IMessageBoxViewModel, MessageBoxViewModel>();
         }
     }
 }
