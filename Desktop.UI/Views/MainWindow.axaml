@@ -58,7 +58,7 @@
 						<TextBlock FontSize="8" Margin="5,0,0,0">Name</TextBlock>
 						<TextBlock FontSize="8" Margin="0,0,5,0" HorizontalAlignment="Right">Has Control</TextBlock>
 					</Grid>
-					<ListBox Name="ViewerListBox" Height="90" Items="{Binding Viewers}" SelectionMode="Multiple">
+					<ListBox Name="ViewerListBox" Height="90" Items="{Binding Viewers}" SelectionMode="Multiple" SelectedItems="{Binding SelectedViewers}">
 						<ListBox.ItemTemplate>
 							<DataTemplate>
 								<DockPanel>
@@ -69,8 +69,7 @@
 						</ListBox.ItemTemplate>
 					</ListBox>
 					<Button Classes="NormalButton" HorizontalAlignment="Right"  Margin="0,5,0,0"
-                            Command="{Binding RemoveViewersCommand}"
-                            CommandParameter="{Binding SelectedItems, ElementName=ViewerListBox}">
+                            Command="{Binding RemoveViewerCommand}">
 						Remove
 					</Button>
 				</StackPanel>

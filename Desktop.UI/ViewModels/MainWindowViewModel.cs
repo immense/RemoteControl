@@ -36,7 +36,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
         ICommand RemoveViewersCommand { get; }
         string StatusMessage { get; set; }
         ObservableCollection<IViewer> Viewers { get; }
-
+        IList<IViewer> SelectedViewers { get; }
         Task ChangeServer();
         Task CopyLink();
         Task GetSessionID();
@@ -54,6 +54,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
         private readonly IScreenCaster _screenCaster;
         private readonly IViewModelFactory _viewModelFactory;
         private readonly IEnvironmentHelper _environment;
+        private IList<IViewer> _selectedViewers = new List<IViewer>();
 
         public MainWindowViewModel(
           IBrandingProvider brandingProvider,
@@ -81,7 +82,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             Host = appState.Host;
             ChangeServerCommand = new AsyncRelayCommand(ChangeServer);
             CopyLinkCommand = new AsyncRelayCommand(CopyLink);
-            RemoveViewersCommand = new AsyncRelayCommand<AvaloniaList<object>>(RemoveViewers, CanRemoveViewers);
+            RemoveViewersCommand = new AsyncRelayCommand(RemoveViewers, CanRemoveViewers);
         }
 
         public ICommand ChangeServerCommand { get; }
@@ -135,6 +136,16 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
 
         public ObservableCollection<IViewer> Viewers { get; } = new();
 
+        public IList<IViewer> SelectedViewers
+        {
+            get => Get<IList<IViewer>>() ?? new List<IViewer>();
+            set
+            {
+                _selectedViewers = value ?? new List<IViewer>();
+                OnPropertyChanged();
+            }
+        }
+
         public async Task ChangeServer()
         {
             await PromptForHostName();
@@ -147,7 +158,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             {
                 return;
             }
-            await _dispatcher.CurrentApp.Clipboard.SetTextAsync($"{Host}/RemoteControl/Viewer?sessionID={StatusMessage.Replace(" ", "")}");
+            await _dispatcher.CurrentApp.Clipboard.SetTextAsync($"{Host}/RemoteControl/Viewer?sessionId={StatusMessage.Replace(" ", "")}");
 
             CopyMessageOpacity = 1;
             IsCopyMessageVisible = true;
@@ -273,7 +284,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             Host = result;
         }
 
-        public async Task RemoveViewers(AvaloniaList<object>? list)
+        public async Task RemoveViewers()
         {
             if (list is null)
             {
@@ -286,10 +297,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             }
         }
 
-        private bool CanRemoveViewers(AvaloniaList<object>? obj)
-        {
-            return obj?.Any() == true;
-        }
+        private bool CanRemoveViewers() => SelectedViewers.Any() == true;
 
         private async Task InstallDependencies()
         {
