@@ -201,6 +201,11 @@ namespace Immense.RemoteControl.Desktop.Linux.Services
                 ~0,
                 2);
 
+            if (imagePointer == IntPtr.Zero)
+            {
+                return currentFrame;
+            }
+            
             var image = Marshal.PtrToStructure<LibX11.XImage>(imagePointer);
 
             var pixels = currentFrame.GetPixels();

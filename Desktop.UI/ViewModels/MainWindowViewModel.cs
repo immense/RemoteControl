@@ -78,6 +78,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             _appState.ViewerAdded += ViewerAdded;
             _appState.ScreenCastRequested += ScreenCastRequested;
 
+            Host = appState.Host;
             ChangeServerCommand = new AsyncRelayCommand(ChangeServer);
             CopyLinkCommand = new AsyncRelayCommand(CopyLink);
             RemoveViewersCommand = new AsyncRelayCommand<AvaloniaList<object>>(RemoveViewers, CanRemoveViewers);
@@ -190,8 +191,6 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
 
             StatusMessage = "Retrieving...";
 
-            Host = _appState.Host;
-
             while (string.IsNullOrWhiteSpace(Host))
             {
                 Host = "https://";
@@ -287,7 +286,10 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             }
         }
 
-        private bool CanRemoveViewers(AvaloniaList<object>? obj) => obj?.Any() == true;
+        private bool CanRemoveViewers(AvaloniaList<object>? obj)
+        {
+            return obj?.Any() == true;
+        }
 
         private async Task InstallDependencies()
         {
