@@ -20,40 +20,44 @@ using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 using Immense.RemoteControl.Desktop.UI.Controls;
 using Avalonia.Logging;
 using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
+using System.Collections.Concurrent;
+using Immense.RemoteControl.Desktop.Shared.ViewModels;
+using System.Threading;
+using Immense.RemoteControl.Shared.Models.Dtos;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {
     public interface IMainWindowViewModel
     {
-        ICommand ChangeServerCommand { get; }
+        AsyncRelayCommand ChangeServerCommand { get; }
         ICommand CloseCommand { get; }
-        ICommand CopyLinkCommand { get; }
+        AsyncRelayCommand CopyLinkCommand { get; }
         double CopyMessageOpacity { get; set; }
         string Host { get; set; }
         bool IsCopyMessageVisible { get; set; }
         ICommand MinimizeCommand { get; }
         ICommand OpenOptionsMenu { get; }
-        ICommand RemoveViewersCommand { get; }
+        AsyncRelayCommand RemoveViewersCommand { get; }
+        IList<IViewer> SelectedViewers { get; }
         string StatusMessage { get; set; }
         ObservableCollection<IViewer> Viewers { get; }
-        IList<IViewer> SelectedViewers { get; }
         Task ChangeServer();
         Task CopyLink();
         Task GetSessionID();
         Task Init();
         Task PromptForHostName();
-        Task RemoveViewers(AvaloniaList<object>? list);
+        Task RemoveViewers();
     }
 
     public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         private readonly IAppState _appState;
         private readonly IAvaloniaDispatcher _dispatcher;
+        private readonly IEnvironmentHelper _environment;
         private readonly IDesktopHubConnection _hubConnection;
         private readonly ILogger<MainWindowViewModel> _logger;
         private readonly IScreenCaster _screenCaster;
         private readonly IViewModelFactory _viewModelFactory;
-        private readonly IEnvironmentHelper _environment;
         private IList<IViewer> _selectedViewers = new List<IViewer>();
 
         public MainWindowViewModel(
@@ -85,7 +89,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             RemoveViewersCommand = new AsyncRelayCommand(RemoveViewers, CanRemoveViewers);
         }
 
-        public ICommand ChangeServerCommand { get; }
+        public AsyncRelayCommand ChangeServerCommand { get; }
 
         public ICommand CloseCommand { get; } = new RelayCommand<Window>(window =>
         {
@@ -93,7 +97,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             Environment.Exit(0);
         });
 
-        public ICommand CopyLinkCommand { get; }
+        public AsyncRelayCommand CopyLinkCommand { get; }
 
         public double CopyMessageOpacity
         {
@@ -126,7 +130,18 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
             button?.ContextMenu?.Open(button);
         });
 
-        public ICommand RemoveViewersCommand { get; }
+        public AsyncRelayCommand RemoveViewersCommand { get; }
+
+        public IList<IViewer> SelectedViewers
+        {
+            get => _selectedViewers;
+            set
+            {
+                _selectedViewers = value ?? new List<IViewer>();
+                OnPropertyChanged();
+                RemoveViewersCommand.NotifyCanExecuteChanged();
+            }
+        }
 
         public string StatusMessage
         {
@@ -135,16 +150,6 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
         }
 
         public ObservableCollection<IViewer> Viewers { get; } = new();
-
-        public IList<IViewer> SelectedViewers
-        {
-            get => Get<IList<IViewer>>() ?? new List<IViewer>();
-            set
-            {
-                _selectedViewers = value ?? new List<IViewer>();
-                OnPropertyChanged();
-            }
-        }
 
         public async Task ChangeServer()
         {
@@ -286,18 +291,21 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
 
         public async Task RemoveViewers()
         {
-            if (list is null)
+            if (!SelectedViewers.Any())
             {
                 return;
             }
-            var viewerList = list ?? new AvaloniaList<object>();
-            foreach (var viewer in viewerList.Cast<Viewer>())
+
+            foreach (var viewer in SelectedViewers)
             {
                 await _hubConnection.DisconnectViewer(viewer, true);
             }
         }
 
-        private bool CanRemoveViewers() => SelectedViewers.Any() == true;
+        private bool CanRemoveViewers()
+        {
+            return SelectedViewers.Any() == true;
+        }
 
         private async Task InstallDependencies()
         {
@@ -327,6 +335,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels
 
 
         }
+
         private void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
         {
             Dispatcher.UIThread.InvokeAsync(async () =>

@@ -9,7 +9,7 @@
         x:Class="Immense.RemoteControl.Desktop.UI.Views.MainWindow"
         Icon="{Binding WindowIcon}"
         Title="{Binding ProductName}"
-		Height="275" Width="350"
+		Height="325" Width="400"
 		HasSystemDecorations="False">
 
     <Design.DataContext>
@@ -61,15 +61,15 @@
 					<ListBox Name="ViewerListBox" Height="90" Items="{Binding Viewers}" SelectionMode="Multiple" SelectedItems="{Binding SelectedViewers}">
 						<ListBox.ItemTemplate>
 							<DataTemplate>
-								<DockPanel>
-									<TextBlock Text="{Binding Name}"></TextBlock>
-									<CheckBox IsChecked="{Binding HasControl}" HorizontalAlignment="Right"></CheckBox>
+								<DockPanel VerticalAlignment="Center">
+									<TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+									<CheckBox IsChecked="{Binding HasControl}" HorizontalAlignment="Right" VerticalAlignment="Center" />
 								</DockPanel>
 							</DataTemplate>
 						</ListBox.ItemTemplate>
 					</ListBox>
 					<Button Classes="NormalButton" HorizontalAlignment="Right"  Margin="0,5,0,0"
-                            Command="{Binding RemoveViewerCommand}">
+                            Command="{Binding RemoveViewersCommand}">
 						Remove
 					</Button>
 				</StackPanel>
