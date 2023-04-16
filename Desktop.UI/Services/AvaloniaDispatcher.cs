@@ -99,6 +99,8 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             try
             {
                 var args = Environment.GetCommandLineArgs();
+                var argString = string.Join(", ", args);
+                _logger.LogInformation("Starting dispatcher in unattended mode with args: [args].", argString);
                 _appBuilder = BuildAvaloniaApp();
                 _appBuilder.Start(MainImpl, args);
             }

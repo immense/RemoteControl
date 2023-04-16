@@ -63,7 +63,7 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             switch (_appState.Mode)
             {
                 case AppMode.Unattended:
-                    _dispatcher.StartUnattended();
+                    _ = Task.Run(() => _dispatcher.StartUnattended());
                     await StartScreenCasting().ConfigureAwait(false);
                     break;
                 case AppMode.Attended:
@@ -102,18 +102,21 @@ namespace Immense.RemoteControl.Desktop.UI.Services
                 return;
             }
 
-            if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+            if (OperatingSystem.IsWindows()) 
             {
-                _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to get initial desktop name.");
-            }
+                if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+                {
+                    _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to get initial desktop name.");
+                }
 
-            if (!Win32Interop.SwitchToInputDesktop())
-            {
-                _logger.LogWarning("Failed to set initial desktop.");
+                if (!Win32Interop.SwitchToInputDesktop())
+                {
+                    _logger.LogWarning("Failed to set initial desktop.");
+                }
             }
 
             if (_appState.ArgDict.ContainsKey("relaunch"))
