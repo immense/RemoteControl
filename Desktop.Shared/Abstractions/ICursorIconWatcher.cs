@@ -1,13 +1,10 @@
 ﻿using Immense.RemoteControl.Shared.Models;
-using System;
 
-namespace Immense.RemoteControl.Desktop.Shared.Abstractions
+namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
+
+public interface ICursorIconWatcher
 {
-    public interface ICursorIconWatcher
-    {
-        event EventHandler<CursorInfo> OnChange;
+    event EventHandler<CursorInfo> OnChange;
 
-        CursorInfo GetCurrentCursor();
-    }
-
+    CursorInfo GetCurrentCursor();
 }

@@ -1,9 +1,8 @@
-﻿namespace Immense.RemoteControl.Desktop.Shared.Enums
+﻿namespace Immense.RemoteControl.Desktop.Shared.Enums;
+
+public enum AppMode
 {
-    public enum AppMode
-    {
-        Unattended,
-        Attended,
-        Chat
-    }
+    Unattended,
+    Attended,
+    Chat
 }

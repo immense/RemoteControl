@@ -1,24 +1,21 @@
-﻿using System;
+﻿namespace Immense.RemoteControl.Shared.Helpers;
 
-namespace Immense.RemoteControl.Shared.Helpers
+public static class Disposer
 {
-    public static class Disposer
+    public static void TryDisposeAll(params IDisposable[] disposables)
     {
-        public static void TryDisposeAll(params IDisposable[] disposables)
+        if (disposables is null)
         {
-            if (disposables is null)
-            {
-                return;
-            }
+            return;
+        }
 
-            foreach (var disposable in disposables)
+        foreach (var disposable in disposables)
+        {
+            try
             {
-                try
-                {
-                    disposable?.Dispose();
-                }
-                catch { }
+                disposable?.Dispose();
             }
+            catch { }
         }
     }
 }

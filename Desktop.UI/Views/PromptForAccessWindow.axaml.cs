@@ -1,36 +1,34 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using System;
 
-namespace Immense.RemoteControl.Desktop.UI.Views
+namespace Immense.RemoteControl.Desktop.UI.Views;
+
+public partial class PromptForAccessWindow : Window
 {
-    public partial class PromptForAccessWindow : Window
+    public PromptForAccessWindow()
     {
-        public PromptForAccessWindow()
-        {
-            this.InitializeComponent();
-        }
+        this.InitializeComponent();
+    }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
 
-            Opened += Window_Opened;
-            this.FindControl<Border>("TitleBanner").PointerPressed += TitleBanner_PointerPressed;
-        }
+        Opened += Window_Opened;
+        this.FindControl<Border>("TitleBanner").PointerPressed += TitleBanner_PointerPressed;
+    }
 
-        private void Window_Opened(object? sender, EventArgs e)
-        {
-            Topmost = false;
-        }
+    private void Window_Opened(object? sender, EventArgs e)
+    {
+        Topmost = false;
+    }
 
-        private void TitleBanner_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    private void TitleBanner_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
         {
-            if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
-            {
-                BeginMoveDrag(e);
-            }
+            BeginMoveDrag(e);
         }
     }
 }

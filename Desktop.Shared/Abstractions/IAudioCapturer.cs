@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
 
-namespace Immense.RemoteControl.Desktop.Shared.Abstractions
+public interface IAudioCapturer
 {
-    public interface IAudioCapturer
-    {
-        event EventHandler<byte[]> AudioSampleReady;
-        void ToggleAudio(bool toggleOn);
-    }
+    event EventHandler<byte[]> AudioSampleReady;
+    void ToggleAudio(bool toggleOn);
 }

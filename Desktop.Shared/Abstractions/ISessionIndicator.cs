@@ -1,7 +1,6 @@
-﻿namespace Immense.RemoteControl.Desktop.Shared.Abstractions
+﻿namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
+
+public interface ISessionIndicator
 {
-    public interface ISessionIndicator
-    {
-        void Show();
-    }
+    void Show();
 }

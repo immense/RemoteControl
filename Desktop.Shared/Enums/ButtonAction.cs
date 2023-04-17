@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Immense.RemoteControl.Desktop.Shared.Enums;
 
-namespace Immense.RemoteControl.Desktop.Shared.Enums
+public enum ButtonAction
 {
-    public enum ButtonAction
-    {
-        Down,
-        Up
-    }
+    Down,
+    Up
 }

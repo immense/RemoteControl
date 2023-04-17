@@ -1,9 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
 
-namespace Immense.RemoteControl.Desktop.Shared.Abstractions
+public interface IShutdownService
 {
-    public interface IShutdownService
-    {
-        Task Shutdown();
-    }
+    Task Shutdown();
 }

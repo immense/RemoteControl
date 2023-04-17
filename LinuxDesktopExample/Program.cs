@@ -1,9 +1,8 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Desktop.Linux;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.Services;
-using Immense.RemoteControl.Desktop.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
 using WindowsDesktopExample;
 
 

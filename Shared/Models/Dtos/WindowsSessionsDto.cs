@@ -1,18 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace Immense.RemoteControl.Shared.Models.Dtos
+namespace Immense.RemoteControl.Shared.Models.Dtos;
+
+[DataContract]
+public class WindowsSessionsDto
 {
-    [DataContract]
-    public class WindowsSessionsDto
+    public WindowsSessionsDto(List<WindowsSession> windowsSessions)
     {
-        public WindowsSessionsDto(List<WindowsSession> windowsSessions)
-        {
-            WindowsSessions = windowsSessions;
-        }
-
-
-        [DataMember(Name = "WindowsSessions")]
-        public List<WindowsSession> WindowsSessions { get; set; }
+        WindowsSessions = windowsSessions;
     }
+
+
+    [DataMember(Name = "WindowsSessions")]
+    public List<WindowsSession> WindowsSessions { get; set; }
 }

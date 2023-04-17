@@ -1,50 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Immense.RemoteControl.Shared.Services;
 
-namespace Immense.RemoteControl.Shared.Services
+public interface ISystemTime
 {
-    public interface ISystemTime
-    {
-        DateTimeOffset Now { get; }
+    DateTimeOffset Now { get; }
 
-        DateTimeOffset Offset(TimeSpan offset);
-        void Restore();
-        void Set(DateTimeOffset time);
+    DateTimeOffset Offset(TimeSpan offset);
+    void Restore();
+    void Set(DateTimeOffset time);
+}
+
+public class SystemTime : ISystemTime
+{
+    private TimeSpan _offset;
+    private DateTimeOffset? _time;
+
+    public DateTimeOffset Now
+    {
+        get
+        {
+            var baseTime = _time ?? DateTimeOffset.Now;
+            return baseTime.Add(_offset);
+        }
     }
 
-    public class SystemTime : ISystemTime
+    public DateTimeOffset Offset(TimeSpan offset)
     {
-        private TimeSpan _offset;
-        private DateTimeOffset? _time;
+        _offset = _offset.Add(offset);
+        return Now;
+    }
 
-        public DateTimeOffset Now
-        {
-            get
-            {
-                var baseTime = _time ?? DateTimeOffset.Now;
-                return baseTime.Add(_offset);
-            }
-        }
+    public void Restore()
+    {
+        _offset = TimeSpan.Zero;
+        _time = null;
+    }
 
-        public DateTimeOffset Offset(TimeSpan offset)
-        {
-            _offset = _offset.Add(offset);
-            return Now;
-        }
-
-        public void Restore()
-        {
-            _offset = TimeSpan.Zero;
-            _time = null;
-        }
-
-        public void Set(DateTimeOffset time)
-        {
-            _offset = TimeSpan.Zero;
-            _time = time;
-        }
+    public void Set(DateTimeOffset time)
+    {
+        _offset = TimeSpan.Zero;
+        _time = time;
     }
 }

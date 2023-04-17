@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Immense.RemoteControl.Shared.Enums;
 
-namespace Immense.RemoteControl.Shared.Enums
+public enum SessionSwitchReasonEx
 {
-    public enum SessionSwitchReasonEx
-    {
-        ConsoleConnect = 1,
-        ConsoleDisconnect = 2,
-        RemoteConnect = 3,
-        RemoteDisconnect = 4,
-        SessionLogon = 5,
-        SessionLogoff = 6,
-        SessionLock = 7,
-        SessionUnlock = 8,
-        SessionRemoteControl = 9
-    }
+    ConsoleConnect = 1,
+    ConsoleDisconnect = 2,
+    RemoteConnect = 3,
+    RemoteDisconnect = 4,
+    SessionLogon = 5,
+    SessionLogoff = 6,
+    SessionLock = 7,
+    SessionUnlock = 8,
+    SessionRemoteControl = 9
 }

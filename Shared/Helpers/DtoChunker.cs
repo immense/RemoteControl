@@ -1,72 +1,66 @@
 ﻿using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Shared.Helpers
+namespace Immense.RemoteControl.Shared.Helpers;
+
+public static class DtoChunker
 {
-    public static class DtoChunker
+    private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
+
+    public static IEnumerable<DtoWrapper> ChunkDto<T>(T dto, DtoType dtoType, string requestId = "", int chunkSize = 50_000)
     {
-        private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
+        var dtoBytes = MessagePackSerializer.Serialize(dto);
+        var instanceId = Guid.NewGuid().ToString();
+        var chunks = dtoBytes.Chunk(chunkSize).ToArray();
 
-        public static IEnumerable<DtoWrapper> ChunkDto<T>(T dto, DtoType dtoType, string requestId = "", int chunkSize = 50_000)
+        for (var i = 0; i < chunks.Length; i++)
         {
-            var dtoBytes = MessagePackSerializer.Serialize(dto);
-            var instanceId = Guid.NewGuid().ToString();
-            var chunks = dtoBytes.Chunk(chunkSize).ToArray();
+            var chunk = chunks[i];
 
-            for (var i = 0; i < chunks.Length; i++)
+            yield return new DtoWrapper()
             {
-                var chunk = chunks[i];
-
-                yield return new DtoWrapper()
-                {
-                    DtoChunk = chunk,
-                    DtoType = dtoType,
-                    SequenceId = i,
-                    IsFirstChunk = i == 0,
-                    IsLastChunk = i == chunks.Length - 1,
-                    RequestId = requestId,
-                    InstanceId = instanceId
-                };
-            }
+                DtoChunk = chunk,
+                DtoType = dtoType,
+                SequenceId = i,
+                IsFirstChunk = i == 0,
+                IsLastChunk = i == chunks.Length - 1,
+                RequestId = requestId,
+                InstanceId = instanceId
+            };
         }
+    }
 
-        public static bool TryComplete<T>(DtoWrapper wrapper, out T? result)
+    public static bool TryComplete<T>(DtoWrapper wrapper, out T? result)
+    {
+        result = default;
+
+        var chunks = _cache.GetOrCreate(wrapper.InstanceId, entry =>
         {
-            result = default;
+            entry.SlidingExpiration = TimeSpan.FromMinutes(1);
+            return new List<DtoWrapper>();
+        });
 
-            var chunks = _cache.GetOrCreate(wrapper.InstanceId, entry =>
+        lock (chunks)
+        {
+            chunks.Add(wrapper);
+
+            if (!wrapper.IsLastChunk)
             {
-                entry.SlidingExpiration = TimeSpan.FromMinutes(1);
-                return new List<DtoWrapper>();
+                return false;
+            }
+
+            _cache.Remove(wrapper.InstanceId);
+
+            chunks.Sort((a, b) =>
+            {
+                return a.SequenceId - b.SequenceId;
             });
 
-            lock (chunks)
-            {
-                chunks.Add(wrapper);
+            var buffer = chunks.SelectMany(x => x.DtoChunk).ToArray();
 
-                if (!wrapper.IsLastChunk)
-                {
-                    return false;
-                }
-
-                _cache.Remove(wrapper.InstanceId);
-
-                chunks.Sort((a, b) =>
-                {
-                    return a.SequenceId - b.SequenceId;
-                });
-
-                var buffer = chunks.SelectMany(x => x.DtoChunk).ToArray();
-
-                result = MessagePackSerializer.Deserialize<T>(buffer);
-                return true;
-            }
+            result = MessagePackSerializer.Deserialize<T>(buffer);
+            return true;
         }
     }
 }

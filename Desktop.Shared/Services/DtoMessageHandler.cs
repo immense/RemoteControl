@@ -5,327 +5,323 @@ using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Shared.Services
+namespace Immense.RemoteControl.Desktop.Shared.Services;
+
+public interface IDtoMessageHandler
 {
-    public interface IDtoMessageHandler
+    Task ParseMessage(IViewer viewer, byte[] message);
+}
+public class DtoMessageHandler : IDtoMessageHandler
+{
+    private readonly IAudioCapturer _audioCapturer;
+
+    private readonly IClipboardService _clipboardService;
+
+    private readonly IFileTransferService _fileTransferService;
+
+    private readonly IKeyboardMouseInput _keyboardMouseInput;
+
+    private readonly ILogger<DtoMessageHandler> _logger;
+
+
+    public DtoMessageHandler(
+        IKeyboardMouseInput keyboardMouseInput,
+        IAudioCapturer audioCapturer,
+        IClipboardService clipboardService,
+        IFileTransferService fileTransferService,
+        ILogger<DtoMessageHandler> logger)
     {
-        Task ParseMessage(IViewer viewer, byte[] message);
+        _keyboardMouseInput = keyboardMouseInput;
+        _audioCapturer = audioCapturer;
+        _clipboardService = clipboardService;
+        _fileTransferService = fileTransferService;
+        _logger = logger;
     }
-    public class DtoMessageHandler : IDtoMessageHandler
+
+    public async Task ParseMessage(IViewer viewer, byte[] message)
     {
-        private readonly IAudioCapturer _audioCapturer;
-
-        private readonly IClipboardService _clipboardService;
-
-        private readonly IFileTransferService _fileTransferService;
-
-        private readonly IKeyboardMouseInput _keyboardMouseInput;
-
-        private readonly ILogger<DtoMessageHandler> _logger;
-
-
-        public DtoMessageHandler(
-            IKeyboardMouseInput keyboardMouseInput,
-            IAudioCapturer audioCapturer,
-            IClipboardService clipboardService,
-            IFileTransferService fileTransferService,
-            ILogger<DtoMessageHandler> logger)
+        try
         {
-            _keyboardMouseInput = keyboardMouseInput;
-            _audioCapturer = audioCapturer;
-            _clipboardService = clipboardService;
-            _fileTransferService = fileTransferService;
-            _logger = logger;
-        }
+            var wrapper = MessagePackSerializer.Deserialize<DtoWrapper>(message);
 
-        public async Task ParseMessage(IViewer viewer, byte[] message)
-        {
-            try
+            switch (wrapper.DtoType)
             {
-                var wrapper = MessagePackSerializer.Deserialize<DtoWrapper>(message);
-
-                switch (wrapper.DtoType)
-                {
-                    case DtoType.MouseMove:
-                    case DtoType.MouseDown:
-                    case DtoType.MouseUp:
-                    case DtoType.Tap:
-                    case DtoType.MouseWheel:
-                    case DtoType.KeyDown:
-                    case DtoType.KeyUp:
-                    case DtoType.CtrlAltDel:
-                    case DtoType.ToggleBlockInput:
-                    case DtoType.ClipboardTransfer:
-                    case DtoType.KeyPress:
-                    case DtoType.SetKeyStatesUp:
+                case DtoType.MouseMove:
+                case DtoType.MouseDown:
+                case DtoType.MouseUp:
+                case DtoType.Tap:
+                case DtoType.MouseWheel:
+                case DtoType.KeyDown:
+                case DtoType.KeyUp:
+                case DtoType.CtrlAltDel:
+                case DtoType.ToggleBlockInput:
+                case DtoType.ClipboardTransfer:
+                case DtoType.KeyPress:
+                case DtoType.SetKeyStatesUp:
+                    {
+                        if (!viewer.HasControl)
                         {
-                            if (!viewer.HasControl)
-                            {
-                                return;
-                            }
+                            return;
                         }
-                        break;
-                    default:
-                        break;
-                }
-
-                switch (wrapper.DtoType)
-                {
-                    case DtoType.SelectScreen:
-                        SelectScreen(wrapper, viewer);
-                        break;
-                    case DtoType.MouseMove:
-                        MouseMove(wrapper, viewer);
-                        break;
-                    case DtoType.MouseDown:
-                        MouseDown(wrapper, viewer);
-                        break;
-                    case DtoType.MouseUp:
-                        MouseUp(wrapper, viewer);
-                        break;
-                    case DtoType.Tap:
-                        Tap(wrapper, viewer);
-                        break;
-                    case DtoType.MouseWheel:
-                        MouseWheel(wrapper);
-                        break;
-                    case DtoType.KeyDown:
-                        KeyDown(wrapper);
-                        break;
-                    case DtoType.KeyUp:
-                        KeyUp(wrapper);
-                        break;
-                    case DtoType.CtrlAltDel:
-                        CtrlAltDel();
-                        break;
-                    case DtoType.ToggleAudio:
-                        ToggleAudio(wrapper);
-                        break;
-                    case DtoType.ToggleBlockInput:
-                        ToggleBlockInput(wrapper);
-                        break;
-                    case DtoType.ClipboardTransfer:
-                        await ClipboardTransfer(wrapper);
-                        break;
-                    case DtoType.KeyPress:
-                        await KeyPress(wrapper);
-                        break;
-                    case DtoType.File:
-                        await DownloadFile(wrapper);
-                        break;
-                    case DtoType.WindowsSessions:
-                        await GetWindowsSessions(viewer);
-                        break;
-                    case DtoType.SetKeyStatesUp:
-                        SetKeyStatesUp();
-                        break;
-                    case DtoType.FrameReceived:
-                        HandleFrameReceived(viewer);
-                        break;
-                    case DtoType.OpenFileTransferWindow:
-                        OpenFileTransferWindow(viewer);
-                        break;
-                    default:
-                        break;
-                }
+                    }
+                    break;
+                default:
+                    break;
             }
-            catch (Exception ex)
+
+            switch (wrapper.DtoType)
             {
-                _logger.LogError(ex, "Error while parsing message.");
+                case DtoType.SelectScreen:
+                    SelectScreen(wrapper, viewer);
+                    break;
+                case DtoType.MouseMove:
+                    MouseMove(wrapper, viewer);
+                    break;
+                case DtoType.MouseDown:
+                    MouseDown(wrapper, viewer);
+                    break;
+                case DtoType.MouseUp:
+                    MouseUp(wrapper, viewer);
+                    break;
+                case DtoType.Tap:
+                    Tap(wrapper, viewer);
+                    break;
+                case DtoType.MouseWheel:
+                    MouseWheel(wrapper);
+                    break;
+                case DtoType.KeyDown:
+                    KeyDown(wrapper);
+                    break;
+                case DtoType.KeyUp:
+                    KeyUp(wrapper);
+                    break;
+                case DtoType.CtrlAltDel:
+                    CtrlAltDel();
+                    break;
+                case DtoType.ToggleAudio:
+                    ToggleAudio(wrapper);
+                    break;
+                case DtoType.ToggleBlockInput:
+                    ToggleBlockInput(wrapper);
+                    break;
+                case DtoType.ClipboardTransfer:
+                    await ClipboardTransfer(wrapper);
+                    break;
+                case DtoType.KeyPress:
+                    await KeyPress(wrapper);
+                    break;
+                case DtoType.File:
+                    await DownloadFile(wrapper);
+                    break;
+                case DtoType.WindowsSessions:
+                    await GetWindowsSessions(viewer);
+                    break;
+                case DtoType.SetKeyStatesUp:
+                    SetKeyStatesUp();
+                    break;
+                case DtoType.FrameReceived:
+                    HandleFrameReceived(viewer);
+                    break;
+                case DtoType.OpenFileTransferWindow:
+                    OpenFileTransferWindow(viewer);
+                    break;
+                default:
+                    break;
             }
         }
-
-        private void CtrlAltDel()
+        catch (Exception ex)
         {
-            if (OperatingSystem.IsWindows())
-            {
-                // Might as well try both.
-                User32.SendSAS(false);
-                User32.SendSAS(true);
-            }
+            _logger.LogError(ex, "Error while parsing message.");
         }
+    }
 
-        private async Task ClipboardTransfer(DtoWrapper wrapper)
+    private void CtrlAltDel()
+    {
+        if (OperatingSystem.IsWindows())
         {
-            if (!DtoChunker.TryComplete<ClipboardTransferDto>(wrapper, out var dto))
-            {
-                return;
-            }
-            
-            if (dto!.TypeText)
-            {
-                _keyboardMouseInput.SendText(dto.Text);
-            }
-            else
-            {
-                await _clipboardService.SetText(dto.Text);
-            }
+            // Might as well try both.
+            User32.SendSAS(false);
+            User32.SendSAS(true);
         }
+    }
 
-        private async Task DownloadFile(DtoWrapper wrapper)
+    private async Task ClipboardTransfer(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<ClipboardTransferDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<FileDto>(wrapper, out var dto))
-            {
-                return;
-            }
-            
-            await _fileTransferService.ReceiveFile(dto!.Buffer,
-                dto.FileName,
-                dto.MessageId,
-                dto.EndOfFile,
-                dto.StartOfFile);
+            return;
         }
-
-        private async Task GetWindowsSessions(IViewer viewer)
+        
+        if (dto!.TypeText)
         {
-            await viewer.SendWindowsSessions();
+            _keyboardMouseInput.SendText(dto.Text);
         }
-
-        private void HandleFrameReceived(IViewer viewer)
+        else
         {
-            viewer.DequeuePendingFrame();
+            await _clipboardService.SetText(dto.Text);
         }
+    }
 
-        private void KeyDown(DtoWrapper wrapper)
+    private async Task DownloadFile(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<FileDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<KeyDownDto>(wrapper, out var dto))
-            {
-                return;
-            }
-            
-            if (dto?.Key is null)
-            {
-                _logger.LogWarning("Key input is empty.");
-                return;
-            }
-            _keyboardMouseInput.SendKeyDown(dto.Key);
+            return;
         }
+        
+        await _fileTransferService.ReceiveFile(dto!.Buffer,
+            dto.FileName,
+            dto.MessageId,
+            dto.EndOfFile,
+            dto.StartOfFile);
+    }
 
-        private async Task KeyPress(DtoWrapper wrapper)
+    private async Task GetWindowsSessions(IViewer viewer)
+    {
+        await viewer.SendWindowsSessions();
+    }
+
+    private void HandleFrameReceived(IViewer viewer)
+    {
+        viewer.DequeuePendingFrame();
+    }
+
+    private void KeyDown(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<KeyDownDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<KeyPressDto>(wrapper, out var dto))
-            {
-                return;
-            }
-   
-            if (dto?.Key is null)
-            {
-                _logger.LogWarning("Key input is empty.");
-                return;
-            }
-
-            _keyboardMouseInput.SendKeyDown(dto.Key);
-            await Task.Delay(1);
-            _keyboardMouseInput.SendKeyUp(dto.Key);
+            return;
         }
-
-        private void KeyUp(DtoWrapper wrapper)
+        
+        if (dto?.Key is null)
         {
-            if (!DtoChunker.TryComplete<KeyUpDto>(wrapper, out var dto))
-            {
-                return;
-            }
-            
-            if (dto?.Key is null)
-            {
-                _logger.LogWarning("Key input is empty.");
-                return;
-            }
-            _keyboardMouseInput.SendKeyUp(dto.Key);
+            _logger.LogWarning("Key input is empty.");
+            return;
         }
+        _keyboardMouseInput.SendKeyDown(dto.Key);
+    }
 
-        private void MouseDown(DtoWrapper wrapper, IViewer viewer)
+    private async Task KeyPress(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<KeyPressDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<MouseDownDto>(wrapper, out var dto))
-            {
-                return;
-            }
-
-            _keyboardMouseInput.SendMouseButtonAction(dto!.Button, ButtonAction.Down, dto.PercentX, dto.PercentY, viewer);
+            return;
         }
 
-        private void MouseMove(DtoWrapper wrapper, IViewer viewer)
+        if (dto?.Key is null)
         {
-            if (!DtoChunker.TryComplete<MouseMoveDto>(wrapper, out var dto))
-            {
-                return;
-            }
-            
-            _keyboardMouseInput.SendMouseMove(dto!.PercentX, dto.PercentY, viewer);
+            _logger.LogWarning("Key input is empty.");
+            return;
         }
 
-        private void MouseUp(DtoWrapper wrapper, IViewer viewer)
+        _keyboardMouseInput.SendKeyDown(dto.Key);
+        await Task.Delay(1);
+        _keyboardMouseInput.SendKeyUp(dto.Key);
+    }
+
+    private void KeyUp(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<KeyUpDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<MouseUpDto>(wrapper, out var dto))
-            {
-                return;
-            }
-
-            _keyboardMouseInput.SendMouseButtonAction(dto!.Button, ButtonAction.Up, dto.PercentX, dto.PercentY, viewer);
+            return;
         }
-
-        private void MouseWheel(DtoWrapper wrapper)
+        
+        if (dto?.Key is null)
         {
-            if (!DtoChunker.TryComplete<MouseWheelDto>(wrapper, out var dto))
-            {
-                return;
-            }
-
-            _keyboardMouseInput.SendMouseWheel(-(int)dto!.DeltaY);
+            _logger.LogWarning("Key input is empty.");
+            return;
         }
+        _keyboardMouseInput.SendKeyUp(dto.Key);
+    }
 
-        private void OpenFileTransferWindow(IViewer viewer)
+    private void MouseDown(DtoWrapper wrapper, IViewer viewer)
+    {
+        if (!DtoChunker.TryComplete<MouseDownDto>(wrapper, out var dto))
         {
-            _fileTransferService.OpenFileTransferWindow(viewer);
+            return;
         }
 
-        private void SelectScreen(DtoWrapper wrapper, IViewer viewer)
+        _keyboardMouseInput.SendMouseButtonAction(dto!.Button, ButtonAction.Down, dto.PercentX, dto.PercentY, viewer);
+    }
+
+    private void MouseMove(DtoWrapper wrapper, IViewer viewer)
+    {
+        if (!DtoChunker.TryComplete<MouseMoveDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<SelectScreenDto>(wrapper, out var dto))
-            {
-                return;
-            }
-
-            viewer.Capturer.SetSelectedScreen(dto!.DisplayName);
+            return;
         }
+        
+        _keyboardMouseInput.SendMouseMove(dto!.PercentX, dto.PercentY, viewer);
+    }
 
-        private void SetKeyStatesUp()
+    private void MouseUp(DtoWrapper wrapper, IViewer viewer)
+    {
+        if (!DtoChunker.TryComplete<MouseUpDto>(wrapper, out var dto))
         {
-            _keyboardMouseInput.SetKeyStatesUp();
+            return;
         }
 
-        private void Tap(DtoWrapper wrapper, IViewer viewer)
+        _keyboardMouseInput.SendMouseButtonAction(dto!.Button, ButtonAction.Up, dto.PercentX, dto.PercentY, viewer);
+    }
+
+    private void MouseWheel(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<MouseWheelDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<TapDto>(wrapper, out var dto))
-            {
-                return;
-            }
-
-            _keyboardMouseInput.SendMouseButtonAction(0, ButtonAction.Down, dto!.PercentX, dto.PercentY, viewer);
-            _keyboardMouseInput.SendMouseButtonAction(0, ButtonAction.Up, dto.PercentX, dto.PercentY, viewer);
+            return;
         }
 
-        private void ToggleAudio(DtoWrapper wrapper)
+        _keyboardMouseInput.SendMouseWheel(-(int)dto!.DeltaY);
+    }
+
+    private void OpenFileTransferWindow(IViewer viewer)
+    {
+        _fileTransferService.OpenFileTransferWindow(viewer);
+    }
+
+    private void SelectScreen(DtoWrapper wrapper, IViewer viewer)
+    {
+        if (!DtoChunker.TryComplete<SelectScreenDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<ToggleAudioDto>(wrapper, out var dto))
-            {
-                return;
-            }
-
-            _audioCapturer.ToggleAudio(dto!.ToggleOn);
+            return;
         }
 
-        private void ToggleBlockInput(DtoWrapper wrapper)
+        viewer.Capturer.SetSelectedScreen(dto!.DisplayName);
+    }
+
+    private void SetKeyStatesUp()
+    {
+        _keyboardMouseInput.SetKeyStatesUp();
+    }
+
+    private void Tap(DtoWrapper wrapper, IViewer viewer)
+    {
+        if (!DtoChunker.TryComplete<TapDto>(wrapper, out var dto))
         {
-            if (!DtoChunker.TryComplete<ToggleBlockInputDto>(wrapper, out var dto))
-            {
-                return;
-            }
-            _keyboardMouseInput.ToggleBlockInput(dto!.ToggleOn);
+            return;
         }
+
+        _keyboardMouseInput.SendMouseButtonAction(0, ButtonAction.Down, dto!.PercentX, dto.PercentY, viewer);
+        _keyboardMouseInput.SendMouseButtonAction(0, ButtonAction.Up, dto.PercentX, dto.PercentY, viewer);
+    }
+
+    private void ToggleAudio(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<ToggleAudioDto>(wrapper, out var dto))
+        {
+            return;
+        }
+
+        _audioCapturer.ToggleAudio(dto!.ToggleOn);
+    }
+
+    private void ToggleBlockInput(DtoWrapper wrapper)
+    {
+        if (!DtoChunker.TryComplete<ToggleBlockInputDto>(wrapper, out var dto))
+        {
+            return;
+        }
+        _keyboardMouseInput.ToggleBlockInput(dto!.ToggleOn);
     }
 }
