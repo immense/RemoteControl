@@ -1,8 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Immense.RemoteControl.Desktop.Shared;
+using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {
@@ -18,9 +20,18 @@ namespace Immense.RemoteControl.Desktop.UI.Views
         {
             AvaloniaXamlLoader.Load(this);
 
-            this.FindControl<Border>("TitleBanner").PointerPressed += TitleBanner_PointerPressed;
-
+            this.FindControl<Border>(nameof(TitleBanner)).PointerPressed += TitleBanner_PointerPressed;
+            this.FindControl<ListBox>(nameof(ViewerListBox)).SelectionChanged += ViewerListBox_SelectionChanged;
             Opened += MainWindow_Opened;
+        }
+
+        private void ViewerListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel &&
+                sender is ListBox viewerListBox)
+            {
+                viewModel.SelectedViewers = viewerListBox.SelectedItems.Cast<IViewer>().ToList();
+            }
         }
 
         private async void MainWindow_Opened(object? sender, System.EventArgs e)

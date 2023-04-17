@@ -80,10 +80,9 @@ namespace Immense.RemoteControl.Desktop.Shared.Services
         {
             try
             {
-                if (Connection is not null &&
-                    Connection.State != HubConnectionState.Disconnected)
+                if (Connection is not null)
                 {
-                    return true;
+                    await Connection.DisposeAsync();
                 }
 
                 var result = BuildConnection();

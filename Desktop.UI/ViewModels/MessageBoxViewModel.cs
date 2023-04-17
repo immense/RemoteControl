@@ -1,10 +1,10 @@
 ﻿using Avalonia.Controls;
-using Immense.RemoteControl.Desktop.UI.Controls;
 using Immense.RemoteControl.Desktop.UI.Services;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels
 {

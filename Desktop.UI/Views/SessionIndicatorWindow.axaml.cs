@@ -6,6 +6,7 @@ using Immense.RemoteControl.Desktop.Shared;
 using Immense.RemoteControl.Desktop.UI.Controls;
 using System;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 
 namespace Immense.RemoteControl.Desktop.UI.Views
 {

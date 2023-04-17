@@ -2,6 +2,7 @@
 using Avalonia.Threading;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.Controls;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Views;

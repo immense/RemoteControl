@@ -73,6 +73,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
             _appState.ViewerAdded += ViewerAdded;
             _appState.ScreenCastRequested += ScreenCastRequested;
 
+            Host = appState.Host;
             ChangeServerCommand = new AsyncRelayCommand(ChangeServer);
             ElevateToAdminCommand = new RelayCommand(ElevateToAdmin, () => CanElevateToAdmin);
             ElevateToServiceCommand = new RelayCommand(ElevateToService, () => CanElevateToService);
@@ -118,7 +119,14 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
 
         public void CopyLink()
         {
-            Clipboard.SetText($"{Host}/RemoteControl/Viewer?sessionId={StatusMessage?.Replace(" ", "")}");
+            try
+            {
+                Clipboard.SetDataObject($"{Host}/RemoteControl/Viewer?sessionId={StatusMessage?.Replace(" ", "")}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while copying attended session link to clipboard.");
+            }
         }
 
         public async Task Init()
@@ -127,8 +135,6 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels
             _dispatcher.CurrentApp.Exit += Application_Exit;
 
             StatusMessage = "Retrieving...";
-
-            Host = _appState.Host;
 
             while (string.IsNullOrWhiteSpace(Host))
             {

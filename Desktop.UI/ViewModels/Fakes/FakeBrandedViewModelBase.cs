@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Immense.RemoteControl.Desktop.UI.Controls;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;

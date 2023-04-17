@@ -13,9 +13,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Reactive
     {
         private readonly ConcurrentDictionary<string, object?> _backingFields = new();
 
-        protected void Set<T>(T newValue, [CallerMemberName] string propertyName = "")
+        public void NotifyPropertyChanged(string propertyName)
         {
-            _backingFields.AddOrUpdate(propertyName, newValue, (k, v) => newValue);
             OnPropertyChanged(propertyName);
         }
 
@@ -28,6 +27,12 @@ namespace Immense.RemoteControl.Desktop.Shared.Reactive
             }
 
             return defaultValue;
+        }
+
+        protected void Set<T>(T newValue, [CallerMemberName] string propertyName = "")
+        {
+            _backingFields.AddOrUpdate(propertyName, newValue, (k, v) => newValue);
+            OnPropertyChanged(propertyName);
         }
     }
 }

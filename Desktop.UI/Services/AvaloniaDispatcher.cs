@@ -34,6 +34,7 @@ namespace Immense.RemoteControl.Desktop.UI.Services
     internal class AvaloniaDispatcher : IAvaloniaDispatcher
     {
         private static readonly CancellationTokenSource _appCts = new();
+        private AppBuilder? _appBuilder;
         private static Application? _currentApp;
         private readonly IAppState _appState;
         private readonly ILogger<AvaloniaDispatcher> _logger;
@@ -46,13 +47,13 @@ namespace Immense.RemoteControl.Desktop.UI.Services
 
         public CancellationToken AppCancellationToken => _appCts.Token;
 
-        public Application? CurrentApp => _currentApp;
+        public Application? CurrentApp => _currentApp ?? _appBuilder?.Instance;
 
         public Window? MainWindow
         {
             get
             {
-                if (_currentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime app)
+                if (CurrentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime app)
                 {
                     return app.MainWindow;
                 }
@@ -98,7 +99,10 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             try
             {
                 var args = Environment.GetCommandLineArgs();
-                BuildAvaloniaApp().Start(MainImpl, args);
+                var argString = string.Join(", ", args);
+                _logger.LogInformation("Starting dispatcher in unattended mode with args: [{args}].", argString);
+                _appBuilder = BuildAvaloniaApp();
+                _appBuilder.Start(MainImpl, args);
             }
             catch (Exception ex)
             {
@@ -112,9 +116,8 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             try
             {
                 var args = Environment.GetCommandLineArgs();
-                var builder = BuildAvaloniaApp();
-                _currentApp = builder.Instance;
-                builder.StartWithClassicDesktopLifetime(args);
+                _appBuilder = BuildAvaloniaApp();
+                _appBuilder.StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)
             {

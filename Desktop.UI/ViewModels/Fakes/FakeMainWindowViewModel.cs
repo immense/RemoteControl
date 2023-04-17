@@ -13,10 +13,10 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels.Fakes
 {
     public class FakeMainWindowViewModel : FakeBrandedViewModelBase, IMainWindowViewModel
     {
-        public ICommand ChangeServerCommand { get; } = new RelayCommand(() => { });
+        public AsyncRelayCommand ChangeServerCommand => new(() => Task.CompletedTask);
 
         public ICommand CloseCommand => new RelayCommand(() => { });
-        public ICommand CopyLinkCommand => new RelayCommand(() => { });
+        public AsyncRelayCommand CopyLinkCommand => new(() => Task.CompletedTask);
         public double CopyMessageOpacity { get; set; }
 
         public string Host { get; set; } = string.Empty;
@@ -26,12 +26,15 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels.Fakes
         public bool IsCopyMessageVisible { get; set; }
         public ICommand MinimizeCommand => new RelayCommand(() => { });
         public ICommand OpenOptionsMenu => new RelayCommand(() => { });
-        public ICommand RemoveViewersCommand { get; } = new RelayCommand(() => { });
+        public AsyncRelayCommand RemoveViewersCommand => new(() => Task.CompletedTask);
 
         public string StatusMessage { get; set; } = string.Empty;
 
         public ObservableCollection<IViewer> Viewers { get; } = new();
-        public bool CanRemoveViewers(IList<object>? items)
+
+        public IList<IViewer> SelectedViewers { get; } = new List<IViewer>();
+
+        public bool CanRemoveViewers()
         {
             return true;
         }
@@ -62,7 +65,7 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels.Fakes
             return Task.CompletedTask;
         }
 
-        public Task RemoveViewers(AvaloniaList<object>? list)
+        public Task RemoveViewers()
         {
             return Task.CompletedTask;
         }

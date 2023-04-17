@@ -4,6 +4,7 @@ using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Views;
+using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System;
@@ -63,7 +64,19 @@ namespace Immense.RemoteControl.Desktop.UI.Services
             switch (_appState.Mode)
             {
                 case AppMode.Unattended:
-                    _dispatcher.StartUnattended();
+                    _ = Task.Run(() => _dispatcher.StartUnattended());
+
+                    var waitResult = await WaitHelper.WaitForAsync(
+                        () => _dispatcher.CurrentApp is not null,
+                        TimeSpan.FromSeconds(10));
+
+                    if (!waitResult)
+                    {
+                        _logger.LogError("Unattended dispatcher failed to start in time.");
+                        _dispatcher.Shutdown();
+                        return;
+                    }
+
                     await StartScreenCasting().ConfigureAwait(false);
                     break;
                 case AppMode.Attended:
@@ -102,18 +115,21 @@ namespace Immense.RemoteControl.Desktop.UI.Services
                 return;
             }
 
-            if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+            if (OperatingSystem.IsWindows()) 
             {
-                _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to get initial desktop name.");
-            }
+                if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+                {
+                    _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to get initial desktop name.");
+                }
 
-            if (!Win32Interop.SwitchToInputDesktop())
-            {
-                _logger.LogWarning("Failed to set initial desktop.");
+                if (!Win32Interop.SwitchToInputDesktop())
+                {
+                    _logger.LogWarning("Failed to set initial desktop.");
+                }
             }
 
             if (_appState.ArgDict.ContainsKey("relaunch"))
