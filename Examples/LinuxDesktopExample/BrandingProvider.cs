@@ -1,7 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Shared.Models;
 
-namespace WindowsDesktopExample;
+namespace LinuxDesktopExample;
 
 internal class BrandingProvider : IBrandingProvider
 {

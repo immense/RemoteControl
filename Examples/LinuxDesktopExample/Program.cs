@@ -1,9 +1,9 @@
 ﻿using Immense.RemoteControl.Desktop.Linux;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.Services;
+using LinuxDesktopExample;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using WindowsDesktopExample;
 
 
 // The service provider is returned in case it's needed.
