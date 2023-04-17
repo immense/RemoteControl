@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Immense.RemoteControl.Server.Models;
 
-namespace Immense.RemoteControl.Server.Models
+public enum RemoteControlMode
 {
-    public enum RemoteControlMode
-    {
-        Unknown,
-        Unattended,
-        Attended
-    }
+    Unknown,
+    Unattended,
+    Attended
 }

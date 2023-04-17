@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Desktop.Linux\Desktop.Linux.csproj" />
+    <ProjectReference Include="..\..\Desktop.Linux\Desktop.Linux.csproj" />
   </ItemGroup>
 
 </Project>

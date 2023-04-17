@@ -1,11 +1,10 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Immense.RemoteControl.Shared.Models.Dtos
+namespace Immense.RemoteControl.Shared.Models.Dtos;
+
+[DataContract]
+public class ToggleBlockInputDto
 {
-    [DataContract]
-    public class ToggleBlockInputDto
-    {
-        [DataMember(Name = "ToggleOn")]
-        public bool ToggleOn { get; set; }
-    }
+    [DataMember(Name = "ToggleOn")]
+    public bool ToggleOn { get; set; }
 }

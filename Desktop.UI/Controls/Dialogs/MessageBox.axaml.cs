@@ -4,7 +4,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CommunityToolkit.Diagnostics;
 using Immense.RemoteControl.Desktop.Shared;
-using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Shared.Helpers;

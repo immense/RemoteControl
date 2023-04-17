@@ -3,31 +3,30 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using System;
 
-namespace Immense.RemoteControl.Desktop.UI.Views
+namespace Immense.RemoteControl.Desktop.UI.Views;
+
+public partial class FileTransferWindow : Window
 {
-    public partial class FileTransferWindow : Window
+    public FileTransferWindow()
     {
-        public FileTransferWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
 
-        private void InitializeComponent()
-        {
-            AvaloniaXamlLoader.Load(this);
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
 
-            Opened += FileTransferWindow_Opened;
-        }
+        Opened += FileTransferWindow_Opened;
+    }
 
-        private void FileTransferWindow_Opened(object? sender, EventArgs e)
-        {
-            Topmost = false;
+    private void FileTransferWindow_Opened(object? sender, EventArgs e)
+    {
+        Topmost = false;
 
-            var left = Screens.Primary.WorkingArea.Right - Width;
+        var left = Screens.Primary.WorkingArea.Right - Width;
 
-            var top = Screens.Primary.WorkingArea.Bottom - Height;
+        var top = Screens.Primary.WorkingArea.Bottom - Height;
 
-            Position = new PixelPoint((int)left, (int)top);
-        }
+        Position = new PixelPoint((int)left, (int)top);
     }
 }

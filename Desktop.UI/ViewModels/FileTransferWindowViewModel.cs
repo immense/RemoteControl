@@ -14,117 +14,120 @@ using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Mvvm.Input;
 
-namespace Immense.RemoteControl.Desktop.UI.ViewModels
-{
-    public interface IFileTransferWindowViewModel
-    {
-        ObservableCollection<FileUpload> FileUploads { get; }
-        ICommand OpenFileUploadDialogCommand { get; }
-        ICommand RemoveFileUploadCommand { get; }
-        string ViewerConnectionId { get; set; }
-        string ViewerName { get; set; }
+namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-        void RemoveFileUpload(FileUpload? fileUpload);
-        Task UploadFile(string filePath);
+public interface IFileTransferWindowViewModel
+{
+    ObservableCollection<FileUpload> FileUploads { get; }
+    ICommand OpenFileUploadDialogCommand { get; }
+    ICommand RemoveFileUploadCommand { get; }
+    string ViewerConnectionId { get; set; }
+    string ViewerName { get; set; }
+
+    void RemoveFileUpload(FileUpload? fileUpload);
+    Task UploadFile(string filePath);
+}
+
+public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWindowViewModel
+{
+    private readonly IFileTransferService _fileTransferService;
+    private readonly IViewer _viewer;
+
+    public FileTransferWindowViewModel(
+       IViewer viewer,
+       IBrandingProvider brandingProvider,
+       IAvaloniaDispatcher dispatcher,
+       IFileTransferService fileTransferService,
+       ILogger<FileTransferWindowViewModel> logger)
+       : base(brandingProvider, dispatcher, logger)
+    {
+        _viewer = viewer;
+        _fileTransferService = fileTransferService;
+        ViewerName = viewer.Name;
+        ViewerConnectionId = viewer.ViewerConnectionID;
+
+        OpenFileUploadDialogCommand = new AsyncRelayCommand<FileTransferWindow>(OpenFileUploadDialog);
+        RemoveFileUploadCommand = new RelayCommand<FileUpload>(RemoveFileUpload);
     }
 
-    public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWindowViewModel
+    public ObservableCollection<FileUpload> FileUploads { get; } = new ObservableCollection<FileUpload>();
+
+    public ICommand OpenFileUploadDialogCommand { get; }
+
+    public ICommand RemoveFileUploadCommand { get; }
+
+    public string ViewerConnectionId
     {
-        private readonly IFileTransferService _fileTransferService;
-        private readonly IViewer _viewer;
+        get => Get<string>() ?? string.Empty;
+        set => Set(value);
+    }
 
-        public FileTransferWindowViewModel(
-           IViewer viewer,
-           IBrandingProvider brandingProvider,
-           IAvaloniaDispatcher dispatcher,
-           IFileTransferService fileTransferService,
-           ILogger<FileTransferWindowViewModel> logger)
-           : base(brandingProvider, dispatcher, logger)
+    public string ViewerName
+    {
+        get => Get<string>() ?? string.Empty;
+        set => Set(value);
+    }
+
+    public void RemoveFileUpload(FileUpload? fileUpload)
+    {
+        if (fileUpload is null)
         {
-            _viewer = viewer;
-            _fileTransferService = fileTransferService;
-            ViewerName = viewer.Name;
-            ViewerConnectionId = viewer.ViewerConnectionID;
-
-            OpenFileUploadDialogCommand = new AsyncRelayCommand<FileTransferWindow>(OpenFileUploadDialog);
-            RemoveFileUploadCommand = new RelayCommand<FileUpload>(RemoveFileUpload);
+            return;
         }
+        FileUploads.Remove(fileUpload);
+        fileUpload.CancellationTokenSource.Cancel();
+    }
 
-        public ObservableCollection<FileUpload> FileUploads { get; } = new ObservableCollection<FileUpload>();
-
-        public ICommand OpenFileUploadDialogCommand { get; }
-
-        public ICommand RemoveFileUploadCommand { get; }
-
-        public string ViewerConnectionId
+    public async Task UploadFile(string filePath)
+    {
+        var fileUpload = new FileUpload()
         {
-            get => Get<string>() ?? string.Empty;
-            set => Set(value);
-        }
+            FilePath = filePath
+        };
 
-        public string ViewerName
+        await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            get => Get<string>() ?? string.Empty;
-            set => Set(value);
-        }
+            FileUploads.Add(fileUpload);
+        });
 
-        public void RemoveFileUpload(FileUpload? fileUpload)
-        {
-            if (fileUpload is null)
-            {
-                return;
-            }
-            FileUploads.Remove(fileUpload);
-            fileUpload.CancellationTokenSource.Cancel();
-        }
-
-        public async Task UploadFile(string filePath)
-        {
-            var fileUpload = new FileUpload()
-            {
-                FilePath = filePath
-            };
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                FileUploads.Add(fileUpload);
-            });
-
-            await _fileTransferService.UploadFile(fileUpload, _viewer, fileUpload.CancellationTokenSource.Token, async progress =>
+        await _fileTransferService.UploadFile(
+            fileUpload, 
+            _viewer, 
+            async progress =>
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     fileUpload.PercentProgress = progress;
                 });
-            });
+            },
+            fileUpload.CancellationTokenSource.Token);
+    }
+
+    private async Task OpenFileUploadDialog(FileTransferWindow? window)
+    {
+        var initialDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        if (!Directory.Exists(initialDir))
+        {
+            initialDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "RemoteControl")).FullName;
         }
 
-        private async Task OpenFileUploadDialog(FileTransferWindow? window)
+        var ofd = new OpenFileDialog
         {
-            var initialDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            if (!Directory.Exists(initialDir))
-            {
-                initialDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "RemoteControl")).FullName;
-            }
+            Title = "Upload File via Remotely",
+            AllowMultiple = true,
+            Directory = initialDir
+        };
 
-            var ofd = new OpenFileDialog
+        var result = await ofd.ShowAsync(window!);
+        if (result?.Any() != true)
+        {
+            return;
+        }
+        foreach (var file in result)
+        {
+            if (File.Exists(file))
             {
-                Title = "Upload File via Remotely",
-                AllowMultiple = true,
-                Directory = initialDir
-            };
-
-            var result = await ofd.ShowAsync(window!);
-            if (result?.Any() != true)
-            {
-                return;
-            }
-            foreach (var file in result)
-            {
-                if (File.Exists(file))
-                {
-                    await UploadFile(file);
-                }
+                await UploadFile(file);
             }
         }
     }

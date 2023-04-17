@@ -1,65 +1,63 @@
 ﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
-using System;
 using System.Windows;
 using System.Windows.Input;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
-namespace Immense.RemoteControl.Desktop.UI.WPF.Views
+namespace Immense.RemoteControl.Desktop.UI.WPF.Views;
+
+/// <summary>
+/// Interaction logic for ChatWindow.xaml
+/// </summary>
+public partial class ChatWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for ChatWindow.xaml
-    /// </summary>
-    public partial class ChatWindow : Window
+    public ChatWindow()
     {
-        public ChatWindow()
+        InitializeComponent();
+    }
+
+
+    private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
+
+    private async void ChatInputBox_PreviewKeyUp(object sender, KeyEventArgs e)
+    {
+        if (ViewModel is null)
         {
-            InitializeComponent();
+            return;
         }
 
-
-        private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
-
-        private async void ChatInputBox_PreviewKeyUp(object sender, KeyEventArgs e)
+        if (e.Key == Key.Enter)
         {
-            if (ViewModel is null)
-            {
-                return;
-            }
-
-            if (e.Key == Key.Enter)
-            {
-                await ViewModel.SendChatMessage();
-            }
+            await ViewModel.SendChatMessage();
         }
+    }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 
-        private void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
-        {
-            MessagesScrollViewer.ScrollToEnd();
-        }
+    private void ItemContainerGenerator_ItemsChanged(object sender, System.Windows.Controls.Primitives.ItemsChangedEventArgs e)
+    {
+        MessagesScrollViewer.ScrollToEnd();
+    }
 
-        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
+    private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
 
-        private void Window_ContentRendered(object sender, EventArgs e)
-        {
-            Topmost = false;
-        }
+    private void Window_ContentRendered(object sender, EventArgs e)
+    {
+        Topmost = false;
+    }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            MessagesItemsControl.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
-        }
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        MessagesItemsControl.ItemContainerGenerator.ItemsChanged += ItemContainerGenerator_ItemsChanged;
+    }
 
-        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            DragMove();
-        }
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DragMove();
     }
 }

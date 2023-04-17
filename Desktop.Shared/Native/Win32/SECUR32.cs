@@ -1,7 +1,5 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Microsoft.Win32.SafeHandles;
-using System;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 

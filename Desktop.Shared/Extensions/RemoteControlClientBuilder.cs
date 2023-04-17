@@ -1,47 +1,41 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Shared.Extensions
+namespace Immense.RemoteControl.Desktop.Shared.Extensions;
+
+public interface IRemoteControlClientBuilder
 {
-    public interface IRemoteControlClientBuilder
+    void AddBrandingProvider<T>()
+        where T : class, IBrandingProvider;
+}
+
+internal class RemoteControlClientBuilder : IRemoteControlClientBuilder
+{
+    private readonly IServiceCollection _services;
+
+    public RemoteControlClientBuilder(IServiceCollection services)
     {
-        void AddBrandingProvider<T>()
-            where T : class, IBrandingProvider;
+        _services = services;
     }
 
-    internal class RemoteControlClientBuilder : IRemoteControlClientBuilder
+    public void AddBrandingProvider<T>()
+        where T : class, IBrandingProvider
     {
-        private readonly IServiceCollection _services;
+        _services.AddScoped<IBrandingProvider, T>();
+    }
 
-        public RemoteControlClientBuilder(IServiceCollection services)
+    internal void Validate()
+    {
+        var serviceTypes = new[]
         {
-            _services = services;
-        }
+            typeof(IBrandingProvider)
+        };
 
-        public void AddBrandingProvider<T>()
-            where T : class, IBrandingProvider
+        foreach (var type in serviceTypes)
         {
-            _services.AddScoped<IBrandingProvider, T>();
-        }
-
-        internal void Validate()
-        {
-            var serviceTypes = new[]
+            if (!_services.Any(x => x.ServiceType == type))
             {
-                typeof(IBrandingProvider)
-            };
-
-            foreach (var type in serviceTypes)
-            {
-                if (!_services.Any(x => x.ServiceType == type))
-                {
-                    throw new Exception($"Missing service registration for type {type.Name}.");
-                }
+                throw new Exception($"Missing service registration for type {type.Name}.");
             }
         }
     }

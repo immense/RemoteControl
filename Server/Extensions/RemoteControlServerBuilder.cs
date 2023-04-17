@@ -1,77 +1,71 @@
 ﻿using Immense.RemoteControl.Server.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Server.Extensions
+namespace Immense.RemoteControl.Server.Extensions;
+
+public interface IRemoteControlServerBuilder
 {
-    public interface IRemoteControlServerBuilder
+    void AddHubEventHandler<T>()
+        where T : class, IHubEventHandler;
+
+    void AddViewerAuthorizer<T>()
+        where T : class, IViewerAuthorizer;
+
+    void AddViewerHubDataProvider<T>()
+        where T : class, IViewerHubDataProvider;
+
+    void AddViewerPageDataProvider<T>()
+        where T : class, IViewerPageDataProvider;
+}
+
+internal class RemoteControlServerBuilder : IRemoteControlServerBuilder
+{
+    private readonly IServiceCollection _services;
+
+    public RemoteControlServerBuilder(IServiceCollection services)
     {
-        void AddHubEventHandler<T>()
-            where T : class, IHubEventHandler;
-
-        void AddViewerAuthorizer<T>()
-            where T : class, IViewerAuthorizer;
-
-        void AddViewerHubDataProvider<T>()
-            where T : class, IViewerHubDataProvider;
-
-        void AddViewerPageDataProvider<T>()
-            where T : class, IViewerPageDataProvider;
+        _services = services;
     }
 
-    internal class RemoteControlServerBuilder : IRemoteControlServerBuilder
+    public void AddHubEventHandler<T>() 
+        where T : class, IHubEventHandler
     {
-        private readonly IServiceCollection _services;
+        _services.AddScoped<IHubEventHandler, T>();
+    }
 
-        public RemoteControlServerBuilder(IServiceCollection services)
-        {
-            _services = services;
-        }
+    public void AddViewerAuthorizer<T>() 
+        where T : class, IViewerAuthorizer
+    {
+        _services.AddScoped<IViewerAuthorizer, T>();
+    }
 
-        public void AddHubEventHandler<T>() 
-            where T : class, IHubEventHandler
-        {
-            _services.AddScoped<IHubEventHandler, T>();
-        }
+    public void AddViewerHubDataProvider<T>() 
+        where T : class, IViewerHubDataProvider
+    {
+        _services.AddScoped<IViewerHubDataProvider, T>();
+    }
 
-        public void AddViewerAuthorizer<T>() 
-            where T : class, IViewerAuthorizer
-        {
-            _services.AddScoped<IViewerAuthorizer, T>();
-        }
+    public void AddViewerPageDataProvider<T>() 
+        where T : class, IViewerPageDataProvider
+    {
+        _services.AddScoped<IViewerPageDataProvider, T>();
+    }
 
-        public void AddViewerHubDataProvider<T>() 
-            where T : class, IViewerHubDataProvider
+    internal void Validate()
+    {
+        var serviceTypes = new[]
         {
-            _services.AddScoped<IViewerHubDataProvider, T>();
-        }
+            typeof(IHubEventHandler),
+            typeof(IViewerAuthorizer),
+            typeof(IViewerHubDataProvider),
+            typeof(IViewerPageDataProvider)
+        };
 
-        public void AddViewerPageDataProvider<T>() 
-            where T : class, IViewerPageDataProvider
+        foreach (var type in serviceTypes)
         {
-            _services.AddScoped<IViewerPageDataProvider, T>();
-        }
-
-        internal void Validate()
-        {
-            var serviceTypes = new[]
+            if (!_services.Any(x => x.ServiceType == type))
             {
-                typeof(IHubEventHandler),
-                typeof(IViewerAuthorizer),
-                typeof(IViewerHubDataProvider),
-                typeof(IViewerPageDataProvider)
-            };
-
-            foreach (var type in serviceTypes)
-            {
-                if (!_services.Any(x => x.ServiceType == type))
-                {
-                    throw new Exception($"Missing service registration for type {type.Name}.");
-                }
+                throw new Exception($"Missing service registration for type {type.Name}.");
             }
         }
     }

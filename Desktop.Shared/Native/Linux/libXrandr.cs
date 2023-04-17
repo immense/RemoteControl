@@ -27,42 +27,36 @@
  */
 
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Desktop.Shared.Native.Linux
+namespace Immense.RemoteControl.Desktop.Shared.Native.Linux;
+
+public static class LibXrandr
 {
-    public static class LibXrandr
+    [StructLayout(LayoutKind.Sequential)]
+    public struct XRRMonitorInfo
     {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct XRRMonitorInfo
-        {
-            // Atom
-            public IntPtr name;
-            public bool primary;
-            public bool automatic;
-            public int noutput;
-            public int x;
-            public int y;
-            public int width;
-            public int height;
-            public int mwidth;
-            public int mheight;
-            // RROutput*
-            public IntPtr outputs;
-        }
-
-        [DllImport("libXrandr")]
-        public static extern IntPtr XRRGetMonitors(IntPtr display, IntPtr window, bool get_active, out int monitors);
-
-        [DllImport("libXrandr")]
-        public static extern void XRRFreeMonitors(IntPtr monitors);
-
-        [DllImport("libXrandr")]
-        public static extern IntPtr XRRAllocateMonitor(IntPtr display, int output);
+        // Atom
+        public IntPtr name;
+        public bool primary;
+        public bool automatic;
+        public int noutput;
+        public int x;
+        public int y;
+        public int width;
+        public int height;
+        public int mwidth;
+        public int mheight;
+        // RROutput*
+        public IntPtr outputs;
     }
+
+    [DllImport("libXrandr")]
+    public static extern IntPtr XRRGetMonitors(IntPtr display, IntPtr window, bool get_active, out int monitors);
+
+    [DllImport("libXrandr")]
+    public static extern void XRRFreeMonitors(IntPtr monitors);
+
+    [DllImport("libXrandr")]
+    public static extern IntPtr XRRAllocateMonitor(IntPtr display, int output);
 }

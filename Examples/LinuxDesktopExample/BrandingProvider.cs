@@ -1,7 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Shared.Models;
 
-namespace WindowsDesktopExample;
+namespace LinuxDesktopExample;
 
 internal class BrandingProvider : IBrandingProvider
 {
@@ -12,7 +12,7 @@ internal class BrandingProvider : IBrandingProvider
 
     public BrandingProvider()
     {
-        using var mrs = typeof(BrandingProvider).Assembly.GetManifestResourceStream("WindowsDesktopExample.ImmyBot.png");
+        using var mrs = typeof(BrandingProvider).Assembly.GetManifestResourceStream("LinuxDesktopExample.ImmyBot.png");
         using var ms = new MemoryStream();
         mrs!.CopyTo(ms);
 

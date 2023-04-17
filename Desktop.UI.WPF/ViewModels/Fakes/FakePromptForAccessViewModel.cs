@@ -1,32 +1,25 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
-namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes
+namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes;
+
+public class FakePromptForAccessViewModel : FakeBrandedViewModelBase, IPromptForAccessWindowViewModel
 {
-    public class FakePromptForAccessViewModel : FakeBrandedViewModelBase, IPromptForAccessWindowViewModel
+    public string OrganizationName { get; set; } = "Test Organization";
+    public bool PromptResult { get; set; }
+    public string RequesterName { get; set; } = "Test Requester";
+
+    public RelayCommand<Window> SetResultNoCommand { get; } = new(window => { });
+
+    public RelayCommand<Window> SetResultYesCommand { get; } = new(window => { });
+
+    public void SetResultNo(Window? promptWindow)
     {
-        public string OrganizationName { get; set; } = "Test Organization";
-        public bool PromptResult { get; set; }
-        public string RequesterName { get; set; } = "Test Requester";
 
-        public RelayCommand<Window> SetResultNoCommand { get; } = new(window => { });
+    }
 
-        public RelayCommand<Window> SetResultYesCommand { get; } = new(window => { });
+    public void SetResultYes(Window? promptWindow)
+    {
 
-        public void SetResultNo(Window? promptWindow)
-        {
-
-        }
-
-        public void SetResultYes(Window? promptWindow)
-        {
-
-        }
     }
 }

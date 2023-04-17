@@ -2,25 +2,24 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace Immense.RemoteControl.Server.Filters
+namespace Immense.RemoteControl.Server.Filters;
+
+internal class ViewerAuthorizationFilter :  IAuthorizationFilter
 {
-    internal class ViewerAuthorizationFilter :  IAuthorizationFilter
+    private readonly IViewerAuthorizer _authorizer;
+
+    public ViewerAuthorizationFilter(IViewerAuthorizer authorizer)
     {
-        private readonly IViewerAuthorizer _authorizer;
+        _authorizer = authorizer;
+    }
 
-        public ViewerAuthorizationFilter(IViewerAuthorizer authorizer)
+    public void OnAuthorization(AuthorizationFilterContext context)
+    {
+        if (_authorizer.IsAuthorized(context))
         {
-            _authorizer = authorizer;
+            return;
         }
 
-        public void OnAuthorization(AuthorizationFilterContext context)
-        {
-            if (_authorizer.IsAuthorized(context))
-            {
-                return;
-            }
-
-            context.Result = new RedirectResult(_authorizer.UnauthorizedRedirectUrl);
-        }
+        context.Result = new RedirectResult(_authorizer.UnauthorizedRedirectUrl);
     }
 }

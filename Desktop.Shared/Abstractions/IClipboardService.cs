@@ -1,14 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
 
-namespace Immense.RemoteControl.Desktop.Shared.Abstractions
+public interface IClipboardService
 {
-    public interface IClipboardService
-    {
-        event EventHandler<string> ClipboardTextChanged;
+    event EventHandler<string> ClipboardTextChanged;
 
-        void BeginWatching();
+    void BeginWatching();
 
-        Task SetText(string clipboardText);
-    }
+    Task SetText(string clipboardText);
 }
