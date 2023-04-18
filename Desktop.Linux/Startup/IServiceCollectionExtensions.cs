@@ -1,40 +1,27 @@
 ﻿using Immense.RemoteControl.Desktop.Linux.Services;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Shared.Extensions;
+using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Immense.RemoteControl.Desktop.Linux;
+namespace Immense.RemoteControl.Desktop.Linux.Startup;
 
-public static class Startup
+public static class IServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds remote control services to a console app.  This will also apply command line
-    /// argument parsing.
+    /// Adds Linux and cross-platform remote control services to the service collection.
+    /// All methods on <see cref="IRemoteControlClientBuilder"/> must be called to register
+    /// required services.
     /// </summary>
-    /// <param name="args">The command line args that were originally passed into the process.</param>
-    /// <param name="clientConfig">Provides methods for adding required service implementations.</param>
-    /// <param name="serviceConfig">Allows registering additional services needed by the parent app.</param>
-    /// <param name="serverUri">Optional.  This will be used as a fallback URI if --host parameter isn't specified.</param>
-    /// <returns>The configured <see cref="IServiceProvider"/>, in case it's needed by the parent app.</returns>
-    public static async Task<IServiceProvider> UseRemoteControlClient(
-        string[] args,
-        Action<IRemoteControlClientBuilder> clientConfig,
-        Action<IServiceCollection>? serviceConfig = null,
-        Func<IServiceProvider, Task>? startupConfig = null,
-        string serverUri = "")
+    /// <param name="services"></param>
+    /// <param name="clientConfig"></param>
+    public static void AddRemoteControlLinux(
+        this IServiceCollection services,
+        Action<IRemoteControlClientBuilder> clientConfig)
     {
-        var services = new ServiceCollection();
+        services.AddRemoteControlXplat(clientConfig);
 
-        serviceConfig?.Invoke(services);
-
-        return await services.BuildRemoteControlServiceProvider(args, clientConfig, AddLinuxServices, startupConfig, serverUri);
-    }
-
-
-    private static void AddLinuxServices(IServiceCollection services)
-    {
         services.AddSingleton<ICursorIconWatcher, CursorIconWatcherLinux>();
         services.AddSingleton<IKeyboardMouseInput, KeyboardMouseInputLinux>();
         services.AddSingleton<IClipboardService, ClipboardServiceLinux>();

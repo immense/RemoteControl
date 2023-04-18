@@ -2,7 +2,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;

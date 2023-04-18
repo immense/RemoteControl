@@ -11,7 +11,6 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Windows;
 using MessageBoxOptions = System.Windows.MessageBoxOptions;
-using System;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 

@@ -98,7 +98,7 @@ public class FileTransferServiceLinux : IFileTransferService
 
             if (buffer?.Length > 0)
             {
-                await fileStream.WriteAsync(buffer, 0, buffer.Length);
+                await fileStream.WriteAsync(buffer);
 
             }
 

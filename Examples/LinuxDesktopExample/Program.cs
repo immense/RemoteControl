@@ -1,30 +1,30 @@
-﻿using Immense.RemoteControl.Desktop.Linux;
+﻿using Immense.RemoteControl.Desktop.Linux.Startup;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.Services;
 using LinuxDesktopExample;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+var services = new ServiceCollection();
+services.AddRemoteControlLinux(config =>
+{
+    config.AddBrandingProvider<BrandingProvider>();
+});
 
-// The service provider is returned in case it's needed.
-var provider = await Startup.UseRemoteControlClient(
-    args,
-    config =>
-    {
-        config.AddBrandingProvider<BrandingProvider>();
-    },
-    services =>
-    {
-        // Add some other services here if I wanted.
+services.AddLogging(builder =>
+{
+    builder.SetMinimumLevel(LogLevel.Debug);
+    // Add file logger, etc.
+});
+// Add other services.
 
-        services.AddLogging(builder =>
-        {
-            builder.SetMinimumLevel(LogLevel.Debug);
-            // Add file logger, etc.
-        });
-    },
-    null,
-    "https://localhost:7024");
+var provider = services.BuildServiceProvider();
+
+var result = await provider.UseRemoteControlLinux(args, serverUri: "https://localhost:7024");
+if (!result.IsSuccess)
+{
+    Console.WriteLine($"Remote control failed with message: {result.Error}");
+}
 
 var shutdownService = provider.GetRequiredService<IShutdownService>();
 Console.CancelKeyPress += async (s, e) =>
@@ -35,4 +35,11 @@ Console.CancelKeyPress += async (s, e) =>
 var dispatcher = provider.GetRequiredService<IAvaloniaDispatcher>();
 
 Console.WriteLine("Press Ctrl + C to exit.");
-await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.AppCancellationToken);
+try
+{
+    await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.AppCancellationToken);
+}
+catch (TaskCanceledException)
+{
+    // Ok.
+}

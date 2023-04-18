@@ -24,6 +24,15 @@ public interface IAppState
     string RequesterName { get; }
     string SessionId { get; }
     ConcurrentDictionary<string, IViewer> Viewers { get; }
+    void Configure(
+        string host,
+        AppMode mode,
+        string sessionId,
+        string accessKey,
+        string requesterName,
+        string organizationName,
+        string pipeName);
+
     void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName);
     void InvokeViewerAdded(IViewer viewer);
     void InvokeViewerRemoved(string viewerID);
@@ -32,8 +41,8 @@ public interface IAppState
 
 public class AppState : IAppState
 {
-    private readonly IMessenger _messenger;
     private readonly ILogger<AppState> _logger;
+    private readonly IMessenger _messenger;
     private string _host = string.Empty;
 
     public AppState(
@@ -51,7 +60,8 @@ public class AppState : IAppState
 
     public event EventHandler<string>? ViewerRemoved;
 
-    public string AccessKey { get; init; } = string.Empty;
+    public string AccessKey { get; private set; } = string.Empty;
+
     public Dictionary<string, string> ArgDict { get; } = new();
 
 
@@ -67,12 +77,40 @@ public class AppState : IAppState
 
     public AppMode Mode { get; set; }
 
-    public string OrganizationName { get; init; } = string.Empty;
+    public string OrganizationName { get; private set; } = string.Empty;
 
-    public string PipeName { get; init; } = string.Empty;
-    public string RequesterName { get; init; } = string.Empty;
-    public string SessionId { get; init; } = string.Empty;
+    public string PipeName { get; private set; } = string.Empty;
+
+    private bool _isConfigured;
+
+    public string RequesterName { get; private set; } = string.Empty;
+    public string SessionId { get; private set; } = string.Empty;
     public ConcurrentDictionary<string, IViewer> Viewers { get; } = new();
+
+    public void Configure(
+        string host,
+        AppMode mode,
+        string sessionId,
+        string accessKey,
+        string requesterName,
+        string organizationName,
+        string pipeName)
+    {
+        if (_isConfigured)
+        {
+            throw new InvalidOperationException("AppState has already been configured.");
+        }
+
+        _isConfigured = true;
+        Host = host;
+        Mode = mode;
+        SessionId = sessionId;
+        AccessKey = accessKey;
+        RequesterName = requesterName;
+        OrganizationName = organizationName;
+        PipeName = pipeName;
+    }
+
     public void InvokeScreenCastRequested(ScreenCastRequest viewerIdAndRequesterName)
     {
         ScreenCastRequested?.Invoke(null, viewerIdAndRequesterName);

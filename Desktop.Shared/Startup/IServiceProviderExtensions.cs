@@ -1,45 +1,43 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Shared.Services;
-using Microsoft.AspNetCore.SignalR.Client;
+using Immense.RemoteControl.Shared;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System.CommandLine;
-using System.Runtime.CompilerServices;
 
-namespace Immense.RemoteControl.Desktop.Shared.Extensions;
+namespace Immense.RemoteControl.Desktop.Shared.Startup;
 
-public static class IServiceCollectionExtensions
+public static class IServiceProviderExtensions
 {
     /// <summary>
-    /// For internal use only.  I'd normally make this internal instead of public, 
-    /// but for some reason, <see cref="InternalsVisibleToAttribute"/> in this
-    /// project's AssemblyInfo isn't working.
+    /// 
     /// </summary>
     /// <param name="services"></param>
     /// <param name="args"></param>
-    /// <param name="clientConfig"></param>
-    /// <param name="platformServicesConfig"></param>
     /// <param name="serverUri"></param>
     /// <returns></returns>
-    public static async Task<IServiceProvider> BuildRemoteControlServiceProvider(
-        this IServiceCollection services,
+    internal static async Task<Result> UseRemoteControlClientXplat(
+        this IServiceProvider services,
         string[] args,
-        Action<IRemoteControlClientBuilder> clientConfig,
-        Action<IServiceCollection> platformServicesConfig,
-        Func<IServiceProvider, Task>? startupConfig = null,
         string serverUri = "")
     {
-        var builder = new RemoteControlClientBuilder(services);
-        clientConfig.Invoke(builder);
-        builder.Validate();
+        try
+        {
+            await UseRemoteControlClientImpl(services, args, serverUri);
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail(ex);
+        }
 
+    }
 
+    private static async Task UseRemoteControlClientImpl(IServiceProvider services, string[] args, string serverUri)
+    {
         var rootCommand = new RootCommand(
             $"This app is using the {typeof(IServiceCollectionExtensions).Assembly.GetName().Name} library, " +
-            "which allows IT administrators to provide remote assistance on this device.\n\n" +
+            "created by Immense Networks, which allows IT administrators to provide remote assistance on this device.\n\n" +
             "Internal arguments include the following:\n\n" +
             "--relaunch    Used to indicate that process is being relaunched from a previous session\n" +
             "              and should notify viewers when it's ready.\n" +
@@ -88,46 +86,38 @@ public static class IServiceCollectionExtensions
         var requesterNameOption = new Option<string>(
             new[] { "-r", "--requester-name" },
                "The name of the technician requesting to connect.");
-                rootCommand.AddOption(requesterNameOption);
+        rootCommand.AddOption(requesterNameOption);
 
         var organizationNameOption = new Option<string>(
             new[] { "-o", "--org-name" },
             "The organization name of the technician requesting to connect.");
         rootCommand.AddOption(organizationNameOption);
-       
+
         rootCommand.SetHandler(
             (
-                host,
-                mode,
-                pipeName,
-                sessionId,
-                accessKey,
-                requesterName,
-                organizationName) =>
+                string host,
+                AppMode mode,
+                string pipeName,
+                string sessionId,
+                string accessKey,
+                string requesterName,
+                string organizationName) =>
             {
-             
+
                 if (string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(serverUri))
                 {
                     host = serverUri;
                 }
 
-                services.AddSingleton<IAppState>(s =>
-                {
-                    var messenger = s.GetRequiredService<IMessenger>();
-                    var logger = s.GetRequiredService<ILogger<AppState>>();
-                    return new AppState(messenger, logger)
-                    {
-                        Host = host,
-                        Mode = mode,
-                        SessionId = sessionId,
-                        AccessKey = accessKey,
-                        RequesterName = requesterName,
-                        OrganizationName = organizationName,
-                        PipeName = pipeName
-                    };
-                });
-
-                AddServices(services, platformServicesConfig);
+                var appState = services.GetRequiredService<IAppState>();
+                appState.Configure(
+                    host,
+                    mode,
+                    sessionId,
+                    accessKey,
+                    requesterName,
+                    organizationName,
+                    pipeName);
             },
             hostOption,
             modeOption,
@@ -154,37 +144,9 @@ public static class IServiceCollectionExtensions
             Environment.Exit(0);
         }
 
-        var provider = services.BuildServiceProvider();
-        StaticServiceProvider.Instance = provider;
+        StaticServiceProvider.Instance = services;
 
-        if (startupConfig is not null)
-        {
-            await startupConfig.Invoke(provider);
-        }
-
-        var appStartup = provider.GetRequiredService<IAppStartup>();
+        var appStartup = services.GetRequiredService<IAppStartup>();
         await appStartup.Initialize();
-        return provider;
-    }
-
-    private static void AddServices(IServiceCollection services, Action<IServiceCollection> platformServicesConfig)
-    {
-        services.AddLogging(builder =>
-        {
-            builder.AddConsole().AddDebug();
-        });
-
-        services.AddSingleton<ISystemTime, SystemTime>();
-        services.AddSingleton<IScreenCaster, ScreenCaster>();
-        services.AddSingleton<IDesktopHubConnection, DesktopHubConnection>();
-        services.AddSingleton<IIdleTimer, IdleTimer>();
-        services.AddSingleton<IImageHelper, ImageHelper>();
-        services.AddSingleton<IChatHostService, ChatHostService>();
-        services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
-        services.AddSingleton<IEnvironmentHelper, EnvironmentHelper>();
-        services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
-        services.AddTransient<IViewer, Viewer>();
-        services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
-        platformServicesConfig.Invoke(services);
     }
 }
