@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using MessagePack;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 namespace Immense.RemoteControl.Shared;
@@ -9,7 +10,8 @@ namespace Immense.RemoteControl.Shared;
 [DataContract]
 public class Result
 {
-    private Result(bool isSuccess, string reason = "", Exception? exception = null)
+    [SerializationConstructor]
+    public Result(bool isSuccess, string reason = "", Exception? exception = null)
     {
         if (!isSuccess && exception is null && string.IsNullOrWhiteSpace(reason))
         {
@@ -25,6 +27,7 @@ public class Result
     public Exception? Exception { get; init; }
 
     [IgnoreDataMember]
+    [MemberNotNullWhen(true, nameof(Exception))]
     public bool HadException => Exception is not null;
 
     [DataMember]
@@ -104,10 +107,20 @@ public class Result<T>
         Reason = reason;
     }
 
+    [SerializationConstructor]
+    public Result(Exception? exception, bool isSuccess, string reason, T? value)
+    {
+        Exception = exception;
+        IsSuccess = isSuccess;
+        Reason = reason;
+        Value = value;
+    }
+
     [DataMember]
     public Exception? Exception { get; init; }
 
     [IgnoreDataMember]
+    [MemberNotNullWhen(true, nameof(Exception))]
     public bool HadException => Exception is not null;
 
     [DataMember]
