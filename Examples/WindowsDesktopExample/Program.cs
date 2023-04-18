@@ -24,7 +24,7 @@ var provider = services.BuildServiceProvider();
 var result = await provider.UseRemoteControlClientWindows(args, serverUri: "https://localhost:7024");
 if (!result.IsSuccess)
 {
-    Console.WriteLine($"Remote control failed with message: {result.Error}");
+    Console.WriteLine($"Remote control failed with message: {result.Reason}");
 }
 
 var shutdownService = provider.GetRequiredService<IShutdownService>();

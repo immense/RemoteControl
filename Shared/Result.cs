@@ -1,32 +1,57 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
 
 namespace Immense.RemoteControl.Shared;
 
+/// <summary>
+/// Describes the success or failure of any kind of operation.
+/// </summary>
 [DataContract]
 public class Result
 {
-    public static Result<T> Empty<T>()
+    private Result(bool isSuccess, string reason = "", Exception? exception = null)
     {
-        return new Result<T>(true, default);
+        if (!isSuccess && exception is null && string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException("A reason or exception must be supplied for an unsuccessful result.");
+        }
+
+        IsSuccess = isSuccess;
+        Exception = exception;
+        Reason = reason;
     }
 
-    public static Result Fail(string error)
+    [DataMember]
+    public Exception? Exception { get; init; }
+
+    [IgnoreDataMember]
+    public bool HadException => Exception is not null;
+
+    [DataMember]
+    public bool IsSuccess { get; init; }
+
+    [DataMember]
+    public string Reason { get; init; } = string.Empty;
+
+
+    public static Result Fail(string reason)
     {
-        return new Result(false, error);
+        return new Result(false, reason);
     }
+
     public static Result Fail(Exception ex)
     {
-        return new Result(false, null, ex);
+        return new Result(false, string.Empty, ex);
     }
 
-    public static Result<T> Fail<T>(string error)
+    public static Result<T> Fail<T>(string reason)
     {
-        return new Result<T>(false, default, error);
+        return new Result<T>(reason);
     }
 
     public static Result<T> Fail<T>(Exception ex)
     {
-        return new Result<T>(false, default, exception: ex);
+        return new Result<T>(ex);
     }
 
     public static Result Ok()
@@ -36,79 +61,61 @@ public class Result
 
     public static Result<T> Ok<T>(T value)
     {
-        return new Result<T>(true, value, null);
+        return new Result<T>(value);
     }
-
-
-    public Result(bool isSuccess, string? error = null, Exception? exception = null)
-    {
-        IsSuccess = isSuccess;
-        Error = error;
-        Exception = exception;
-
-        if (!IsSuccess && string.IsNullOrWhiteSpace(Error) && Exception is null)
-        {
-            throw new ArgumentException("An error message or exception must be supplied for an unsuccessful result.");
-        }
-
-        if (string.IsNullOrWhiteSpace(Error) && Exception is not null)
-        {
-            Error = Exception.Message;
-        }
-
-        if (Exception is null && !string.IsNullOrWhiteSpace(Error))
-        {
-            Exception = new Exception(Error);
-        }
-    }
-
-    [DataMember]
-    public bool IsSuccess { get; init; }
-
-    [DataMember]
-    public string? Error { get; init; }
-
-    [DataMember]
-    public Exception? Exception { get; init; }
-
-
 }
 
+
+/// <summary>
+/// Describes the success or failure of any kind of operation.
+/// </summary>
 [DataContract]
 public class Result<T>
 {
-    public Result(bool isSuccess, T? value, string? error = null, Exception? exception = null)
+    /// <summary>
+    /// Returns a successful result with the given value.
+    /// </summary>
+    /// <param name="value"></param>
+    public Result(T value)
     {
-        IsSuccess = isSuccess;
-        Error = error;
+        IsSuccess = true;
         Value = value;
-        Exception = exception;
-
-        if (!IsSuccess && string.IsNullOrWhiteSpace(Error) && Exception is null)
-        {
-            throw new ArgumentException("An error message or exception must be supplied for an unsuccessful result.");
-        }
-
-        if (string.IsNullOrWhiteSpace(Error) && Exception is not null)
-        {
-            Error = Exception.Message;
-        }
-
-        if (Exception is null && !string.IsNullOrWhiteSpace(Error))
-        {
-            Exception = new Exception(Error);
-        }
     }
 
+    /// <summary>
+    /// Returns an unsuccessful result with the given exception.
+    /// </summary>
+    /// <param name="exception"></param>
+    public Result(Exception exception)
+    {
+        IsSuccess = false;
+        Exception = exception;
+        Reason = exception.Message;
+    }
 
-    [DataMember]
-    public bool IsSuccess { get; init; }
-
-    [DataMember]
-    public string? Error { get; init; }
+    /// <summary>
+    /// Returns an unsuccessful result with the given reason.
+    /// </summary>
+    /// <param name="errorMessage"></param>
+    /// <exception cref="ArgumentException"></exception>
+    public Result(string reason)
+    {
+        IsSuccess = false;
+        Reason = reason;
+    }
 
     [DataMember]
     public Exception? Exception { get; init; }
+
+    [IgnoreDataMember]
+    public bool HadException => Exception is not null;
+
+    [DataMember]
+    [MemberNotNullWhen(true, nameof(Value))]
+    public bool IsSuccess { get; init; }
+
+    [DataMember]
+    public string Reason { get; init; } = string.Empty;
 
     [DataMember]
     public T? Value { get; init; }
