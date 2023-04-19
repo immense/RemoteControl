@@ -3,9 +3,9 @@ using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Immense.RemoteControl.Desktop.Shared.Startup;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.Windows.Services;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Startup;
+namespace Immense.RemoteControl.Desktop.Windows.Startup;
 
 public static class IServiceCollectionExtensions
 {

@@ -4,7 +4,7 @@ using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using Clipboard = System.Windows.Clipboard;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class ClipboardServiceWin : IClipboardService
 {

@@ -7,7 +7,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class ChatUiServiceWin : IChatUiService
 {

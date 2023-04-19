@@ -2,7 +2,7 @@
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Startup;
+namespace Immense.RemoteControl.Desktop.Windows.Startup;
 
 public static class IServiceProviderExtensions
 {

@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 using static Immense.RemoteControl.Desktop.Shared.Native.Win32.User32;
 
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class KeyboardMouseInputWin : IKeyboardMouseInput
 {

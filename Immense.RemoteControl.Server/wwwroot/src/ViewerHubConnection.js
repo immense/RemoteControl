@@ -68,9 +68,9 @@ export class ViewerHubConnection {
                 UI.ToggleConnectUI(true);
             },
             error: (err) => {
-                console.error(err);
-                ShowMessage("Desktop stream error");
-                UI.StatusMessage.innerHTML = "Desktop stream error";
+                console.warn(err);
+                ShowMessage("Desktop stream ended");
+                UI.StatusMessage.innerHTML = "Desktop stream ended";
                 UI.ToggleConnectUI(true);
             },
         });
