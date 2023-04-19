@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -30,9 +30,9 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IChatHostService, ChatHostService>();
         services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
         services.AddSingleton<IEnvironmentHelper, EnvironmentHelper>();
-        services.AddScoped<IDtoMessageHandler, DtoMessageHandler>();
-        services.AddTransient<IViewer, Viewer>();
+        services.AddSingleton<IDtoMessageHandler, DtoMessageHandler>();
         services.AddSingleton<IAppState, AppState>();
+        services.AddTransient<IViewer, Viewer>();
         services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
     }
 }

@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Examples.WindowsDesktopExample;
 using Immense.RemoteControl.Desktop.Windows.Startup;

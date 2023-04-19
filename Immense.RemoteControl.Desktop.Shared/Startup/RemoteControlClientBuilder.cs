@@ -21,7 +21,7 @@ internal class RemoteControlClientBuilder : IRemoteControlClientBuilder
     public void AddBrandingProvider<T>()
         where T : class, IBrandingProvider
     {
-        _services.AddScoped<IBrandingProvider, T>();
+        _services.AddSingleton<IBrandingProvider, T>();
     }
 
     internal void Validate()

@@ -361,5 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Server/wwwroot/src/**/*.js
-/Server/wwwroot/src/**/*.js.map
+/Immense.RemoteControl.Server/wwwroot/src/**/*.js
+/Immense.RemoteControl.Server/wwwroot/src/**/*.js.map
