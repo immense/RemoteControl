@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared;
@@ -92,7 +92,7 @@ public static class IServiceProviderExtensions
             new[] { "-o", "--org-name" },
             "The organization name of the technician requesting to connect.");
         rootCommand.AddOption(organizationNameOption);
-
+        
         rootCommand.SetHandler(
             (
                 string host,

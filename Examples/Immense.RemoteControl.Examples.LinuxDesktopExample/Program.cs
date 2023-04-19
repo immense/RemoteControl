@@ -1,9 +1,9 @@
-using Immense.RemoteControl.Desktop.Linux.Startup;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Examples.LinuxDesktopExample;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Immense.RemoteControl.Desktop.Startup;
+using Immense.RemoteControl.Desktop.Services;
 
 var services = new ServiceCollection();
 services.AddRemoteControlLinux(config =>

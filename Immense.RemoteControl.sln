@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Deskt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Examples.WindowsDesktopExample", "Examples\Immense.RemoteControl.Examples.WindowsDesktopExample\Immense.RemoteControl.Examples.WindowsDesktopExample.csproj", "{93B89B66-C226-4BB3-B36B-53FEA1E79C39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.UI", "Immense.RemoteControl.Desktop.UI\Immense.RemoteControl.Desktop.UI.csproj", "{43647AE1-DE71-47FF-9420-C4DB0841CC4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop", "Immense.RemoteControl.Desktop\Immense.RemoteControl.Desktop.csproj", "{43647AE1-DE71-47FF-9420-C4DB0841CC4E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.UI.WPF", "Immense.RemoteControl.Desktop.UI.WPF\Immense.RemoteControl.Desktop.UI.WPF.csproj", "{FD1BBB51-9114-4A70-92EE-11C75E808B5F}"
 EndProject
