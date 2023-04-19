@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Linux.Startup;
+using Immense.RemoteControl.Desktop.Linux.Startup;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Examples.LinuxDesktopExample;
@@ -20,7 +20,7 @@ services.AddLogging(builder =>
 
 var provider = services.BuildServiceProvider();
 
-var result = await provider.UseRemoteControlLinux(args, serverUri: "https://localhost:7024");
+var result = await provider.UseRemoteControlClientLinux(args, serverUri: "https://localhost:7024");
 if (!result.IsSuccess)
 {
     Console.WriteLine($"Remote control failed with message: {result.Reason}");
