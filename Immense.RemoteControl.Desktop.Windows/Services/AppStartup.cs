@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
@@ -52,7 +52,7 @@ internal class AppStartup : IAppStartup
         _logger = logger;
     }
 
-    public async Task Initialize()
+    public async Task Run()
     {
         _dispatcher.StartWinFormsThread();
 
@@ -138,11 +138,10 @@ internal class AppStartup : IAppStartup
             _logger.LogWarning("Failed to set initial desktop.");
         }
 
-        if (_appState.ArgDict.ContainsKey("relaunch"))
+        if (_appState.IsRelaunch)
         {
             _logger.LogInformation("Resuming after relaunch.");
-            var viewersString = _appState.ArgDict["viewers"];
-            var viewerIDs = viewersString.Split(",".ToCharArray());
+            var viewerIDs = _appState.RelaunchViewers;
             await _desktopHub.NotifyViewersRelaunchedScreenCasterReady(viewerIDs);
         }
         else

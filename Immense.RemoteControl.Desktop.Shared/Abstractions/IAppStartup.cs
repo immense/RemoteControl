@@ -2,5 +2,5 @@
 
 public interface IAppStartup
 {
-    Task Initialize();
+    Task Run();
 }

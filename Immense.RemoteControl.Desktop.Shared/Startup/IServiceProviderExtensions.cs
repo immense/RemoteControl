@@ -1,152 +1,145 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.CommandLine.NamingConventionBinder;
 
 namespace Immense.RemoteControl.Desktop.Shared.Startup;
 
 public static class IServiceProviderExtensions
 {
     /// <summary>
-    /// 
+    /// Runs the remote control startup with the specified arguments.
     /// </summary>
-    /// <param name="services"></param>
-    /// <param name="args"></param>
-    /// <param name="serverUri"></param>
-    /// <returns></returns>
-    internal static async Task<Result> UseRemoteControlClientXplat(
+    public static async Task<Result> UseRemoteControlClient(
         this IServiceProvider services,
-        string[] args,
-        string serverUri = "")
+        string host,
+        AppMode mode,
+        string pipeName,
+        string sessionId,
+        string accessKey,
+        string requesterName,
+        string organizationName,
+        bool relaunch,
+        string viewers,
+        bool elevate)
     {
         try
         {
-            await UseRemoteControlClientImpl(services, args, serverUri);
+            if (OperatingSystem.IsWindows() && relaunch)
+            {
+                RelaunchElevated();
+                return Result.Ok();
+            }
+
+            var appState = services.GetRequiredService<IAppState>();
+            appState.Configure(
+                host ?? string.Empty,
+                mode,
+                sessionId ?? string.Empty,
+                accessKey ?? string.Empty,
+                requesterName ?? string.Empty,
+                organizationName ?? string.Empty,
+                pipeName ?? string.Empty,
+                relaunch,
+                viewers ?? string.Empty,
+                elevate);
+
+            StaticServiceProvider.Instance = services;
+
+            var appStartup = services.GetRequiredService<IAppStartup>();
+            await appStartup.Run();
             return Result.Ok();
         }
         catch (Exception ex)
         {
+            var logger = services.GetRequiredService<ILogger>();
+            logger.LogError(ex, "Error while running remote control.");
             return Result.Fail(ex);
         }
-
-    }
-
-    private static async Task UseRemoteControlClientImpl(IServiceProvider services, string[] args, string serverUri)
+       
+    } 
+    /// <summary>
+    /// Runs the remote control startup as a root command.  This uses the System.CommandLine package.
+    /// </summary>
+    /// <param name="services">The service provider fo rthe app using this library.</param>
+    /// <param name="args">The original command line arguments passed into the app.</param>
+    /// <param name="commandLineDescription">The description to use for the remote control command.</param>
+    /// <param name="serverUri">If provided, will be used as a fallback if --host option is missing.</param>
+    /// <returns></returns>
+    public static async Task<Result> UseRemoteControlClient(
+        this IServiceProvider services,
+        string[] args,
+        string commandLineDescription,
+        string serverUri = "")
     {
-        var rootCommand = new RootCommand(
-            $"This app is using the {typeof(IServiceCollectionExtensions).Assembly.GetName().Name} library, " +
-            "created by Immense Networks, which allows IT administrators to provide remote assistance on this device.\n\n" +
-            "Internal arguments include the following:\n\n" +
-            "--relaunch    Used to indicate that process is being relaunched from a previous session\n" +
-            "              and should notify viewers when it's ready.\n" +
-            "--viewers     Used with --relaunch.  Should be a comma-separated list of viewers'\n" +
-            "              SignalR connection IDs.\n" +
-            "--elevate     Must be called from a Windows service.  The process will relaunch itself\n" +
-            "              in the console session with elevated rights.");
-
-        var hostOption = new Option<string>(
-            new[] { "-h", "--host" },
-            "The hostname of the server to which to connect (e.g. https://example.com).");
-        rootCommand.AddOption(hostOption);
-
-        var modeOption = new Option<AppMode>(
-            new[] { "-m", "--mode" },
-            () => AppMode.Attended,
-            "The remote control mode to use.  Either Attended, Unattended, or Chat.");
-        rootCommand.AddOption(modeOption);
-
-
-        var pipeNameOption = new Option<string>(
-            new[] { "-p", "--pipe-name" },
-            "When AppMode is Chat, this is the pipe name used by the named pipes server.");
-        pipeNameOption.AddValidator((context) =>
+        try
         {
-            if (context.GetValueForOption(modeOption) == AppMode.Chat &&
-                string.IsNullOrWhiteSpace(context.GetValueOrDefault<string>()))
-            {
-                context.ErrorMessage = "A pipe name must be specified when AppMode is Chat.";
-            }
-        });
-        rootCommand.AddOption(pipeNameOption);
+            var rootCommand = CommandProvider.CreateRemoteControlCommand(true, commandLineDescription);
 
-        var sessionIdOption = new Option<string>(
-           new[] { "-s", "--session-id" },
-           "In Unattended mode, this unique session ID will be assigned to this connection and " +
-           "shared with the server.  The connection can then be found in the DesktopHubSessionCache " +
-           "using this ID.");
-        rootCommand.AddOption(sessionIdOption);
-
-        var accessKeyOption = new Option<string>(
-            new[] { "-a", "--access-key" },
-            "In Unattended mode, secures access to the connection using the provided key.");
-        rootCommand.AddOption(accessKeyOption);
-
-        var requesterNameOption = new Option<string>(
-            new[] { "-r", "--requester-name" },
-               "The name of the technician requesting to connect.");
-        rootCommand.AddOption(requesterNameOption);
-
-        var organizationNameOption = new Option<string>(
-            new[] { "-o", "--org-name" },
-            "The organization name of the technician requesting to connect.");
-        rootCommand.AddOption(organizationNameOption);
-        
-        rootCommand.SetHandler(
-            (
+            rootCommand.Handler = CommandHandler.Create(async (
                 string host,
                 AppMode mode,
                 string pipeName,
                 string sessionId,
                 string accessKey,
                 string requesterName,
-                string organizationName) =>
+                string organizationName,
+                bool relaunch,
+                string viewers,
+                bool elevate) =>
             {
-
                 if (string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(serverUri))
                 {
                     host = serverUri;
                 }
 
-                var appState = services.GetRequiredService<IAppState>();
-                appState.Configure(
+                return await services.UseRemoteControlClient(
                     host,
                     mode,
+                    pipeName,
                     sessionId,
                     accessKey,
                     requesterName,
                     organizationName,
-                    pipeName);
-            },
-            hostOption,
-            modeOption,
-            pipeNameOption,
-            sessionIdOption,
-            accessKeyOption,
-            requesterNameOption,
-            organizationNameOption);
+                    relaunch,
+                    viewers,
+                    elevate);
+            });
 
-        rootCommand.TreatUnmatchedTokensAsErrors = false;
-        var result = await rootCommand.InvokeAsync(args);
+            var result = await rootCommand.InvokeAsync(args);
 
-        if (result > 0)
-        {
-            Environment.Exit(result);
+            if (result == 0)
+            {
+                return Result.Ok();
+            }
+            return Result.Fail($"Remote control command returned code {result}.");
         }
-
-        if (args.Any(x =>
-            x.StartsWith("-h") ||
-            x.StartsWith("--help") ||
-            x.StartsWith("-?") ||
-            x.StartsWith("/?")))
+        catch (Exception ex)
         {
-            Environment.Exit(0);
+            var logger = services.GetRequiredService<ILogger>();
+            logger.LogError(ex, "Error while running remote control.");
+            return Result.Fail(ex);
         }
+    }
 
-        StaticServiceProvider.Instance = services;
+    private static void RelaunchElevated()
+    {
+        var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
 
-        var appStartup = services.GetRequiredService<IAppStartup>();
-        await appStartup.Initialize();
+        Console.WriteLine($"Elevating process {commandLine}.");
+        var result = Win32Interop.OpenInteractiveProcess(
+            commandLine,
+            -1,
+            false,
+            "default",
+            true,
+            out var procInfo);
+        Console.WriteLine($"Elevate result: {result}. Process ID: {procInfo.dwProcessId}.");
+        Environment.Exit(0);
     }
 }

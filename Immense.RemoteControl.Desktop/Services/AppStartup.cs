@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
@@ -48,7 +48,7 @@ internal class AppStartup : IAppStartup
         _logger = logger;
     }
 
-    public async Task Initialize()
+    public async Task Run()
     {
         if (_appState.Mode is AppMode.Unattended or AppMode.Attended)
         {
@@ -131,8 +131,7 @@ internal class AppStartup : IAppStartup
         if (_appState.ArgDict.ContainsKey("relaunch"))
         {
             _logger.LogInformation("Resuming after relaunch.");
-            var viewersString = _appState.ArgDict["viewers"];
-            var viewerIDs = viewersString.Split(",".ToCharArray());
+            var viewerIDs = _appState.RelaunchViewers;
             await _desktopHub.NotifyViewersRelaunchedScreenCasterReady(viewerIDs);
         }
         else
