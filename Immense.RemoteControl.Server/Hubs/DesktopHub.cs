@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
@@ -96,7 +96,7 @@ public class DesktopHub : Hub
     {
         using var scope = _logger.BeginScope(nameof(NotifyRequesterUnattendedReady));
 
-        if (!_sessionCache.Sessions.TryGetValue(SessionInfo.UnattendedSessionId, out var session))
+        if (!_sessionCache.Sessions.TryGetValue($"{SessionInfo.UnattendedSessionId}", out var session))
         {
             _logger.LogError("Connection not found in cache.");
             return;
@@ -131,7 +131,7 @@ public class DesktopHub : Hub
         }
         else if (SessionInfo.Mode == RemoteControlMode.Unattended)
         {
-            _sessionCache.Sessions.TryRemove(SessionInfo.UnattendedSessionId, out _);
+            _sessionCache.Sessions.TryRemove($"{SessionInfo.UnattendedSessionId}", out _);
             if (ViewerList.Count > 0)
             {
                 await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
@@ -142,9 +142,9 @@ public class DesktopHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public Task<Result> ReceiveUnattendedSessionInfo(string unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
+    public Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
     {
-        if (_sessionCache.Sessions.TryGetValue(unattendedSessionId, out var sessionInfo))
+        if (_sessionCache.Sessions.TryGetValue($"{unattendedSessionId}", out var sessionInfo))
         {
             SessionInfo = sessionInfo;
         }
@@ -158,7 +158,7 @@ public class DesktopHub : Hub
         SessionInfo.RequesterName = requesterName;
         SessionInfo.OrganizationName = organizationName;
 
-        if (_sessionCache.Sessions.TryGetValue(unattendedSessionId, out var existingSession) &&
+        if (_sessionCache.Sessions.TryGetValue($"{unattendedSessionId}", out var existingSession) &&
             accessKey != SessionInfo.AccessKey)
         {
             _logger.LogWarning("A desktop session tried to connect, but the access key didn't match.");
@@ -166,7 +166,7 @@ public class DesktopHub : Hub
             return Task.FromResult(result);
         }
 
-        SessionInfo = _sessionCache.Sessions.AddOrUpdate(unattendedSessionId, SessionInfo, (k, v) =>
+        SessionInfo = _sessionCache.Sessions.AddOrUpdate($"{unattendedSessionId}", SessionInfo, (k, v) =>
         {
             v.DesktopConnectionId = Context.ConnectionId;
             v.StartTime = DateTimeOffset.Now;
