@@ -156,6 +156,7 @@ public class AppState : IAppState
 
     private void ProcessArgs()
     {
+        var cmdArgs = Environment.GetCommandLineArgs();
         var args = Environment.GetCommandLineArgs()
             .SkipWhile(x => !x.StartsWith("-"))
             .ToArray();
@@ -176,7 +177,7 @@ public class AppState : IAppState
 
                     key = key.Trim().TrimStart('-').TrimStart('-').ToLower();
 
-                    ArgDict.Add(key, args[i + 1].Trim());
+                    _argDict.Add(key, args[i + 1].Trim());
                 }
             }
             catch (Exception ex)
