@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
@@ -215,7 +215,6 @@ public class ScreenCaster : IScreenCaster
                 viewer.DisconnectRequested);
 
             _appState.Viewers.TryRemove(viewer.ViewerConnectionID, out _);
-            viewer.Dispose();
         }
         finally
         {

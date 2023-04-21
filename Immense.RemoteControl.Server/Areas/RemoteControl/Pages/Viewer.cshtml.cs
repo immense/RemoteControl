@@ -18,10 +18,14 @@ public class ViewerModel : PageModel
 
     public string ThemeUrl { get; private set; } = string.Empty;
     public string UserDisplayName { get; private set; } = string.Empty;
+    public string PageTitle { get; private set; } = string.Empty;
+    public string PageDescription { get; private set; } = string.Empty;
+    public string ProductName { get; private set; } = string.Empty;
+    public string ProductSubtitle { get; private set; } = string.Empty;
 
-    public void OnGet()
+    public async Task OnGet()
     {
-        var theme = _viewerDataProvider.GetTheme(this);
+        var theme = await _viewerDataProvider.GetTheme(this);
 
         ThemeUrl = theme switch
         {
@@ -29,6 +33,10 @@ public class ViewerModel : PageModel
             ViewerPageTheme.Light => "/_content/Immense.RemoteControl.Server/css/remote-control-light.css",
             _ => "/_content/Immense.RemoteControl.Server/css/remote-control-dark.css"
         };
-        UserDisplayName = _viewerDataProvider.GetUserDisplayName(this);
+        UserDisplayName = await _viewerDataProvider.GetUserDisplayName(this);
+        PageTitle = await _viewerDataProvider.GetPageTitle(this);
+        ProductName = await _viewerDataProvider.GetProductName(this);
+        ProductSubtitle = await _viewerDataProvider.GetProductSubtitle(this);
+        PageDescription = await _viewerDataProvider.GetPageDescription(this);
     }
 }

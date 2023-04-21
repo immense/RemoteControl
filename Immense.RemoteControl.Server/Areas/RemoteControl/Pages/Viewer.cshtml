@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model Immense.RemoteControl.Server.Areas.RemoteControl.Pages.ViewerModel
 
 @{
@@ -11,10 +11,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=0.9, user-scalable=no" />
-    <title>Remotely Remote Control</title>
+    <title>@(Model.PageTitle)</title>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="description" content="Remote support tools designed to get things done quickly." />
+    <meta name="description" content="@(Model.PageDescription)" />
     <link href="/_content/Immense.RemoteControl.Server/manifest.json" rel="manifest" />
     <link rel="icon" href="/_content/Immense.RemoteControl.Server/favicon.ico" />
     <link href="/_content/Immense.RemoteControl.Server/css/remote-control.css" rel="stylesheet" asp-append-version="true" />
@@ -40,9 +40,11 @@
 <body>
     <div class="remotely-header" title="Remotely">
         <div class="logo-title">
-            Remotely
+            @(Model.ProductName)
         </div>
-        <div class="logo-subtitle">Support Portal</div>
+        <div class="logo-subtitle">
+            @(Model.ProductSubtitle)
+        </div>
     </div>
 
     <button id="keyboardButton" hidden="hidden" title="Invoke the mobile touch keyboard.">
