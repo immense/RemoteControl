@@ -1,4 +1,4 @@
-﻿body {
+body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 14px;
     line-height: 1.42857143;
@@ -162,18 +162,7 @@ button {
     position: fixed;
     top: 15px;
     left: 15px;
-    animation: fadeout 3s ease 2s forwards;
     z-index: -1;
-}
-
-@keyframes fadeout {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: .1;
-    }
 }
 
 .logo-subtitle {
