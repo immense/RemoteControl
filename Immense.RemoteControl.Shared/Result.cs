@@ -23,7 +23,7 @@ public class Result
         Reason = reason;
     }
 
-    [DataMember]
+    [IgnoreDataMember]
     public Exception? Exception { get; init; }
 
     [IgnoreDataMember]
@@ -116,7 +116,7 @@ public class Result<T>
         Value = value;
     }
 
-    [DataMember]
+    [IgnoreDataMember]
     public Exception? Exception { get; init; }
 
     [IgnoreDataMember]

@@ -1,4 +1,4 @@
-﻿using System.Runtime.Serialization;
+using System.Runtime.Serialization;
 
 namespace Immense.RemoteControl.Shared.Models;
 
@@ -13,7 +13,7 @@ public enum SessionType
 public class WindowsSession
 {
     [DataMember(Name = "ID")]
-    public uint ID { get; set; }
+    public uint Id { get; set; }
     [DataMember(Name = "Name")]
     public string Name { get; set; } = string.Empty;
     [DataMember(Name = "Type")]

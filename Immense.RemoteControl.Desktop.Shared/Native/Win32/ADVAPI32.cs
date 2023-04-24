@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Security;
 
 namespace Immense.RemoteControl.Desktop.Shared.Native.Win32;
@@ -360,11 +360,5 @@ public static class ADVAPI32
 
     [DllImport("advapi32.dll", SetLastError = false)]
     public static extern uint LsaNtStatusToWinError(uint status);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool GetUserObjectInformationW(IntPtr hObj, int nIndex,
-         [Out] byte[] pvInfo, uint nLength, out uint lpnLengthNeeded);
     #endregion
-
-
 }

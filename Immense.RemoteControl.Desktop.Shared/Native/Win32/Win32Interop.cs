@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Shared.Models;
+using Immense.RemoteControl.Shared.Models;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -18,7 +18,7 @@ public class Win32Interop
         var consoleSessionId = Kernel32.WTSGetActiveConsoleSessionId();
         sessions.Add(new WindowsSession()
         {
-            ID = consoleSessionId,
+            Id = consoleSessionId,
             Type = SessionType.Console,
             Name = "Console",
             Username = GetUsernameFromSessionId(consoleSessionId)
@@ -46,7 +46,7 @@ public class Win32Interop
 
                     sessions.Add(new WindowsSession()
                     {
-                        ID = sessionInfo.SessionID,
+                        Id = sessionInfo.SessionID,
                         Name = sessionInfo.pWinStationName,
                         Type = SessionType.RDP,
                         Username = GetUsernameFromSessionId(sessionInfo.SessionID)
@@ -111,7 +111,10 @@ public class Win32Interop
          out PROCESS_INFORMATION procInfo)
     {
         uint winlogonPid = 0;
-        IntPtr hUserTokenDup = IntPtr.Zero, hPToken = IntPtr.Zero, hProcess = IntPtr.Zero;
+        var hUserTokenDup = IntPtr.Zero;
+        var hPToken = IntPtr.Zero;
+        var hProcess = IntPtr.Zero;
+
         procInfo = new PROCESS_INFORMATION();
 
         // If not force console, find target session.  If not present,
@@ -120,18 +123,18 @@ public class Win32Interop
         if (!forceConsoleSession)
         {
             var activeSessions = GetActiveSessions();
-            if (activeSessions.Any(x => x.ID == targetSessionId))
+            if (activeSessions.Any(x => x.Id == targetSessionId))
             {
                 dwSessionId = (uint)targetSessionId;
             }
             else
             {
-                dwSessionId = activeSessions.Last().ID;
+                dwSessionId = activeSessions.Last().Id;
             }
         }
 
         // Obtain the process ID of the winlogon process that is running within the currently active session.
-        Process[] processes = Process.GetProcessesByName("winlogon");
+        var processes = Process.GetProcessesByName("winlogon");
         foreach (Process p in processes)
         {
             if ((uint)p.SessionId == dwSessionId)
@@ -151,7 +154,7 @@ public class Win32Interop
         }
 
         // Security attibute structure used in DuplicateTokenEx and CreateProcessAsUser.
-        SECURITY_ATTRIBUTES sa = new();
+        var sa = new SECURITY_ATTRIBUTES();
         sa.Length = Marshal.SizeOf(sa);
 
         // Copy the access token of the winlogon process; the newly created token will be a primary token.
@@ -166,7 +169,7 @@ public class Win32Interop
         // the window station has a desktop that is invisible and the process is incapable of receiving
         // user input. To remedy this we set the lpDesktop parameter to indicate we want to enable user 
         // interaction with the new process.
-        STARTUPINFO si = new();
+        var si = new STARTUPINFO();
         si.cb = Marshal.SizeOf(si);
         si.lpDesktop = @"winsta0\" + desktopName;
 
@@ -184,7 +187,7 @@ public class Win32Interop
         }
 
         // Create a new process in the current user's logon session.
-        bool result = CreateProcessAsUser(
+        var result = CreateProcessAsUser(
             hUserTokenDup,
             string.Empty,
             applicationName,

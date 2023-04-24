@@ -9,7 +9,7 @@ public class RemoteControlSession
 
     public static RemoteControlSession Empty { get; } = new();
     public string AccessKey { get; internal set; } = string.Empty;
-    public string RelativeAccessLink => $"/RemoteControl/Viewer?mode=Unattended&sessionId={UnattendedSessionId}&accessKey={AccessKey}&viewonly=False";
+    public string RelativeAccessUri => $"/RemoteControl/Viewer?mode=Unattended&sessionId={UnattendedSessionId}&accessKey={AccessKey}&viewonly=False";
     public string AttendedSessionId { get; set; } = string.Empty;
     public DateTimeOffset Created { get; }
     public string DesktopConnectionId { get; internal set; } = string.Empty;
