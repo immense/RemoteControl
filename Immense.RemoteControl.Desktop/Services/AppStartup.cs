@@ -111,35 +111,40 @@ internal class AppStartup : IAppStartup
             return;
         }
 
-        if (OperatingSystem.IsWindows()) 
+        try
         {
-            if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+            if (OperatingSystem.IsWindows()) 
             {
-                _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
+                if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+                {
+                    _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to get initial desktop name.");
+                }
+
+                if (!Win32Interop.SwitchToInputDesktop())
+                {
+                    _logger.LogWarning("Failed to set initial desktop.");
+                }
+            }
+
+            if (_appState.ArgDict.ContainsKey("relaunch"))
+            {
+                _logger.LogInformation("Resuming after relaunch.");
+                var viewerIDs = _appState.RelaunchViewers;
+                await _desktopHub.NotifyViewersRelaunchedScreenCasterReady(viewerIDs);
             }
             else
             {
-                _logger.LogWarning("Failed to get initial desktop name.");
-            }
-
-            if (!Win32Interop.SwitchToInputDesktop())
-            {
-                _logger.LogWarning("Failed to set initial desktop.");
+                await _desktopHub.NotifyRequesterUnattendedReady();
             }
         }
-
-        if (_appState.ArgDict.ContainsKey("relaunch"))
+        finally
         {
-            _logger.LogInformation("Resuming after relaunch.");
-            var viewerIDs = _appState.RelaunchViewers;
-            await _desktopHub.NotifyViewersRelaunchedScreenCasterReady(viewerIDs);
+            _idleTimer.Start();
         }
-        else
-        {
-            await _desktopHub.NotifyRequesterUnattendedReady();
-        }
-
-        _idleTimer.Start();
     }
 
 

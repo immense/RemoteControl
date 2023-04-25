@@ -1,6 +1,7 @@
-﻿using MessagePack;
+using MessagePack;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Immense.RemoteControl.Shared;
 
@@ -10,7 +11,13 @@ namespace Immense.RemoteControl.Shared;
 [DataContract]
 public class Result
 {
+    /// <summary>
+    /// For serialization only.
+    /// </summary>
     [SerializationConstructor]
+    [JsonConstructor]
+    public Result() { }
+
     public Result(bool isSuccess, string reason = "", Exception? exception = null)
     {
         if (!isSuccess && exception is null && string.IsNullOrWhiteSpace(reason))
@@ -107,7 +114,13 @@ public class Result<T>
         Reason = reason;
     }
 
+    /// <summary>
+    /// For serialization only.
+    /// </summary>
     [SerializationConstructor]
+    [JsonConstructor]
+    public Result() { }
+
     public Result(Exception? exception, bool isSuccess, string reason, T? value)
     {
         Exception = exception;

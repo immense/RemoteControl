@@ -92,18 +92,18 @@ public class DesktopHub : Hub
         return sessionId;
     }
 
-    public async Task NotifyRequesterUnattendedReady()
+    public Task NotifyRequesterUnattendedReady()
     {
         using var scope = _logger.BeginScope(nameof(NotifyRequesterUnattendedReady));
 
         if (!_sessionCache.Sessions.TryGetValue($"{SessionInfo.UnattendedSessionId}", out var session))
         {
             _logger.LogError("Connection not found in cache.");
-            return;
+            return Task.CompletedTask;
         }
 
-        var accessLink = $"/RemoteControl/Viewer?mode=Unattended&sessionId={session.UnattendedSessionId}&accessKey={session.AccessKey}&viewonly=False";
-        await _hubEvents.NotifyUnattendedSessionReady(session, accessLink);
+        session.SetSessionReadyState(true);
+        return Task.CompletedTask;
     }
 
     public Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)

@@ -124,32 +124,37 @@ internal class AppStartup : IAppStartup
             return;
         }
 
-        if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+        try
         {
-            _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
-        }
-        else
-        {
-            _logger.LogWarning("Failed to get initial desktop name.");
-        }
+            if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+            {
+                _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to get initial desktop name.");
+            }
 
-        if (!Win32Interop.SwitchToInputDesktop())
-        {
-            _logger.LogWarning("Failed to set initial desktop.");
-        }
+            if (!Win32Interop.SwitchToInputDesktop())
+            {
+                _logger.LogWarning("Failed to set initial desktop.");
+            }
 
-        if (_appState.IsRelaunch)
-        {
-            _logger.LogInformation("Resuming after relaunch.");
-            var viewerIDs = _appState.RelaunchViewers;
-            await _desktopHub.NotifyViewersRelaunchedScreenCasterReady(viewerIDs);
+            if (_appState.IsRelaunch)
+            {
+                _logger.LogInformation("Resuming after relaunch.");
+                var viewerIDs = _appState.RelaunchViewers;
+                await _desktopHub.NotifyViewersRelaunchedScreenCasterReady(viewerIDs);
+            }
+            else
+            {
+                await _desktopHub.NotifyRequesterUnattendedReady();
+            }
         }
-        else
+        finally
         {
-            await _desktopHub.NotifyRequesterUnattendedReady();
+            _idleTimer.Start();
         }
-
-        _idleTimer.Start();
     }
 
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Microsoft.Extensions.Logging;
 using System.Timers;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
@@ -17,7 +18,9 @@ public class IdleTimer : IIdleTimer
     private readonly ILogger<IdleTimer> _logger;
     private System.Timers.Timer? _timer;
 
-    public IdleTimer(IAppState appState, ILogger<IdleTimer> logger)
+    public IdleTimer(
+        IAppState appState,
+        ILogger<IdleTimer> logger)
     {
         _appState = appState;
         _logger = logger;
@@ -29,6 +32,7 @@ public class IdleTimer : IIdleTimer
 
     public void Start()
     {
+        _logger.LogInformation("Starting idle timer.");
         _timer?.Dispose();
         _timer = new System.Timers.Timer(100);
         _timer.Elapsed += Timer_Elapsed;

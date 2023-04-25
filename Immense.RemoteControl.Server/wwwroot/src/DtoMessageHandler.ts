@@ -1,4 +1,4 @@
-﻿import * as UI from "./UI.js";
+import * as UI from "./UI.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { ViewerApp } from "./App.js";
 import { ShowMessage } from "./UI.js";
@@ -108,7 +108,7 @@ export class DtoMessageHandler {
             return;
         }
 
-        document.title = `${screenDataDto.MachineName} - Remotely Session`;
+        document.title = `${screenDataDto.MachineName} - Remote Control Session`;
         UI.ToggleConnectUI(false);
         UI.SetScreenSize(screenDataDto.ScreenWidth, screenDataDto.ScreenHeight);
         UI.UpdateDisplays(screenDataDto.SelectedDisplay, screenDataDto.DisplayNames);

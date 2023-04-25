@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Enums;
 
 namespace Immense.RemoteControl.Server.Abstractions;
@@ -44,17 +44,6 @@ public interface IHubEventHandler
     /// <param name="currentSessionId">The current session ID of the remote control process.</param>
     /// <returns></returns>
     Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReasonEx reason, int currentSessionId);
-
-    /// <summary>
-    /// This will be called when an unattended session is ready for a viewer to connect.
-    /// </summary>
-    /// <param name="session"></param>
-    /// <param name="relativeAccessUrl">
-    ///   The relative URL, including the session ID and access key, that should be used to
-    ///   connect to the session.
-    /// </param>
-    /// <returns></returns>
-    Task NotifyUnattendedSessionReady(RemoteControlSession session, string relativeAccessUrl);
 
     /// <summary>
     /// This is called when the remote control session ends unexpectedly from the desktop

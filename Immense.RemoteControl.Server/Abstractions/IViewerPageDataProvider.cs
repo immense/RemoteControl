@@ -12,4 +12,5 @@ public interface IViewerPageDataProvider
     Task<string> GetProductName(PageModel pageModel);
     Task<string> GetProductSubtitle(PageModel pageModel);
     Task<string> GetPageDescription(ViewerModel viewerModel);
+    Task<string> GetFaviconUrl(ViewerModel viewerModel);
 }

@@ -16,7 +16,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="description" content="@(Model.PageDescription)" />
     <link href="/_content/Immense.RemoteControl.Server/manifest.json" rel="manifest" />
-    <link rel="icon" href="/_content/Immense.RemoteControl.Server/favicon.ico" />
+    <link rel="icon" href="@(Model.FaviconUrl)" />
     <link href="/_content/Immense.RemoteControl.Server/css/remote-control.css" rel="stylesheet" asp-append-version="true" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ThemeUrl))

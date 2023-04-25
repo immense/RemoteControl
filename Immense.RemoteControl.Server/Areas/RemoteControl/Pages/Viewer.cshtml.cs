@@ -16,13 +16,13 @@ public class ViewerModel : PageModel
         _viewerDataProvider = viewerDataProvider;
     }
 
-    public string ThemeUrl { get; private set; } = string.Empty;
-    public string UserDisplayName { get; private set; } = string.Empty;
-    public string PageTitle { get; private set; } = string.Empty;
+    public string FaviconUrl { get; private set; } = string.Empty;
     public string PageDescription { get; private set; } = string.Empty;
+    public string PageTitle { get; private set; } = string.Empty;
     public string ProductName { get; private set; } = string.Empty;
     public string ProductSubtitle { get; private set; } = string.Empty;
-
+    public string ThemeUrl { get; private set; } = string.Empty;
+    public string UserDisplayName { get; private set; } = string.Empty;
     public async Task OnGet()
     {
         var theme = await _viewerDataProvider.GetTheme(this);
@@ -38,5 +38,6 @@ public class ViewerModel : PageModel
         ProductName = await _viewerDataProvider.GetProductName(this);
         ProductSubtitle = await _viewerDataProvider.GetProductSubtitle(this);
         PageDescription = await _viewerDataProvider.GetPageDescription(this);
+        FaviconUrl = await _viewerDataProvider.GetFaviconUrl(this);
     }
 }
