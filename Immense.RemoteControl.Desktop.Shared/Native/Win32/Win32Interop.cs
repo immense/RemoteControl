@@ -103,7 +103,7 @@ public class Win32Interop
         return User32.OpenInputDesktop(0, true, ACCESS_MASK.GENERIC_ALL);
     }
 
-    public static bool OpenInteractiveProcess(string applicationName,
+    public static bool CreateInteractiveSystemProcess(string applicationName,
          int targetSessionId,
          bool forceConsoleSession,
          string desktopName,

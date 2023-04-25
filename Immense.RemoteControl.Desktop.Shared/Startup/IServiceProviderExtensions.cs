@@ -57,8 +57,6 @@ public static class IServiceProviderExtensions
         }
         catch (Exception ex)
         {
-            var logger = services.GetRequiredService<ILogger>();
-            logger.LogError(ex, "Error while running remote control.");
             return Result.Fail(ex);
         }
        
@@ -121,8 +119,6 @@ public static class IServiceProviderExtensions
         }
         catch (Exception ex)
         {
-            var logger = services.GetRequiredService<ILogger>();
-            logger.LogError(ex, "Error while running remote control.");
             return Result.Fail(ex);
         }
     }
@@ -132,7 +128,7 @@ public static class IServiceProviderExtensions
         var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");
 
         Console.WriteLine($"Elevating process {commandLine}.");
-        var result = Win32Interop.OpenInteractiveProcess(
+        var result = Win32Interop.CreateInteractiveSystemProcess(
             commandLine,
             -1,
             false,
