@@ -142,7 +142,7 @@ public class ViewerHub : Hub
             return;
         }
 
-        if (!_desktopSessionCache.Sessions.TryGetValue(sessionId, out var session))
+        if (!_desktopSessionCache.TryGetValue(sessionId, out var session))
         {
             await Clients.Caller.SendAsync("SessionIDNotFound");
             return;

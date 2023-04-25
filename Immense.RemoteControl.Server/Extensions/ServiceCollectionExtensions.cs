@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions
             })
             .AddMessagePackProtocol();
 
+        services.AddHostedService<DesktopHubSessionCleaner>();
         services.AddSingleton<IDesktopStreamCache, DesktopStreamCache>();
         services.AddSingleton<IDesktopHubSessionCache, DesktopHubSessionCache>();
         services.AddSingleton<ISystemTime, SystemTime>();

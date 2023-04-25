@@ -1,8 +1,9 @@
 namespace Immense.RemoteControl.Server.Models;
 
-public class RemoteControlSession
+public class RemoteControlSession : IDisposable
 {
     private readonly ManualResetEventSlim _sessionReadySignal = new(false);
+    private bool disposedValue;
 
     public RemoteControlSession()
     {
@@ -28,6 +29,13 @@ public class RemoteControlSession
     /// Contains a collection of viewer SignalR connection IDs.
     /// </summary>
     public HashSet<string> ViewerList { get; } = new();
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 
     public Task<bool> WaitForSessionReady(TimeSpan waitTime)
     {
@@ -59,6 +67,18 @@ public class RemoteControlSession
         else
         {
             _sessionReadySignal.Reset();
+        }
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                _sessionReadySignal.Dispose();
+            }
+            disposedValue = true;
         }
     }
 }

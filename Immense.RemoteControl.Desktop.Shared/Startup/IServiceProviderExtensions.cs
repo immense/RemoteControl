@@ -73,7 +73,8 @@ public static class IServiceProviderExtensions
         this IServiceProvider services,
         string[] args,
         string commandLineDescription,
-        string serverUri = "")
+        string serverUri = "",
+        bool treatUnmatchedArgsAsErrors = true)
     {
         try
         {
@@ -108,6 +109,8 @@ public static class IServiceProviderExtensions
                     viewers,
                     elevate);
             });
+
+            rootCommand.TreatUnmatchedTokensAsErrors = treatUnmatchedArgsAsErrors;
 
             var result = await rootCommand.InvokeAsync(args);
 
