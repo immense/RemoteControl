@@ -3,7 +3,7 @@ namespace Immense.RemoteControl.Server.Models;
 public class RemoteControlSession : IDisposable
 {
     private readonly ManualResetEventSlim _sessionReadySignal = new(false);
-    private bool disposedValue;
+    private bool _disposedValue;
 
     public RemoteControlSession()
     {
@@ -12,6 +12,7 @@ public class RemoteControlSession : IDisposable
 
     public static RemoteControlSession Empty { get; } = new();
     public string AccessKey { get; internal set; } = string.Empty;
+    public string AgentConnectionId { get; set; } = string.Empty;
     public string AttendedSessionId { get; set; } = string.Empty;
     public DateTimeOffset Created { get; }
     public string DesktopConnectionId { get; internal set; } = string.Empty;
@@ -24,12 +25,14 @@ public class RemoteControlSession : IDisposable
     public DateTimeOffset StartTime { get; internal set; }
     public Guid StreamId { get; internal set; }
     public Guid UnattendedSessionId { get; set; }
+    public string UserConnectionId { get; set; } = string.Empty;
 
     /// <summary>
     /// Contains a collection of viewer SignalR connection IDs.
     /// </summary>
     public HashSet<string> ViewerList { get; } = new();
 
+    public bool ViewOnly { get; set; }
     public void Dispose()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
@@ -72,13 +75,13 @@ public class RemoteControlSession : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (!_disposedValue)
         {
             if (disposing)
             {
                 _sessionReadySignal.Dispose();
             }
-            disposedValue = true;
+            _disposedValue = true;
         }
     }
 }

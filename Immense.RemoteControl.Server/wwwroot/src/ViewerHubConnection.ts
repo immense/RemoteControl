@@ -1,4 +1,4 @@
-﻿import * as UI from "./UI.js";
+import * as UI from "./UI.js";
 import { ViewerApp } from "./App.js";
 import { CursorInfo } from "./Models/CursorInfo.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
@@ -110,6 +110,12 @@ export class ViewerHubConnection {
             UI.StatusMessage.innerHTML = "Connection failed or was denied.";
             ShowMessage("Connection failed.  Please reconnect.");
             this.Connection.stop();
+        });
+        hubConnection.on("ReconnectFailed", () => {
+          UI.ConnectButton.removeAttribute("disabled");
+          UI.StatusMessage.innerHTML = "Unable to reconnect.";
+          ShowMessage("Unable to reconnect.");
+          this.Connection.stop();
         });
         hubConnection.on("ConnectionRequestDenied", () => {
             this.Connection.stop();

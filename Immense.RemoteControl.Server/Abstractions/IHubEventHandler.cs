@@ -43,7 +43,7 @@ public interface IHubEventHandler
     /// <param name="reason">The type of change that's occurring.</param>
     /// <param name="currentSessionId">The current session ID of the remote control process.</param>
     /// <returns></returns>
-    Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReasonEx reason, int currentSessionId);
+    Task NotifySessionChanged(RemoteControlSession session, SessionSwitchReasonEx reason, int currentSessionId);
 
     /// <summary>
     /// This is called when the remote control session ends unexpectedly from the desktop
@@ -56,5 +56,5 @@ public interface IHubEventHandler
     ///    be signaled to automatically reconnect when the new session is ready.
     /// </param>
     /// <returns></returns>
-    Task RestartScreenCaster(RemoteControlSession sessionInfo, HashSet<string> viewerList);
+    Task RestartScreenCaster(RemoteControlSession session, HashSet<string> viewerList);
 }

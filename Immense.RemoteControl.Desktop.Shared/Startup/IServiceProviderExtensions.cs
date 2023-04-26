@@ -30,7 +30,7 @@ public static class IServiceProviderExtensions
     {
         try
         {
-            if (OperatingSystem.IsWindows() && relaunch)
+            if (OperatingSystem.IsWindows() && elevate)
             {
                 RelaunchElevated();
                 return Result.Ok();
