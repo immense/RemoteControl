@@ -132,11 +132,14 @@ public class DesktopHub : Hub
         }
         else if (SessionInfo.Mode == RemoteControlMode.Unattended)
         {
-            _sessionCache.TryRemove($"{SessionInfo.UnattendedSessionId}", out _);
             if (ViewerList.Count > 0)
             {
                 await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
                 await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
+            }
+            else
+            {
+                _sessionCache.Remove($"{SessionInfo.UnattendedSessionId}");
             }
         }
 

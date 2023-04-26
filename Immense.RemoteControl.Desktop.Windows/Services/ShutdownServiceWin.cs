@@ -9,15 +9,18 @@ public class ShutdownServiceWin : IShutdownService
 {
     private readonly IDesktopHubConnection _hubConnection;
     private readonly IWindowsUiDispatcher _dispatcher;
+    private readonly IAppState _appState;
     private readonly ILogger<ShutdownServiceWin> _logger;
 
     public ShutdownServiceWin(
         IDesktopHubConnection hubConnection,
         IWindowsUiDispatcher dispatcher,
+        IAppState appState,
         ILogger<ShutdownServiceWin> logger)
     {
         _hubConnection = hubConnection;
         _dispatcher = dispatcher;
+        _appState = appState;
         _logger = logger;
     }
 
@@ -26,17 +29,29 @@ public class ShutdownServiceWin : IShutdownService
         try
         {
             _logger.LogInformation("Exiting process ID {procId}.", Environment.ProcessId);
-            await _hubConnection.DisconnectAllViewers();
-            await _hubConnection.Disconnect();
+            await TryDisconnectViewers();
             Application.Exit();
-            _dispatcher.InvokeWpf(() =>
-            {
-                _dispatcher.CurrentApp.Shutdown();
-            });
+            _dispatcher.InvokeWpf(_dispatcher.CurrentApp.Shutdown);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while shutting down.");
+        }
+    }
+
+    private async Task TryDisconnectViewers()
+    {
+        try
+        {
+            if (_hubConnection.IsConnected && _appState.Viewers.Any())
+            {
+                await _hubConnection.DisconnectAllViewers();
+                await _hubConnection.Disconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while sending shutdown notice to viewers.");
         }
     }
 }

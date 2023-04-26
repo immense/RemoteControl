@@ -2,5 +2,7 @@
 
 public interface IRemoteControlAccessService
 {
+    bool IsPromptOpen { get; }
+
     Task<bool> PromptForAccess(string requesterName, string organizationName);
 }

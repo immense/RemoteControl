@@ -14,8 +14,8 @@ namespace Immense.RemoteControl.Desktop.Shared.Services;
 public interface IDesktopHubConnection
 {
     HubConnection? Connection { get; }
+    HubConnectionState ConnectionState { get; }
     bool IsConnected { get; }
-
     Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout);
     Task Disconnect();
     Task DisconnectAllViewers();
@@ -38,7 +38,6 @@ public interface IDesktopHubConnection
 public class DesktopHubConnection : IDesktopHubConnection
 {
     private readonly IAppState _appState;
-    private readonly IIdleTimer _idleTimer;
 
     private readonly ILogger<DesktopHubConnection> _logger;
     private readonly IDtoMessageHandler _messageHandler;
@@ -46,7 +45,6 @@ public class DesktopHubConnection : IDesktopHubConnection
     private readonly IServiceScopeFactory _scopeFactory;
 
     public DesktopHubConnection(
-        IIdleTimer idleTimer,
         IDtoMessageHandler messageHandler,
         IServiceScopeFactory scopeFactory,
         IAppState appState,
@@ -54,7 +52,6 @@ public class DesktopHubConnection : IDesktopHubConnection
         IMessenger messenger,
         ILogger<DesktopHubConnection> logger)
     {
-        _idleTimer = idleTimer;
         _messageHandler = messageHandler;
         _remoteControlAccessService = remoteControlAccessService;
         _scopeFactory = scopeFactory;
@@ -66,7 +63,7 @@ public class DesktopHubConnection : IDesktopHubConnection
     }
 
     public HubConnection? Connection { get; private set; }
-
+    public HubConnectionState ConnectionState => Connection?.State ?? HubConnectionState.Disconnected;
     public bool IsConnected => Connection?.State == HubConnectionState.Connected;
 
     public async Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout)
@@ -302,9 +299,7 @@ public class DesktopHubConnection : IDesktopHubConnection
                 {
                     await SendMessageToViewer(viewerID, "Asking user for permission");
 
-                    _idleTimer.Stop();
                     var result = await _remoteControlAccessService.PromptForAccess(requesterName, organizationName);
-                    _idleTimer.Start();
 
                     if (!result)
                     {
@@ -388,14 +383,14 @@ public class DesktopHubConnection : IDesktopHubConnection
         }
     }
 
-    private async void HandleWindowsSessionEnding(object recipient, WindowsSessionEndingMessage message)
-    {
-        await DisconnectAllViewers();
-    }
-
     private async void HandleWindowsSessionChanged(object recipient, WindowsSessionSwitched message)
     {
         await NotifySessionChanged(message.Reason, message.SessionId);
+    }
+
+    private async void HandleWindowsSessionEnding(object recipient, WindowsSessionEndingMessage message)
+    {
+        await DisconnectAllViewers();
     }
     private class RetryPolicy : IRetryPolicy
     {

@@ -250,9 +250,7 @@ public class Viewer : IViewer
 
     public async Task SendScreenCapture(ScreenCaptureDto screenCapture)
     {
-
         PendingSentFrames.Enqueue(new SentFrame(screenCapture.ImageBytes.Length, _systemTime.Now));
-
 
         await TrySendToViewer(screenCapture, DtoType.ScreenCapture, ViewerConnectionID);
     }
@@ -279,7 +277,6 @@ public class Viewer : IViewer
         var dto = new ScreenSizeDto(width, height);
         await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionID);
     }
-
 
     public async Task SendViewerConnected()
     {
@@ -309,6 +306,14 @@ public class Viewer : IViewer
     {
         try
         {
+            if (!_desktopHubConnection.IsConnected)
+            {
+                _logger.LogWarning(
+                    "Unable to send DTO type {type} because the app is disconnected from the server.", 
+                    type);
+                return;
+            }
+
             foreach (var chunk in DtoChunker.ChunkDto(dto, type))
             {
                 await _desktopHubConnection.SendDtoToViewer(chunk, viewerConnectionId);
@@ -316,7 +321,7 @@ public class Viewer : IViewer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while sending to viewer.");
+            _logger.LogError(ex, "Error while sending DTO type {type} to viewer.", type);
         }
     }
 }

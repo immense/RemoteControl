@@ -157,11 +157,10 @@ internal class AppStartup : IAppStartup
         }
     }
 
-
-
     private async void CursorIconWatcher_OnChange(object? sender, CursorInfo cursor)
     {
-        if (_appState?.Viewers?.Any() == true)
+        if (_appState.Viewers.Any() == true &&
+            _desktopHub.IsConnected)
         {
             foreach (var viewer in _appState.Viewers.Values)
             {
