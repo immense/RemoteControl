@@ -2,6 +2,7 @@ using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -69,12 +70,22 @@ public class ViewerHub : Hub
             Context.Items[nameof(SessionInfo)] = value;
         }
     }
-    public async Task ChangeWindowsSession(int sessionID)
+    public async Task<Result> ChangeWindowsSession(int sessionId)
     {
-        if (SessionInfo?.Mode == RemoteControlMode.Unattended)
+        if (SessionInfo.Mode != RemoteControlMode.Unattended)
         {
-            await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, sessionID);
+            return Result.Fail("Only available in unattended mode.");
         }
+
+        await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
+
+        SessionInfo.ViewerList.Remove(Context.ConnectionId);
+        SessionInfo = SessionInfo.CreateNew();
+
+        _desktopSessionCache.AddOrUpdate($"{SessionInfo.UnattendedSessionId}", SessionInfo);
+
+        await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, sessionId);
+        return Result.Ok();
     }
 
     public async IAsyncEnumerable<byte[]> GetDesktopStream()
@@ -177,7 +188,7 @@ public class ViewerHub : Hub
                             $"Machine Name: {SessionInfo.MachineName}.  " +
                             $"Requester Name (if specified): {RequesterDisplayName}.  " +
                             $"Connection ID: {Context.ConnectionId}. User ID: {Context.UserIdentifier}.  " +
-                            $"Screen Caster ID: {SessionInfo.DesktopConnectionId}.  " +
+                            $"Screen Caster Connection ID: {SessionInfo.DesktopConnectionId}.  " +
                             $"Mode: {SessionInfo.Mode}.  " +
                             $"Requester IP Address: {Context.GetHttpContext()?.Connection?.RemoteIpAddress}";
 

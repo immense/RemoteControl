@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Immense.RemoteControl.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Server.Services;
@@ -9,6 +11,7 @@ public class DesktopHubSessionCleaner : BackgroundService
     private readonly ILogger<DesktopHubSessionCleaner> _logger;
 
     public DesktopHubSessionCleaner(
+        IHubContext<DesktopHub> desktopHub,
         IDesktopHubSessionCache sessionCache,
         ILogger<DesktopHubSessionCleaner> logger)
     {

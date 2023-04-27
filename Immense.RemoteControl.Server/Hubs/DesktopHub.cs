@@ -146,7 +146,7 @@ public class DesktopHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
+    public async Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
     {
         if (_sessionCache.TryGetValue($"{unattendedSessionId}", out var sessionInfo))
         {
@@ -167,7 +167,7 @@ public class DesktopHub : Hub
         {
             _logger.LogWarning("A desktop session tried to connect, but the access key didn't match.");
             var result = Result.Fail("SessionId already exists on the server.");
-            return Task.FromResult(result);
+            return result;
         }
 
         SessionInfo = _sessionCache.AddOrUpdate($"{unattendedSessionId}", SessionInfo, (k, v) =>
@@ -180,7 +180,7 @@ public class DesktopHub : Hub
             return v;
         });
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok();
     }
 
     public Task ReceiveAttendedSessionInfo(string machineName)

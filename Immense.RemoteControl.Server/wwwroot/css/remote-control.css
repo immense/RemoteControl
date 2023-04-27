@@ -162,7 +162,18 @@ button {
     position: fixed;
     top: 15px;
     left: 15px;
+    animation: fadeout 3s ease 2s forwards;
     z-index: -1;
+}
+
+@keyframes fadeout {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: .1;
+    }
 }
 
 .logo-subtitle {

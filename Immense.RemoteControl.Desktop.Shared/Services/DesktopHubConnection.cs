@@ -348,7 +348,7 @@ public class DesktopHubConnection : IDesktopHubConnection
         connection.On("ViewerDisconnected", async (string viewerID) =>
         {
             await connection.SendAsync("DisconnectViewer", viewerID, false);
-            if (_appState.Viewers.TryGetValue(viewerID, out var viewer))
+            if (_appState.Viewers.TryRemove(viewerID, out var viewer))
             {
                 viewer.DisconnectRequested = true;
                 viewer.Dispose();
