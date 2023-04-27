@@ -70,7 +70,7 @@ public class ViewerHub : Hub
             Context.Items[nameof(SessionInfo)] = value;
         }
     }
-    public async Task<Result> ChangeWindowsSession(int sessionId)
+    public async Task<Result> ChangeWindowsSession(int targetWindowsSession)
     {
         if (SessionInfo.Mode != RemoteControlMode.Unattended)
         {
@@ -84,7 +84,7 @@ public class ViewerHub : Hub
 
         _desktopSessionCache.AddOrUpdate($"{SessionInfo.UnattendedSessionId}", SessionInfo);
 
-        await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, sessionId);
+        await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, targetWindowsSession);
         return Result.Ok();
     }
 

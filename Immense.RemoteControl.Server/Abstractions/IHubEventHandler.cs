@@ -1,4 +1,5 @@
 using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
 
 namespace Immense.RemoteControl.Server.Abstractions;
