@@ -55,9 +55,8 @@ public class ChatUiServiceWin : IChatUiService
         _dispatcher.InvokeWpf(() =>
         {
             _chatViewModel = _viewModelFactory.CreateChatWindowViewModel(organizationName, writer);
-            var chatWindow = new ChatWindow();
+            var chatWindow = new ChatWindow(_chatViewModel);
             chatWindow.Closing += ChatWindow_Closing;
-            chatWindow.DataContext = _chatViewModel;
             chatWindow.Show();
         });
     }

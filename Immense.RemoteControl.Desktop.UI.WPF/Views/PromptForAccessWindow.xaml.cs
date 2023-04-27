@@ -14,6 +14,12 @@ public partial class PromptForAccessWindow : Window
         InitializeComponent();
     }
 
+    public PromptForAccessWindow(PromptForAccessWindowViewModel viewModel)
+    {
+        DataContext = viewModel;
+        InitializeComponent();
+    }
+
     public PromptForAccessWindowViewModel? ViewModel => DataContext as PromptForAccessWindowViewModel;
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -23,7 +29,7 @@ public partial class PromptForAccessWindow : Window
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
-        this.WindowState = WindowState.Minimized;
+        WindowState = WindowState.Minimized;
     }
 
     private void Window_ContentRendered(object sender, EventArgs e)

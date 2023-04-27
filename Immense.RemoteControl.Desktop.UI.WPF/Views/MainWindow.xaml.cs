@@ -21,7 +21,13 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    public MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
+    public MainWindow(IMainWindowViewModel viewModel)
+    {
+        DataContext = viewModel;
+        InitializeComponent();
+    }
+
+    public IMainWindowViewModel? ViewModel => DataContext as IMainWindowViewModel;
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {

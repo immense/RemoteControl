@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
+using System.Windows;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.Views;
 
@@ -11,8 +12,19 @@ public partial class FileTransferWindow : Window
     public FileTransferWindow()
     {
         InitializeComponent();
-        Left = Screen.PrimaryScreen.WorkingArea.Right - Width;
-        Top = Screen.PrimaryScreen.WorkingArea.Bottom - Height;
+    }
+
+    public FileTransferWindow(FileTransferWindowViewModel viewModel)
+    {
+        DataContext = viewModel;
+        InitializeComponent();
+
+        if (Screen.PrimaryScreen is not null)
+        {
+            Left = Screen.PrimaryScreen.WorkingArea.Right - Width;
+            Top = Screen.PrimaryScreen.WorkingArea.Bottom - Height;
+        }
+
     }
 
     private void Window_ContentRendered(object sender, EventArgs e)

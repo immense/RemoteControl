@@ -33,7 +33,7 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
             RequesterName = requesterName;
         }
 
-        if (!string.IsNullOrWhiteSpace(requesterName))
+        if (!string.IsNullOrWhiteSpace(organizationName))
         {
             OrganizationName = organizationName;
         }
@@ -61,23 +61,13 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
 
     public void SetResultNo(Window? promptWindow)
     {
-        if (promptWindow is null)
-        {
-            return;
-        }
-
         PromptResult = false;
-        promptWindow.Close();
+        promptWindow?.Close();
     }
 
     public void SetResultYes(Window? promptWindow)
     {
-        if (promptWindow is null)
-        {
-            return;
-        }
-
         PromptResult = true;
-        promptWindow.Close();
+        promptWindow?.Close();
     }
 }

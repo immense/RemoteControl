@@ -84,10 +84,7 @@ internal class AppStartup : IAppStartup
             case AppMode.Attended:
                 _dispatcher.InvokeWpf(() =>
                 {
-                    _mainWindow = new MainWindow
-                    {
-                        DataContext = _mainWindowVm
-                    };
+                    _mainWindow = new MainWindow(_mainWindowVm);
                     _mainWindow.Show();
                 });
                 break;

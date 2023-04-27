@@ -279,9 +279,8 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
     private void PromptForHostName()
     {
-        var prompt = new HostNamePrompt();
         var viewModel = _viewModelFactory.CreateHostNamePromptViewModel();
-        prompt.DataContext = viewModel;
+        var prompt = new HostNamePrompt(viewModel);
 
         if (!string.IsNullOrWhiteSpace(Host))
         {

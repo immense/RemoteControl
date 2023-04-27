@@ -13,10 +13,16 @@ public partial class HostNamePrompt : Window
         InitializeComponent();
     }
 
+    public HostNamePrompt(HostNamePromptViewModel viewModel)
+    {
+        DataContext = viewModel;
+        InitializeComponent();
+    }
+
     public HostNamePromptViewModel? ViewModel => DataContext as HostNamePromptViewModel;
 
     private void OKButton_Click(object sender, RoutedEventArgs e)
     {
-        this.Close();
+        Close();
     }
 }

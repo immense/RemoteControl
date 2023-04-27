@@ -49,7 +49,7 @@ public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWi
         RemoveFileUploadCommand = new RelayCommand<FileUpload>(RemoveFileUpload);
     }
 
-    public ObservableCollection<FileUpload> FileUploads { get; } = new ObservableCollection<FileUpload>();
+    public ObservableCollection<FileUpload> FileUploads { get; } = new();
 
     public AsyncRelayCommand OpenFileDialogCommand { get; }
     public RelayCommand<FileUpload> RemoveFileUploadCommand { get; }

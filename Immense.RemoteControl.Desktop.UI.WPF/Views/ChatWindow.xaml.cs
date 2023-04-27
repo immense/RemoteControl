@@ -15,6 +15,11 @@ public partial class ChatWindow : Window
         InitializeComponent();
     }
 
+    public ChatWindow(ChatWindowViewModel viewModel)
+    {
+        DataContext = viewModel;
+        InitializeComponent();
+    }
 
     private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
 

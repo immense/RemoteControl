@@ -54,10 +54,8 @@ public class FileTransferServiceWin : IFileTransferService
             }
             else
             {
-                window = new FileTransferWindow
-                {
-                    DataContext = _viewModelFactory.CreateFileTransferWindowViewModel(viewer)
-                };
+                var viewModel = _viewModelFactory.CreateFileTransferWindowViewModel(viewer);
+                window = new FileTransferWindow(viewModel);
                 window.Closed += (sender, arg) =>
                 {
                     _fileTransferWindows.Remove(viewer.ViewerConnectionID, out _);

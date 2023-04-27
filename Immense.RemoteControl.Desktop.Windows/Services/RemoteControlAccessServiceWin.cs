@@ -33,10 +33,7 @@ public class RemoteControlAccessServiceWin : IRemoteControlAccessService
                 Interlocked.Increment(ref _promptCount);
 
                 var viewModel = _viewModelFactory.CreatePromptForAccessViewModel(requesterName, organizationName);
-                var promptWindow = new PromptForAccessWindow
-                {
-                    DataContext = viewModel
-                };
+                var promptWindow = new PromptForAccessWindow(viewModel);
                 promptWindow.ShowDialog();
 
                 return viewModel.PromptResult;
