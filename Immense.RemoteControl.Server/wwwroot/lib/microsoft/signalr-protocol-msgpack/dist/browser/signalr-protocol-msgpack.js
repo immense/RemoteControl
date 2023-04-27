@@ -7,7 +7,7 @@
 		exports["msgpack"] = factory(require("signalR"));
 	else
 		root["signalR"] = root["signalR"] || {}, root["signalR"]["protocols"] = root["signalR"]["protocols"] || {}, root["signalR"]["protocols"]["msgpack"] = factory(root["signalR"]);
-})(self, function(__WEBPACK_EXTERNAL_MODULE__1__) {
+})(self, (__WEBPACK_EXTERNAL_MODULE__1__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -115,10 +115,8 @@ function getUint64(view, offset) {
 }
 //# sourceMappingURL=int.mjs.map
 ;// CONCATENATED MODULE: ./node_modules/@msgpack/msgpack/dist.es5+esm/utils/utf8.mjs
-var _a, _b, _c;
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
-var TEXT_ENCODING_AVAILABLE = (typeof process === "undefined" || ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a["TEXT_ENCODING"]) !== "never") &&
+var TEXT_ENCODING_AVAILABLE = (typeof process === "undefined" || process.env["TEXT_ENCODING"] !== "never") &&
     typeof TextEncoder !== "undefined" &&
     typeof TextDecoder !== "undefined";
 function utf8Count(str) {
@@ -205,7 +203,7 @@ function utf8EncodeJs(str, output, outputOffset) {
 var sharedTextEncoder = TEXT_ENCODING_AVAILABLE ? new TextEncoder() : undefined;
 var TEXT_ENCODER_THRESHOLD = !TEXT_ENCODING_AVAILABLE
     ? UINT32_MAX
-    : typeof process !== "undefined" && ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b["TEXT_ENCODING"]) !== "force"
+    : typeof process !== "undefined" && process.env["TEXT_ENCODING"] !== "force"
         ? 200
         : 0;
 function utf8EncodeTEencode(str, output, outputOffset) {
@@ -267,7 +265,7 @@ function utf8DecodeJs(bytes, inputOffset, byteLength) {
 var sharedTextDecoder = TEXT_ENCODING_AVAILABLE ? new TextDecoder() : null;
 var TEXT_DECODER_THRESHOLD = !TEXT_ENCODING_AVAILABLE
     ? UINT32_MAX
-    : typeof process !== "undefined" && ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c["TEXT_DECODER"]) !== "force"
+    : typeof process !== "undefined" && process.env["TEXT_DECODER"] !== "force"
         ? 200
         : 0;
 function utf8DecodeTD(bytes, inputOffset, byteLength) {
@@ -407,7 +405,7 @@ function decodeTimestampToTimeSpec(data) {
             return { sec: sec, nsec: nsec };
         }
         default:
-            throw new DecodeError("Unrecognized data size for timestamp (expected 4, 8, or 12): ".concat(data.length));
+            throw new DecodeError("Unrecognized data size for timestamp (expected 4, 8, or 12): " + data.length);
     }
 }
 function decodeTimestampExtension(data) {
@@ -558,7 +556,7 @@ var Encoder = /** @class */ (function () {
     };
     Encoder.prototype.doEncode = function (object, depth) {
         if (depth > this.maxDepth) {
-            throw new Error("Too deep objects in depth ".concat(depth));
+            throw new Error("Too deep objects in depth " + depth);
         }
         if (object == null) {
             this.encodeNil();
@@ -691,7 +689,7 @@ var Encoder = /** @class */ (function () {
             this.writeU32(byteLength);
         }
         else {
-            throw new Error("Too long string: ".concat(byteLength, " bytes in UTF-8"));
+            throw new Error("Too long string: " + byteLength + " bytes in UTF-8");
         }
     };
     Encoder.prototype.encodeString = function (object) {
@@ -729,7 +727,7 @@ var Encoder = /** @class */ (function () {
         }
         else {
             // symbol, function and other special object come here unless extensionCodec handles them.
-            throw new Error("Unrecognized object: ".concat(Object.prototype.toString.apply(object)));
+            throw new Error("Unrecognized object: " + Object.prototype.toString.apply(object));
         }
     };
     Encoder.prototype.encodeBinary = function (object) {
@@ -750,7 +748,7 @@ var Encoder = /** @class */ (function () {
             this.writeU32(size);
         }
         else {
-            throw new Error("Too large binary: ".concat(size));
+            throw new Error("Too large binary: " + size);
         }
         var bytes = ensureUint8Array(object);
         this.writeU8a(bytes);
@@ -772,7 +770,7 @@ var Encoder = /** @class */ (function () {
             this.writeU32(size);
         }
         else {
-            throw new Error("Too large array: ".concat(size));
+            throw new Error("Too large array: " + size);
         }
         for (var _i = 0, object_1 = object; _i < object_1.length; _i++) {
             var item = object_1[_i];
@@ -810,7 +808,7 @@ var Encoder = /** @class */ (function () {
             this.writeU32(size);
         }
         else {
-            throw new Error("Too large map object: ".concat(size));
+            throw new Error("Too large map object: " + size);
         }
         for (var _i = 0, keys_2 = keys; _i < keys_2.length; _i++) {
             var key = keys_2[_i];
@@ -859,7 +857,7 @@ var Encoder = /** @class */ (function () {
             this.writeU32(size);
         }
         else {
-            throw new Error("Too large extension object: ".concat(size));
+            throw new Error("Too large extension object: " + size);
         }
         this.writeI8(ext.type);
         this.writeU8a(ext.data);
@@ -926,7 +924,7 @@ var Encoder = /** @class */ (function () {
 //# sourceMappingURL=Encoder.mjs.map
 ;// CONCATENATED MODULE: ./node_modules/@msgpack/msgpack/dist.es5+esm/utils/prettyByte.mjs
 function prettyByte(byte) {
-    return "".concat(byte < 0 ? "-" : "", "0x").concat(Math.abs(byte).toString(16).padStart(2, "0"));
+    return (byte < 0 ? "-" : "") + "0x" + Math.abs(byte).toString(16).padStart(2, "0");
 }
 //# sourceMappingURL=prettyByte.mjs.map
 ;// CONCATENATED MODULE: ./node_modules/@msgpack/msgpack/dist.es5+esm/CachedKeyDecoder.mjs
@@ -1134,7 +1132,7 @@ var Decoder = /** @class */ (function () {
     };
     Decoder.prototype.createExtraByteError = function (posToShow) {
         var _a = this, view = _a.view, pos = _a.pos;
-        return new RangeError("Extra ".concat(view.byteLength - pos, " of ").concat(view.byteLength, " byte(s) found at buffer[").concat(posToShow, "]"));
+        return new RangeError("Extra " + (view.byteLength - pos) + " of " + view.byteLength + " byte(s) found at buffer[" + posToShow + "]");
     };
     /**
      * @throws {DecodeError}
@@ -1226,7 +1224,7 @@ var Decoder = /** @class */ (function () {
                             return [2 /*return*/, object];
                         }
                         _b = this, headByte = _b.headByte, pos = _b.pos, totalPos = _b.totalPos;
-                        throw new RangeError("Insufficient data in parsing ".concat(prettyByte(headByte), " at ").concat(totalPos, " (").concat(pos, " in the current buffer)"));
+                        throw new RangeError("Insufficient data in parsing " + prettyByte(headByte) + " at " + totalPos + " (" + pos + " in the current buffer)");
                 }
             });
         });
@@ -1520,7 +1518,7 @@ var Decoder = /** @class */ (function () {
                 object = this.decodeExtension(size, 4);
             }
             else {
-                throw new DecodeError("Unrecognized type byte: ".concat(prettyByte(headByte)));
+                throw new DecodeError("Unrecognized type byte: " + prettyByte(headByte));
             }
             this.complete();
             var stack = this.stack;
@@ -1589,14 +1587,14 @@ var Decoder = /** @class */ (function () {
                     return headByte - 0x90;
                 }
                 else {
-                    throw new DecodeError("Unrecognized array type byte: ".concat(prettyByte(headByte)));
+                    throw new DecodeError("Unrecognized array type byte: " + prettyByte(headByte));
                 }
             }
         }
     };
     Decoder.prototype.pushMapState = function (size) {
         if (size > this.maxMapLength) {
-            throw new DecodeError("Max length exceeded: map length (".concat(size, ") > maxMapLengthLength (").concat(this.maxMapLength, ")"));
+            throw new DecodeError("Max length exceeded: map length (" + size + ") > maxMapLengthLength (" + this.maxMapLength + ")");
         }
         this.stack.push({
             type: 1 /* MAP_KEY */,
@@ -1608,7 +1606,7 @@ var Decoder = /** @class */ (function () {
     };
     Decoder.prototype.pushArrayState = function (size) {
         if (size > this.maxArrayLength) {
-            throw new DecodeError("Max length exceeded: array length (".concat(size, ") > maxArrayLength (").concat(this.maxArrayLength, ")"));
+            throw new DecodeError("Max length exceeded: array length (" + size + ") > maxArrayLength (" + this.maxArrayLength + ")");
         }
         this.stack.push({
             type: 0 /* ARRAY */,
@@ -1620,7 +1618,7 @@ var Decoder = /** @class */ (function () {
     Decoder.prototype.decodeUtf8String = function (byteLength, headerOffset) {
         var _a;
         if (byteLength > this.maxStrLength) {
-            throw new DecodeError("Max length exceeded: UTF-8 byte length (".concat(byteLength, ") > maxStrLength (").concat(this.maxStrLength, ")"));
+            throw new DecodeError("Max length exceeded: UTF-8 byte length (" + byteLength + ") > maxStrLength (" + this.maxStrLength + ")");
         }
         if (this.bytes.byteLength < this.pos + headerOffset + byteLength) {
             throw MORE_DATA;
@@ -1648,7 +1646,7 @@ var Decoder = /** @class */ (function () {
     };
     Decoder.prototype.decodeBinary = function (byteLength, headOffset) {
         if (byteLength > this.maxBinLength) {
-            throw new DecodeError("Max length exceeded: bin length (".concat(byteLength, ") > maxBinLength (").concat(this.maxBinLength, ")"));
+            throw new DecodeError("Max length exceeded: bin length (" + byteLength + ") > maxBinLength (" + this.maxBinLength + ")");
         }
         if (!this.hasRemaining(byteLength + headOffset)) {
             throw MORE_DATA;
@@ -1660,7 +1658,7 @@ var Decoder = /** @class */ (function () {
     };
     Decoder.prototype.decodeExtension = function (size, headOffset) {
         if (size > this.maxExtLength) {
-            throw new DecodeError("Max length exceeded: ext length (".concat(size, ") > maxExtLength (").concat(this.maxExtLength, ")"));
+            throw new DecodeError("Max length exceeded: ext length (" + size + ") > maxExtLength (" + this.maxExtLength + ")");
         }
         var extType = this.view.getInt8(this.pos + headOffset);
         var data = this.decodeBinary(size, headOffset + 1 /* extType */);
@@ -2026,7 +2024,8 @@ class MessagePackHubProtocol {
         return BinaryMessageFormat.write(payload.slice());
     }
     _writeCompletion(completionMessage) {
-        const resultKind = completionMessage.error ? this._errorResult : completionMessage.result ? this._nonVoidResult : this._voidResult;
+        const resultKind = completionMessage.error ? this._errorResult :
+            (completionMessage.result !== undefined) ? this._nonVoidResult : this._voidResult;
         let payload;
         switch (resultKind) {
             case this._errorResult:
@@ -2059,7 +2058,7 @@ class MessagePackHubProtocol {
 // The .NET Foundation licenses this file to you under the MIT license.
 // Version token that will be replaced by the prepack command
 /** The version of the SignalR Message Pack protocol library. */
-const VERSION = "6.0.9";
+const VERSION = "7.0.5";
 
 
 ;// CONCATENATED MODULE: ./src/browser-index.ts

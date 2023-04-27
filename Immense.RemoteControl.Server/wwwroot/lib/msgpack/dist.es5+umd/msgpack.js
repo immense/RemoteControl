@@ -70,34 +70,6 @@ __webpack_require__.d(__webpack_exports__, {
   "encodeTimestampExtension": function() { return /* reexport */ encodeTimestampExtension; }
 });
 
-;// CONCATENATED MODULE: ./src/utils/int.ts
-// Integer Utility
-var UINT32_MAX = 4294967295;
-// DataView extension to handle int64 / uint64,
-// where the actual range is 53-bits integer (a.k.a. safe integer)
-function setUint64(view, offset, value) {
-    var high = value / 4294967296;
-    var low = value; // high bits are truncated by DataView
-    view.setUint32(offset, high);
-    view.setUint32(offset + 4, low);
-}
-function setInt64(view, offset, value) {
-    var high = Math.floor(value / 4294967296);
-    var low = value; // high bits are truncated by DataView
-    view.setUint32(offset, high);
-    view.setUint32(offset + 4, low);
-}
-function getInt64(view, offset) {
-    var high = view.getInt32(offset);
-    var low = view.getUint32(offset + 4);
-    return high * 4294967296 + low;
-}
-function getUint64(view, offset) {
-    var high = view.getUint32(offset);
-    var low = view.getUint32(offset + 4);
-    return high * 4294967296 + low;
-}
-
 ;// CONCATENATED MODULE: ./src/utils/utf8.ts
 var __read = (undefined && undefined.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -124,12 +96,6 @@ var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from
     }
     return to.concat(ar || Array.prototype.slice.call(from));
 };
-var _a, _b, _c;
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-
-var TEXT_ENCODING_AVAILABLE = (typeof process === "undefined" || ((_a = process === null || process === void 0 ? void 0 : process.env) === null || _a === void 0 ? void 0 : _a["TEXT_ENCODING"]) !== "never") &&
-    typeof TextEncoder !== "undefined" &&
-    typeof TextDecoder !== "undefined";
 function utf8Count(str) {
     var strLength = str.length;
     var byteLength = 0;
@@ -211,19 +177,27 @@ function utf8EncodeJs(str, output, outputOffset) {
         output[offset++] = (value & 0x3f) | 0x80;
     }
 }
-var sharedTextEncoder = TEXT_ENCODING_AVAILABLE ? new TextEncoder() : undefined;
-var TEXT_ENCODER_THRESHOLD = !TEXT_ENCODING_AVAILABLE
-    ? UINT32_MAX
-    : typeof process !== "undefined" && ((_b = process === null || process === void 0 ? void 0 : process.env) === null || _b === void 0 ? void 0 : _b["TEXT_ENCODING"]) !== "force"
-        ? 200
-        : 0;
-function utf8EncodeTEencode(str, output, outputOffset) {
-    output.set(sharedTextEncoder.encode(str), outputOffset);
-}
-function utf8EncodeTEencodeInto(str, output, outputOffset) {
+// TextEncoder and TextDecoder are standardized in whatwg encoding:
+// https://encoding.spec.whatwg.org/
+// and available in all the modern browsers:
+// https://caniuse.com/textencoder
+// They are available in Node.js since v12 LTS as well:
+// https://nodejs.org/api/globals.html#textencoder
+var sharedTextEncoder = new TextEncoder();
+// This threshold should be determined by benchmarking, which might vary in engines and input data.
+// Run `npx ts-node benchmark/encode-string.ts` for details.
+var TEXT_ENCODER_THRESHOLD = 50;
+function utf8EncodeTE(str, output, outputOffset) {
     sharedTextEncoder.encodeInto(str, output.subarray(outputOffset));
 }
-var utf8EncodeTE = (sharedTextEncoder === null || sharedTextEncoder === void 0 ? void 0 : sharedTextEncoder.encodeInto) ? utf8EncodeTEencodeInto : utf8EncodeTEencode;
+function utf8Encode(str, output, outputOffset) {
+    if (str.length > TEXT_ENCODER_THRESHOLD) {
+        utf8EncodeTE(str, output, outputOffset);
+    }
+    else {
+        utf8EncodeJs(str, output, outputOffset);
+    }
+}
 var CHUNK_SIZE = 4096;
 function utf8DecodeJs(bytes, inputOffset, byteLength) {
     var offset = inputOffset;
@@ -273,15 +247,21 @@ function utf8DecodeJs(bytes, inputOffset, byteLength) {
     }
     return result;
 }
-var sharedTextDecoder = TEXT_ENCODING_AVAILABLE ? new TextDecoder() : null;
-var TEXT_DECODER_THRESHOLD = !TEXT_ENCODING_AVAILABLE
-    ? UINT32_MAX
-    : typeof process !== "undefined" && ((_c = process === null || process === void 0 ? void 0 : process.env) === null || _c === void 0 ? void 0 : _c["TEXT_DECODER"]) !== "force"
-        ? 200
-        : 0;
+var sharedTextDecoder = new TextDecoder();
+// This threshold should be determined by benchmarking, which might vary in engines and input data.
+// Run `npx ts-node benchmark/decode-string.ts` for details.
+var TEXT_DECODER_THRESHOLD = 200;
 function utf8DecodeTD(bytes, inputOffset, byteLength) {
     var stringBytes = bytes.subarray(inputOffset, inputOffset + byteLength);
     return sharedTextDecoder.decode(stringBytes);
+}
+function utf8Decode(bytes, inputOffset, byteLength) {
+    if (byteLength > TEXT_DECODER_THRESHOLD) {
+        return utf8DecodeTD(bytes, inputOffset, byteLength);
+    }
+    else {
+        return utf8DecodeJs(bytes, inputOffset, byteLength);
+    }
 }
 
 ;// CONCATENATED MODULE: ./src/ExtData.ts
@@ -330,6 +310,34 @@ var DecodeError = /** @class */ (function (_super) {
     return DecodeError;
 }(Error));
 
+
+;// CONCATENATED MODULE: ./src/utils/int.ts
+// Integer Utility
+var UINT32_MAX = 4294967295;
+// DataView extension to handle int64 / uint64,
+// where the actual range is 53-bits integer (a.k.a. safe integer)
+function setUint64(view, offset, value) {
+    var high = value / 4294967296;
+    var low = value; // high bits are truncated by DataView
+    view.setUint32(offset, high);
+    view.setUint32(offset + 4, low);
+}
+function setInt64(view, offset, value) {
+    var high = Math.floor(value / 4294967296);
+    var low = value; // high bits are truncated by DataView
+    view.setUint32(offset, high);
+    view.setUint32(offset + 4, low);
+}
+function getInt64(view, offset) {
+    var high = view.getInt32(offset);
+    var low = view.getUint32(offset + 4);
+    return high * 4294967296 + low;
+}
+function getUint64(view, offset) {
+    var high = view.getUint32(offset);
+    var low = view.getUint32(offset + 4);
+    return high * 4294967296 + low;
+}
 
 ;// CONCATENATED MODULE: ./src/timestamp.ts
 // https://github.com/msgpack/msgpack/blob/master/spec.md#timestamp-extension-type
@@ -500,7 +508,6 @@ var ExtensionCodec = /** @class */ (function () {
     return ExtensionCodec;
 }());
 
-
 ;// CONCATENATED MODULE: ./src/utils/typedArrays.ts
 function ensureUint8Array(buffer) {
     if (buffer instanceof Uint8Array) {
@@ -544,37 +551,41 @@ var Encoder_values = (undefined && undefined.__values) || function(o) {
 var DEFAULT_MAX_DEPTH = 100;
 var DEFAULT_INITIAL_BUFFER_SIZE = 2048;
 var Encoder = /** @class */ (function () {
-    function Encoder(extensionCodec, context, maxDepth, initialBufferSize, sortKeys, forceFloat32, ignoreUndefined, forceIntegerToFloat) {
-        if (extensionCodec === void 0) { extensionCodec = ExtensionCodec.defaultCodec; }
-        if (context === void 0) { context = undefined; }
-        if (maxDepth === void 0) { maxDepth = DEFAULT_MAX_DEPTH; }
-        if (initialBufferSize === void 0) { initialBufferSize = DEFAULT_INITIAL_BUFFER_SIZE; }
-        if (sortKeys === void 0) { sortKeys = false; }
-        if (forceFloat32 === void 0) { forceFloat32 = false; }
-        if (ignoreUndefined === void 0) { ignoreUndefined = false; }
-        if (forceIntegerToFloat === void 0) { forceIntegerToFloat = false; }
-        this.extensionCodec = extensionCodec;
-        this.context = context;
-        this.maxDepth = maxDepth;
-        this.initialBufferSize = initialBufferSize;
-        this.sortKeys = sortKeys;
-        this.forceFloat32 = forceFloat32;
-        this.ignoreUndefined = ignoreUndefined;
-        this.forceIntegerToFloat = forceIntegerToFloat;
+    function Encoder(options) {
+        var _a, _b, _c, _d, _e, _f, _g, _h;
+        this.extensionCodec = (_a = options === null || options === void 0 ? void 0 : options.extensionCodec) !== null && _a !== void 0 ? _a : ExtensionCodec.defaultCodec;
+        this.context = options === null || options === void 0 ? void 0 : options.context; // needs a type assertion because EncoderOptions has no context property when ContextType is undefined
+        this.useBigInt64 = (_b = options === null || options === void 0 ? void 0 : options.useBigInt64) !== null && _b !== void 0 ? _b : false;
+        this.maxDepth = (_c = options === null || options === void 0 ? void 0 : options.maxDepth) !== null && _c !== void 0 ? _c : DEFAULT_MAX_DEPTH;
+        this.initialBufferSize = (_d = options === null || options === void 0 ? void 0 : options.initialBufferSize) !== null && _d !== void 0 ? _d : DEFAULT_INITIAL_BUFFER_SIZE;
+        this.sortKeys = (_e = options === null || options === void 0 ? void 0 : options.sortKeys) !== null && _e !== void 0 ? _e : false;
+        this.forceFloat32 = (_f = options === null || options === void 0 ? void 0 : options.forceFloat32) !== null && _f !== void 0 ? _f : false;
+        this.ignoreUndefined = (_g = options === null || options === void 0 ? void 0 : options.ignoreUndefined) !== null && _g !== void 0 ? _g : false;
+        this.forceIntegerToFloat = (_h = options === null || options === void 0 ? void 0 : options.forceIntegerToFloat) !== null && _h !== void 0 ? _h : false;
         this.pos = 0;
         this.view = new DataView(new ArrayBuffer(this.initialBufferSize));
         this.bytes = new Uint8Array(this.view.buffer);
     }
-    Encoder.prototype.getUint8Array = function () {
-        return this.bytes.subarray(0, this.pos);
-    };
     Encoder.prototype.reinitializeState = function () {
         this.pos = 0;
     };
+    /**
+     * This is almost equivalent to {@link Encoder#encode}, but it returns an reference of the encoder's internal buffer and thus much faster than {@link Encoder#encode}.
+     *
+     * @returns Encodes the object and returns a shared reference the encoder's internal buffer.
+     */
+    Encoder.prototype.encodeSharedRef = function (object) {
+        this.reinitializeState();
+        this.doEncode(object, 1);
+        return this.bytes.subarray(0, this.pos);
+    };
+    /**
+     * @returns Encodes the object and returns a copy of the encoder's internal buffer.
+     */
     Encoder.prototype.encode = function (object) {
         this.reinitializeState();
         this.doEncode(object, 1);
-        return this.getUint8Array();
+        return this.bytes.slice(0, this.pos);
     };
     Encoder.prototype.doEncode = function (object, depth) {
         if (depth > this.maxDepth) {
@@ -587,10 +598,18 @@ var Encoder = /** @class */ (function () {
             this.encodeBoolean(object);
         }
         else if (typeof object === "number") {
-            this.encodeNumber(object);
+            if (!this.forceIntegerToFloat) {
+                this.encodeNumber(object);
+            }
+            else {
+                this.encodeNumberAsFloat(object);
+            }
         }
         else if (typeof object === "string") {
             this.encodeString(object);
+        }
+        else if (this.useBigInt64 && typeof object === "bigint") {
+            this.encodeBigInt64(object);
         }
         else {
             this.encodeObject(object, depth);
@@ -622,7 +641,7 @@ var Encoder = /** @class */ (function () {
         }
     };
     Encoder.prototype.encodeNumber = function (object) {
-        if (Number.isSafeInteger(object) && !this.forceIntegerToFloat) {
+        if (!this.forceIntegerToFloat && Number.isSafeInteger(object)) {
             if (object >= 0) {
                 if (object < 0x80) {
                     // positive fixint
@@ -643,10 +662,13 @@ var Encoder = /** @class */ (function () {
                     this.writeU8(0xce);
                     this.writeU32(object);
                 }
-                else {
+                else if (!this.useBigInt64) {
                     // uint 64
                     this.writeU8(0xcf);
                     this.writeU64(object);
+                }
+                else {
+                    this.encodeNumberAsFloat(object);
                 }
             }
             else {
@@ -669,25 +691,42 @@ var Encoder = /** @class */ (function () {
                     this.writeU8(0xd2);
                     this.writeI32(object);
                 }
-                else {
+                else if (!this.useBigInt64) {
                     // int 64
                     this.writeU8(0xd3);
                     this.writeI64(object);
                 }
+                else {
+                    this.encodeNumberAsFloat(object);
+                }
             }
         }
         else {
-            // non-integer numbers
-            if (this.forceFloat32) {
-                // float 32
-                this.writeU8(0xca);
-                this.writeF32(object);
-            }
-            else {
-                // float 64
-                this.writeU8(0xcb);
-                this.writeF64(object);
-            }
+            this.encodeNumberAsFloat(object);
+        }
+    };
+    Encoder.prototype.encodeNumberAsFloat = function (object) {
+        if (this.forceFloat32) {
+            // float 32
+            this.writeU8(0xca);
+            this.writeF32(object);
+        }
+        else {
+            // float 64
+            this.writeU8(0xcb);
+            this.writeF64(object);
+        }
+    };
+    Encoder.prototype.encodeBigInt64 = function (object) {
+        if (object >= BigInt(0)) {
+            // uint 64
+            this.writeU8(0xcf);
+            this.writeBigUint64(object);
+        }
+        else {
+            // int 64
+            this.writeU8(0xd3);
+            this.writeBigInt64(object);
         }
     };
     Encoder.prototype.writeStringHeader = function (byteLength) {
@@ -716,21 +755,11 @@ var Encoder = /** @class */ (function () {
     };
     Encoder.prototype.encodeString = function (object) {
         var maxHeaderSize = 1 + 4;
-        var strLength = object.length;
-        if (strLength > TEXT_ENCODER_THRESHOLD) {
-            var byteLength = utf8Count(object);
-            this.ensureBufferSizeToWrite(maxHeaderSize + byteLength);
-            this.writeStringHeader(byteLength);
-            utf8EncodeTE(object, this.bytes, this.pos);
-            this.pos += byteLength;
-        }
-        else {
-            var byteLength = utf8Count(object);
-            this.ensureBufferSizeToWrite(maxHeaderSize + byteLength);
-            this.writeStringHeader(byteLength);
-            utf8EncodeJs(object, this.bytes, this.pos);
-            this.pos += byteLength;
-        }
+        var byteLength = utf8Count(object);
+        this.ensureBufferSizeToWrite(maxHeaderSize + byteLength);
+        this.writeStringHeader(byteLength);
+        utf8Encode(object, this.bytes, this.pos);
+        this.pos += byteLength;
     };
     Encoder.prototype.encodeObject = function (object, depth) {
         // try to encode objects with custom codec first of non-primitives
@@ -970,13 +999,26 @@ var Encoder = /** @class */ (function () {
         setInt64(this.view, this.pos, value);
         this.pos += 8;
     };
+    Encoder.prototype.writeBigUint64 = function (value) {
+        this.ensureBufferSizeToWrite(8);
+        this.view.setBigUint64(this.pos, value);
+        this.pos += 8;
+    };
+    Encoder.prototype.writeBigInt64 = function (value) {
+        this.ensureBufferSizeToWrite(8);
+        this.view.setBigInt64(this.pos, value);
+        this.pos += 8;
+    };
     return Encoder;
 }());
 
 
 ;// CONCATENATED MODULE: ./src/encode.ts
 
-var defaultEncodeOptions = {};
+/**
+ * @deprecated No longer supported.
+ */
+var defaultEncodeOptions = (/* unused pure expression or super */ null && (undefined));
 /**
  * It encodes `value` in the MessagePack format and
  * returns a byte buffer.
@@ -984,9 +1026,8 @@ var defaultEncodeOptions = {};
  * The returned buffer is a slice of a larger `ArrayBuffer`, so you have to use its `#byteOffset` and `#byteLength` in order to convert it to another typed arrays including NodeJS `Buffer`.
  */
 function encode(value, options) {
-    if (options === void 0) { options = defaultEncodeOptions; }
-    var encoder = new Encoder(options.extensionCodec, options.context, options.maxDepth, options.initialBufferSize, options.sortKeys, options.forceFloat32, options.ignoreUndefined, options.forceIntegerToFloat);
-    return encoder.encode(value);
+    var encoder = new Encoder(options);
+    return encoder.encodeSharedRef(value);
 }
 
 ;// CONCATENATED MODULE: ./src/utils/prettyByte.ts
@@ -1096,7 +1137,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -1143,52 +1184,46 @@ var __asyncGenerator = (undefined && undefined.__asyncGenerator) || function (th
 
 
 
+var STATE_ARRAY = "array";
+var STATE_MAP_KEY = "map_key";
+var STATE_MAP_VALUE = "map_value";
 var isValidMapKeyType = function (key) {
-    var keyType = typeof key;
-    return keyType === "string" || keyType === "number";
+    return typeof key === "string" || typeof key === "number";
 };
 var HEAD_BYTE_REQUIRED = -1;
 var EMPTY_VIEW = new DataView(new ArrayBuffer(0));
 var EMPTY_BYTES = new Uint8Array(EMPTY_VIEW.buffer);
-// IE11: Hack to support IE11.
-// IE11: Drop this hack and just use RangeError when IE11 is obsolete.
-var DataViewIndexOutOfBoundsError = (function () {
-    try {
-        // IE11: The spec says it should throw RangeError,
-        // IE11: but in IE11 it throws TypeError.
-        EMPTY_VIEW.getInt8(0);
+try {
+    // IE11: The spec says it should throw RangeError,
+    // IE11: but in IE11 it throws TypeError.
+    EMPTY_VIEW.getInt8(0);
+}
+catch (e) {
+    if (!(e instanceof RangeError)) {
+        throw new Error("This module is not supported in the current JavaScript engine because DataView does not throw RangeError on out-of-bounds access");
     }
-    catch (e) {
-        return e.constructor;
-    }
-    throw new Error("never reached");
-})();
+}
+var DataViewIndexOutOfBoundsError = RangeError;
 var MORE_DATA = new DataViewIndexOutOfBoundsError("Insufficient data");
 var sharedCachedKeyDecoder = new CachedKeyDecoder();
 var Decoder = /** @class */ (function () {
-    function Decoder(extensionCodec, context, maxStrLength, maxBinLength, maxArrayLength, maxMapLength, maxExtLength, keyDecoder) {
-        if (extensionCodec === void 0) { extensionCodec = ExtensionCodec.defaultCodec; }
-        if (context === void 0) { context = undefined; }
-        if (maxStrLength === void 0) { maxStrLength = UINT32_MAX; }
-        if (maxBinLength === void 0) { maxBinLength = UINT32_MAX; }
-        if (maxArrayLength === void 0) { maxArrayLength = UINT32_MAX; }
-        if (maxMapLength === void 0) { maxMapLength = UINT32_MAX; }
-        if (maxExtLength === void 0) { maxExtLength = UINT32_MAX; }
-        if (keyDecoder === void 0) { keyDecoder = sharedCachedKeyDecoder; }
-        this.extensionCodec = extensionCodec;
-        this.context = context;
-        this.maxStrLength = maxStrLength;
-        this.maxBinLength = maxBinLength;
-        this.maxArrayLength = maxArrayLength;
-        this.maxMapLength = maxMapLength;
-        this.maxExtLength = maxExtLength;
-        this.keyDecoder = keyDecoder;
+    function Decoder(options) {
+        var _a, _b, _c, _d, _e, _f, _g;
         this.totalPos = 0;
         this.pos = 0;
         this.view = EMPTY_VIEW;
         this.bytes = EMPTY_BYTES;
         this.headByte = HEAD_BYTE_REQUIRED;
         this.stack = [];
+        this.extensionCodec = (_a = options === null || options === void 0 ? void 0 : options.extensionCodec) !== null && _a !== void 0 ? _a : ExtensionCodec.defaultCodec;
+        this.context = options === null || options === void 0 ? void 0 : options.context; // needs a type assertion because EncoderOptions has no context property when ContextType is undefined
+        this.useBigInt64 = (_b = options === null || options === void 0 ? void 0 : options.useBigInt64) !== null && _b !== void 0 ? _b : false;
+        this.maxStrLength = (_c = options === null || options === void 0 ? void 0 : options.maxStrLength) !== null && _c !== void 0 ? _c : UINT32_MAX;
+        this.maxBinLength = (_d = options === null || options === void 0 ? void 0 : options.maxBinLength) !== null && _d !== void 0 ? _d : UINT32_MAX;
+        this.maxArrayLength = (_e = options === null || options === void 0 ? void 0 : options.maxArrayLength) !== null && _e !== void 0 ? _e : UINT32_MAX;
+        this.maxMapLength = (_f = options === null || options === void 0 ? void 0 : options.maxMapLength) !== null && _f !== void 0 ? _f : UINT32_MAX;
+        this.maxExtLength = (_g = options === null || options === void 0 ? void 0 : options.maxExtLength) !== null && _g !== void 0 ? _g : UINT32_MAX;
+        this.keyDecoder = ((options === null || options === void 0 ? void 0 : options.keyDecoder) !== undefined) ? options.keyDecoder : sharedCachedKeyDecoder;
     }
     Decoder.prototype.reinitializeState = function () {
         this.totalPos = 0;
@@ -1223,8 +1258,8 @@ var Decoder = /** @class */ (function () {
         return new RangeError("Extra ".concat(view.byteLength - pos, " of ").concat(view.byteLength, " byte(s) found at buffer[").concat(posToShow, "]"));
     };
     /**
-     * @throws {DecodeError}
-     * @throws {RangeError}
+     * @throws {@link DecodeError}
+     * @throws {@link RangeError}
      */
     Decoder.prototype.decode = function (buffer) {
         this.reinitializeState();
@@ -1253,52 +1288,59 @@ var Decoder = /** @class */ (function () {
         });
     };
     Decoder.prototype.decodeAsync = function (stream) {
-        var stream_1, stream_1_1;
-        var e_1, _a;
+        var _a, stream_1, stream_1_1;
+        var _b, e_1, _c, _d;
         return __awaiter(this, void 0, void 0, function () {
-            var decoded, object, buffer, e_1_1, _b, headByte, pos, totalPos;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var decoded, object, buffer, e_1_1, _e, headByte, pos, totalPos;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
                         decoded = false;
-                        _c.label = 1;
+                        _f.label = 1;
                     case 1:
-                        _c.trys.push([1, 6, 7, 12]);
-                        stream_1 = __asyncValues(stream);
-                        _c.label = 2;
+                        _f.trys.push([1, 6, 7, 12]);
+                        _a = true, stream_1 = __asyncValues(stream);
+                        _f.label = 2;
                     case 2: return [4 /*yield*/, stream_1.next()];
                     case 3:
-                        if (!(stream_1_1 = _c.sent(), !stream_1_1.done)) return [3 /*break*/, 5];
-                        buffer = stream_1_1.value;
-                        if (decoded) {
-                            throw this.createExtraByteError(this.totalPos);
-                        }
-                        this.appendBuffer(buffer);
+                        if (!(stream_1_1 = _f.sent(), _b = stream_1_1.done, !_b)) return [3 /*break*/, 5];
+                        _d = stream_1_1.value;
+                        _a = false;
                         try {
-                            object = this.doDecodeSync();
-                            decoded = true;
-                        }
-                        catch (e) {
-                            if (!(e instanceof DataViewIndexOutOfBoundsError)) {
-                                throw e; // rethrow
+                            buffer = _d;
+                            if (decoded) {
+                                throw this.createExtraByteError(this.totalPos);
                             }
-                            // fallthrough
+                            this.appendBuffer(buffer);
+                            try {
+                                object = this.doDecodeSync();
+                                decoded = true;
+                            }
+                            catch (e) {
+                                if (!(e instanceof DataViewIndexOutOfBoundsError)) {
+                                    throw e; // rethrow
+                                }
+                                // fallthrough
+                            }
+                            this.totalPos += this.pos;
                         }
-                        this.totalPos += this.pos;
-                        _c.label = 4;
+                        finally {
+                            _a = true;
+                        }
+                        _f.label = 4;
                     case 4: return [3 /*break*/, 2];
                     case 5: return [3 /*break*/, 12];
                     case 6:
-                        e_1_1 = _c.sent();
+                        e_1_1 = _f.sent();
                         e_1 = { error: e_1_1 };
                         return [3 /*break*/, 12];
                     case 7:
-                        _c.trys.push([7, , 10, 11]);
-                        if (!(stream_1_1 && !stream_1_1.done && (_a = stream_1.return))) return [3 /*break*/, 9];
-                        return [4 /*yield*/, _a.call(stream_1)];
+                        _f.trys.push([7, , 10, 11]);
+                        if (!(!_a && !_b && (_c = stream_1.return))) return [3 /*break*/, 9];
+                        return [4 /*yield*/, _c.call(stream_1)];
                     case 8:
-                        _c.sent();
-                        _c.label = 9;
+                        _f.sent();
+                        _f.label = 9;
                     case 9: return [3 /*break*/, 11];
                     case 10:
                         if (e_1) throw e_1.error;
@@ -1311,7 +1353,7 @@ var Decoder = /** @class */ (function () {
                             }
                             return [2 /*return*/, object];
                         }
-                        _b = this, headByte = _b.headByte, pos = _b.pos, totalPos = _b.totalPos;
+                        _e = this, headByte = _e.headByte, pos = _e.pos, totalPos = _e.totalPos;
                         throw new RangeError("Insufficient data in parsing ".concat(prettyByte(headByte), " at ").concat(totalPos, " (").concat(pos, " in the current buffer)"));
                 }
             });
@@ -1325,22 +1367,27 @@ var Decoder = /** @class */ (function () {
     };
     Decoder.prototype.decodeMultiAsync = function (stream, isArray) {
         return __asyncGenerator(this, arguments, function decodeMultiAsync_1() {
-            var isArrayHeaderRequired, arrayItemsLeft, stream_2, stream_2_1, buffer, e_2, e_3_1;
-            var e_3, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var isArrayHeaderRequired, arrayItemsLeft, _a, stream_2, stream_2_1, buffer, e_2, e_3_1;
+            var _b, e_3, _c, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         isArrayHeaderRequired = isArray;
                         arrayItemsLeft = -1;
-                        _b.label = 1;
+                        _e.label = 1;
                     case 1:
-                        _b.trys.push([1, 13, 14, 19]);
-                        stream_2 = __asyncValues(stream);
-                        _b.label = 2;
+                        _e.trys.push([1, 15, 16, 21]);
+                        _a = true, stream_2 = __asyncValues(stream);
+                        _e.label = 2;
                     case 2: return [4 /*yield*/, __await(stream_2.next())];
                     case 3:
-                        if (!(stream_2_1 = _b.sent(), !stream_2_1.done)) return [3 /*break*/, 12];
-                        buffer = stream_2_1.value;
+                        if (!(stream_2_1 = _e.sent(), _b = stream_2_1.done, !_b)) return [3 /*break*/, 14];
+                        _d = stream_2_1.value;
+                        _a = false;
+                        _e.label = 4;
+                    case 4:
+                        _e.trys.push([4, , 12, 13]);
+                        buffer = _d;
                         if (isArray && arrayItemsLeft === 0) {
                             throw this.createExtraByteError(this.totalPos);
                         }
@@ -1350,49 +1397,52 @@ var Decoder = /** @class */ (function () {
                             isArrayHeaderRequired = false;
                             this.complete();
                         }
-                        _b.label = 4;
-                    case 4:
-                        _b.trys.push([4, 9, , 10]);
-                        _b.label = 5;
+                        _e.label = 5;
                     case 5:
+                        _e.trys.push([5, 10, , 11]);
+                        _e.label = 6;
+                    case 6:
                         if (false) {}
                         return [4 /*yield*/, __await(this.doDecodeSync())];
-                    case 6: return [4 /*yield*/, _b.sent()];
-                    case 7:
-                        _b.sent();
+                    case 7: return [4 /*yield*/, _e.sent()];
+                    case 8:
+                        _e.sent();
                         if (--arrayItemsLeft === 0) {
-                            return [3 /*break*/, 8];
+                            return [3 /*break*/, 9];
                         }
-                        return [3 /*break*/, 5];
-                    case 8: return [3 /*break*/, 10];
-                    case 9:
-                        e_2 = _b.sent();
+                        return [3 /*break*/, 6];
+                    case 9: return [3 /*break*/, 11];
+                    case 10:
+                        e_2 = _e.sent();
                         if (!(e_2 instanceof DataViewIndexOutOfBoundsError)) {
                             throw e_2; // rethrow
                         }
-                        return [3 /*break*/, 10];
-                    case 10:
+                        return [3 /*break*/, 11];
+                    case 11:
                         this.totalPos += this.pos;
-                        _b.label = 11;
-                    case 11: return [3 /*break*/, 2];
-                    case 12: return [3 /*break*/, 19];
-                    case 13:
-                        e_3_1 = _b.sent();
-                        e_3 = { error: e_3_1 };
-                        return [3 /*break*/, 19];
-                    case 14:
-                        _b.trys.push([14, , 17, 18]);
-                        if (!(stream_2_1 && !stream_2_1.done && (_a = stream_2.return))) return [3 /*break*/, 16];
-                        return [4 /*yield*/, __await(_a.call(stream_2))];
+                        return [3 /*break*/, 13];
+                    case 12:
+                        _a = true;
+                        return [7 /*endfinally*/];
+                    case 13: return [3 /*break*/, 2];
+                    case 14: return [3 /*break*/, 21];
                     case 15:
-                        _b.sent();
-                        _b.label = 16;
-                    case 16: return [3 /*break*/, 18];
+                        e_3_1 = _e.sent();
+                        e_3 = { error: e_3_1 };
+                        return [3 /*break*/, 21];
+                    case 16:
+                        _e.trys.push([16, , 19, 20]);
+                        if (!(!_a && !_b && (_c = stream_2.return))) return [3 /*break*/, 18];
+                        return [4 /*yield*/, __await(_c.call(stream_2))];
                     case 17:
+                        _e.sent();
+                        _e.label = 18;
+                    case 18: return [3 /*break*/, 20];
+                    case 19:
                         if (e_3) throw e_3.error;
                         return [7 /*endfinally*/];
-                    case 18: return [7 /*endfinally*/];
-                    case 19: return [2 /*return*/];
+                    case 20: return [7 /*endfinally*/];
+                    case 21: return [2 /*return*/];
                 }
             });
         });
@@ -1474,7 +1524,12 @@ var Decoder = /** @class */ (function () {
             }
             else if (headByte === 0xcf) {
                 // uint 64
-                object = this.readU64();
+                if (this.useBigInt64) {
+                    object = this.readU64AsBigInt();
+                }
+                else {
+                    object = this.readU64();
+                }
             }
             else if (headByte === 0xd0) {
                 // int 8
@@ -1490,7 +1545,12 @@ var Decoder = /** @class */ (function () {
             }
             else if (headByte === 0xd3) {
                 // int 64
-                object = this.readI64();
+                if (this.useBigInt64) {
+                    object = this.readI64AsBigInt();
+                }
+                else {
+                    object = this.readI64();
+                }
             }
             else if (headByte === 0xd9) {
                 // str 8
@@ -1613,7 +1673,7 @@ var Decoder = /** @class */ (function () {
             while (stack.length > 0) {
                 // arrays and maps
                 var state = stack[stack.length - 1];
-                if (state.type === 0 /* ARRAY */) {
+                if (state.type === STATE_ARRAY) {
                     state.array[state.position] = object;
                     state.position++;
                     if (state.position === state.size) {
@@ -1624,7 +1684,7 @@ var Decoder = /** @class */ (function () {
                         continue DECODE;
                     }
                 }
-                else if (state.type === 1 /* MAP_KEY */) {
+                else if (state.type === STATE_MAP_KEY) {
                     if (!isValidMapKeyType(object)) {
                         throw new DecodeError("The type of key must be string or number but " + typeof object);
                     }
@@ -1632,7 +1692,7 @@ var Decoder = /** @class */ (function () {
                         throw new DecodeError("The key __proto__ is not allowed");
                     }
                     state.key = object;
-                    state.type = 2 /* MAP_VALUE */;
+                    state.type = STATE_MAP_VALUE;
                     continue DECODE;
                 }
                 else {
@@ -1645,7 +1705,7 @@ var Decoder = /** @class */ (function () {
                     }
                     else {
                         state.key = null;
-                        state.type = 1 /* MAP_KEY */;
+                        state.type = STATE_MAP_KEY;
                         continue DECODE;
                     }
                 }
@@ -1685,7 +1745,7 @@ var Decoder = /** @class */ (function () {
             throw new DecodeError("Max length exceeded: map length (".concat(size, ") > maxMapLengthLength (").concat(this.maxMapLength, ")"));
         }
         this.stack.push({
-            type: 1 /* MAP_KEY */,
+            type: STATE_MAP_KEY,
             size: size,
             key: null,
             readCount: 0,
@@ -1697,7 +1757,7 @@ var Decoder = /** @class */ (function () {
             throw new DecodeError("Max length exceeded: array length (".concat(size, ") > maxArrayLength (").concat(this.maxArrayLength, ")"));
         }
         this.stack.push({
-            type: 0 /* ARRAY */,
+            type: STATE_ARRAY,
             size: size,
             array: new Array(size),
             position: 0,
@@ -1716,11 +1776,8 @@ var Decoder = /** @class */ (function () {
         if (this.stateIsMapKey() && ((_a = this.keyDecoder) === null || _a === void 0 ? void 0 : _a.canBeCached(byteLength))) {
             object = this.keyDecoder.decode(this.bytes, offset, byteLength);
         }
-        else if (byteLength > TEXT_DECODER_THRESHOLD) {
-            object = utf8DecodeTD(this.bytes, offset, byteLength);
-        }
         else {
-            object = utf8DecodeJs(this.bytes, offset, byteLength);
+            object = utf8Decode(this.bytes, offset, byteLength);
         }
         this.pos += headerOffset + byteLength;
         return object;
@@ -1728,7 +1785,7 @@ var Decoder = /** @class */ (function () {
     Decoder.prototype.stateIsMapKey = function () {
         if (this.stack.length > 0) {
             var state = this.stack[this.stack.length - 1];
-            return state.type === 1 /* MAP_KEY */;
+            return state.type === STATE_MAP_KEY;
         }
         return false;
     };
@@ -1801,6 +1858,16 @@ var Decoder = /** @class */ (function () {
         this.pos += 8;
         return value;
     };
+    Decoder.prototype.readU64AsBigInt = function () {
+        var value = this.view.getBigUint64(this.pos);
+        this.pos += 8;
+        return value;
+    };
+    Decoder.prototype.readI64AsBigInt = function () {
+        var value = this.view.getBigInt64(this.pos);
+        this.pos += 8;
+        return value;
+    };
     Decoder.prototype.readF32 = function () {
         var value = this.view.getFloat32(this.pos);
         this.pos += 4;
@@ -1817,25 +1884,32 @@ var Decoder = /** @class */ (function () {
 
 ;// CONCATENATED MODULE: ./src/decode.ts
 
-var defaultDecodeOptions = {};
+/**
+ * @deprecated No longer supported.
+ */
+var defaultDecodeOptions = (/* unused pure expression or super */ null && (undefined));
 /**
  * It decodes a single MessagePack object in a buffer.
  *
  * This is a synchronous decoding function.
  * See other variants for asynchronous decoding: {@link decodeAsync()}, {@link decodeStream()}, or {@link decodeArrayStream()}.
+ *
+ * @throws {@link RangeError} if the buffer is incomplete, including the case where the buffer is empty.
+ * @throws {@link DecodeError} if the buffer contains invalid data.
  */
 function decode(buffer, options) {
-    if (options === void 0) { options = defaultDecodeOptions; }
-    var decoder = new Decoder(options.extensionCodec, options.context, options.maxStrLength, options.maxBinLength, options.maxArrayLength, options.maxMapLength, options.maxExtLength);
+    var decoder = new Decoder(options);
     return decoder.decode(buffer);
 }
 /**
  * It decodes multiple MessagePack objects in a buffer.
  * This is corresponding to {@link decodeMultiStream()}.
+ *
+ * @throws {@link RangeError} if the buffer is incomplete, including the case where the buffer is empty.
+ * @throws {@link DecodeError} if the buffer contains invalid data.
  */
 function decodeMulti(buffer, options) {
-    if (options === void 0) { options = defaultDecodeOptions; }
-    var decoder = new Decoder(options.extensionCodec, options.context, options.maxStrLength, options.maxBinLength, options.maxArrayLength, options.maxMapLength, options.maxExtLength);
+    var decoder = new Decoder(options);
     return decoder.decodeMulti(buffer);
 }
 
@@ -1847,7 +1921,7 @@ var stream_generator = (undefined && undefined.__generator) || function (thisArg
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -1948,7 +2022,7 @@ var decodeAsync_generator = (undefined && undefined.__generator) || function (th
     function verb(n) { return function (v) { return step([n, v]); }; }
     function step(op) {
         if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
             switch (op[0]) {
@@ -1971,37 +2045,42 @@ var decodeAsync_generator = (undefined && undefined.__generator) || function (th
 };
 
 
-
+/**
+ * @throws {@link RangeError} if the buffer is incomplete, including the case where the buffer is empty.
+ * @throws {@link DecodeError} if the buffer contains invalid data.
+ */
 function decodeAsync(streamLike, options) {
-    if (options === void 0) { options = defaultDecodeOptions; }
     return decodeAsync_awaiter(this, void 0, void 0, function () {
         var stream, decoder;
         return decodeAsync_generator(this, function (_a) {
             stream = ensureAsyncIterable(streamLike);
-            decoder = new Decoder(options.extensionCodec, options.context, options.maxStrLength, options.maxBinLength, options.maxArrayLength, options.maxMapLength, options.maxExtLength);
+            decoder = new Decoder(options);
             return [2 /*return*/, decoder.decodeAsync(stream)];
         });
     });
 }
+/**
+ * @throws {@link RangeError} if the buffer is incomplete, including the case where the buffer is empty.
+ * @throws {@link DecodeError} if the buffer contains invalid data.
+ */
 function decodeArrayStream(streamLike, options) {
-    if (options === void 0) { options = defaultDecodeOptions; }
     var stream = ensureAsyncIterable(streamLike);
-    var decoder = new Decoder(options.extensionCodec, options.context, options.maxStrLength, options.maxBinLength, options.maxArrayLength, options.maxMapLength, options.maxExtLength);
+    var decoder = new Decoder(options);
     return decoder.decodeArrayStream(stream);
 }
+/**
+ * @throws {@link RangeError} if the buffer is incomplete, including the case where the buffer is empty.
+ * @throws {@link DecodeError} if the buffer contains invalid data.
+ */
 function decodeMultiStream(streamLike, options) {
-    if (options === void 0) { options = defaultDecodeOptions; }
     var stream = ensureAsyncIterable(streamLike);
-    var decoder = new Decoder(options.extensionCodec, options.context, options.maxStrLength, options.maxBinLength, options.maxArrayLength, options.maxMapLength, options.maxExtLength);
+    var decoder = new Decoder(options);
     return decoder.decodeStream(stream);
 }
 /**
  * @deprecated Use {@link decodeMultiStream()} instead.
  */
-function decodeStream(streamLike, options) {
-    if (options === void 0) { options = defaultDecodeOptions; }
-    return decodeMultiStream(streamLike, options);
-}
+var decodeStream = undefined;
 
 ;// CONCATENATED MODULE: ./src/index.ts
 // Main Functions:
@@ -2016,7 +2095,8 @@ function decodeStream(streamLike, options) {
 
 
 
-// Utilitiies for Extension Types:
+
+// Utilities for Extension Types:
 
 
 

@@ -89,4 +89,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Immense.RemoteControl.Shared\Immense.RemoteControl.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\msgpack\" />
+  </ItemGroup>
 </Project>

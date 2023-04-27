@@ -3,11 +3,11 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "microsoft-signalr@6.0.9",
+      "library": "microsoft-signalr@7.0.5",
       "destination": "wwwroot/lib/microsoft-signalr/"
     },
     {
-      "library": "@msgpack/msgpack@2.7.2",
+      "library": "@msgpack/msgpack@3.0.0-beta2",
       "destination": "wwwroot/lib/msgpack/",
       "provider": "unpkg",
       "files": [
@@ -19,7 +19,7 @@
     },
     {
       "provider": "unpkg",
-      "library": "@microsoft/signalr-protocol-msgpack@6.0.9",
+      "library": "@microsoft/signalr-protocol-msgpack@7.0.5",
       "destination": "wwwroot/lib/microsoft/signalr-protocol-msgpack/",
       "files": [
         "dist/browser/signalr-protocol-msgpack.js",
