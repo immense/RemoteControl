@@ -41,26 +41,32 @@ public static class DtoChunker
             return new List<DtoWrapper>();
         });
 
+        if (chunks is null)
+        {
+            return false;
+        }
+
         lock (chunks)
         {
             chunks.Add(wrapper);
 
-            if (!wrapper.IsLastChunk)
-            {
-                return false;
-            }
-
-            _cache.Remove(wrapper.InstanceId);
-
-            chunks.Sort((a, b) =>
-            {
-                return a.SequenceId - b.SequenceId;
-            });
-
-            var buffer = chunks.SelectMany(x => x.DtoChunk).ToArray();
-
-            result = MessagePackSerializer.Deserialize<T>(buffer);
-            return true;
         }
+
+        if (!wrapper.IsLastChunk)
+        {
+            return false;
+        }
+
+        _cache.Remove(wrapper.InstanceId);
+
+        chunks.Sort((a, b) =>
+        {
+            return a.SequenceId - b.SequenceId;
+        });
+
+        var buffer = chunks.SelectMany(x => x.DtoChunk).ToArray();
+
+        result = MessagePackSerializer.Deserialize<T>(buffer);
+        return true;
     }
 }
