@@ -251,9 +251,7 @@ export function ApplyInputHandlers() {
         if (currentPointerDevice == "touch") {
             return;
         }
-        if (e.button != 0 && e.button != 2) {
-            return;
-        }
+
         e.preventDefault();
 
         if (ViewerApp.ViewOnlyMode) {
@@ -502,7 +500,7 @@ export function ApplyInputHandlers() {
             ViewerApp.MessageSender.SendKeyPress(" ");
         }
         else {
-            var input = TouchKeyboardTextArea.value.trim().substr(1);
+            var input = TouchKeyboardTextArea.value.trim().substring(1);
             for (var i = 0; i < input.length; i++) {
                 var character = input.charAt(i);
                 var sendShift = character.match(/[A-Z~!@#$%^&*()_+{}|<>?]/);
