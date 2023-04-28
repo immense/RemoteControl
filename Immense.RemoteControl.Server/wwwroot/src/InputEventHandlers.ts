@@ -1,4 +1,4 @@
-﻿import {
+import {
     AudioButton,
     ChangeScreenButton,
     HorizontalBars,
@@ -528,7 +528,7 @@ export function ApplyInputHandlers() {
         ViewerApp.MessageSender.GetWindowsSessions();
     });
     WindowsSessionSelect.addEventListener("change", () => {
-        ShowMessage("Switching sessions...");
+        ShowMessage("Switching sessions");
         ViewerApp.MessageSender.ChangeWindowsSession(Number(WindowsSessionSelect.selectedOptions[0].value));
     });
     RecordSessionButton.addEventListener("click", () => {

@@ -151,15 +151,16 @@ export class ViewerHubConnection {
         });
       
         hubConnection.on("Reconnecting", () => {
-            ShowMessage("Reconnecting...");
+            ShowMessage("Reconnecting");
         });
 
         hubConnection.on("CursorChange", (cursor: CursorInfo) => {
             UI.UpdateCursor(cursor.ImageBytes, cursor.HotSpot.X, cursor.HotSpot.Y, cursor.CssOverride);
         });
 
-        hubConnection.on("RequestingScreenCast", () => {
-            ShowMessage("Requesting remote control...");
+      hubConnection.on("RequestingScreenCast", () => {
+            UI.StatusMessage.innerHTML = "The host has disconnected.";
+            ShowMessage("Requesting remote control");
         });
 
         hubConnection.on("ShowMessage", (message: string) => {

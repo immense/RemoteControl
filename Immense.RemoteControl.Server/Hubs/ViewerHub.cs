@@ -17,19 +17,17 @@ public class ViewerHub : Hub
     private readonly IHubEventHandler _hubEvents;
     private readonly ILogger<ViewerHub> _logger;
     private readonly IDesktopStreamCache _streamCache;
-    private readonly IViewerHubDataProvider _viewerHubDataProvider;
+
     public ViewerHub(
         IHubEventHandler hubEvents,
         IDesktopHubSessionCache desktopSessionCache,
         IDesktopStreamCache streamCache,
-        IViewerHubDataProvider viewerHubDataProvider,
         IHubContext<DesktopHub> desktopHub,
         ILogger<ViewerHub> logger)
     {
         _hubEvents = hubEvents;
         _desktopSessionCache = desktopSessionCache;
         _streamCache = streamCache;
-        _viewerHubDataProvider = viewerHubDataProvider;
         _desktopHub = desktopHub;
         _logger = logger;
     }
@@ -200,8 +198,8 @@ public class ViewerHub : Hub
                 "GetScreenCast",
                 Context.ConnectionId,
                 RequesterDisplayName,
-                _viewerHubDataProvider.RemoteControlNotifyUser,
-                _viewerHubDataProvider.EnforceAttendedAccess,
+                SessionInfo.NotifyUserOnStart,
+                SessionInfo.RequireConsent,
                 SessionInfo.OrganizationName,
                 SessionInfo.StreamId);
         }
@@ -212,8 +210,8 @@ public class ViewerHub : Hub
             await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
                 "RequestScreenCast", 
                 Context.ConnectionId, 
-                RequesterDisplayName, 
-                _viewerHubDataProvider.RemoteControlNotifyUser,
+                RequesterDisplayName,
+                SessionInfo.NotifyUserOnStart,
                 SessionInfo.StreamId);
         }
     }

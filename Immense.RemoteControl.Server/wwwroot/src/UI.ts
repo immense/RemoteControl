@@ -1,4 +1,4 @@
-﻿import { ViewerApp } from "./App.js";
+import { ViewerApp } from "./App.js";
 import { ConvertUInt8ArrayToBase64 } from "./Utilities.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { WindowsSessionType } from "./Enums/WindowsSessionType.js";
@@ -116,7 +116,7 @@ export function ToggleConnectUI(shown: boolean) {
             DisconnectedBox.style.removeProperty("display");
         }
         BlockInputButton.classList.remove("toggled");
-        AudioButton.classList.remove("toggled");
+      AudioButton.classList.remove("toggled");
     }
     else {
         ConnectButton.removeAttribute("disabled");

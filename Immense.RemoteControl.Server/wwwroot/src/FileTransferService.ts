@@ -1,4 +1,4 @@
-﻿import { FileTransferProgress, FileTransferInput, FileTransferNameSpan } from "./UI.js";
+import { FileTransferProgress, FileTransferInput, FileTransferNameSpan } from "./UI.js";
 import { ViewerApp } from "./App.js";
 import { ShowMessage } from "./UI.js";
 import { FileDto } from "./Interfaces/Dtos.js";
@@ -11,7 +11,7 @@ export async function UploadFiles(fileList: FileList) {
         ShowMessage("File transfer already in progress.");
         return;
     }
-    ShowMessage("File upload started...");
+    ShowMessage("File upload started");
     FileTransferProgress.value = 0;
     FileTransferProgress.parentElement.removeAttribute("hidden");
 
@@ -32,7 +32,7 @@ export async function UploadFiles(fileList: FileList) {
 
 export async function ReceiveFile(file: FileDto) {
     if (file.StartOfFile) {
-        ShowMessage(`Downloading file ${file.FileName}...`);
+        ShowMessage(`Downloading file ${file.FileName}`);
     }
 
     var partial = PartialDownloads[file.MessageId];

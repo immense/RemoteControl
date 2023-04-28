@@ -19,10 +19,22 @@ public class RemoteControlSession : IDisposable
     public string DesktopConnectionId { get; internal set; } = string.Empty;
     public string MachineName { get; internal set; } = string.Empty;
     public RemoteControlMode Mode { get; internal set; }
+    /// <summary>
+    /// Whether to notify the user via system notification when a remote
+    /// control session has started.
+    /// </summary>
+    public bool NotifyUserOnStart { get; set; } = true;
+
     public string OrganizationName { get; internal set; } = string.Empty;
     public string RelativeAccessUri => $"/RemoteControl/Viewer?mode=Unattended&sessionId={UnattendedSessionId}&accessKey={AccessKey}&viewonly=False";
     public string RequesterName { get; set; } = string.Empty;
     public string RequesterUserName { get; internal set; } = string.Empty;
+    /// <summary>
+    /// Whether the remote control session requires the end user's consent
+    /// before the view can connect.
+    /// </summary>
+    public bool RequireConsent { get; set; }
+
     public DateTimeOffset StartTime { get; internal set; }
     public Guid StreamId { get; internal set; }
     public Guid UnattendedSessionId { get; set; }

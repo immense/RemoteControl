@@ -1,4 +1,4 @@
-﻿import * as Utilities from "./Utilities.js";
+import * as Utilities from "./Utilities.js";
 import * as UI from "./UI.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { ClipboardWatcher } from "./ClipboardWatcher.js";
@@ -62,7 +62,7 @@ export const ViewerApp = {
         ViewerApp.RequesterName = UI.RequesterNameInput.value;
         ViewerApp.Mode = RemoteControlMode.Attended;
         ViewerApp.ViewerHubConnection.Connect();
-        UI.StatusMessage.innerHTML = "Requesting access on remote device...";
+        UI.StatusMessage.innerHTML = "Requesting access on remote device";
 
         ViewerApp.Settings.displayName = ViewerApp.RequesterName;
         SetSettings(ViewerApp.Settings);
