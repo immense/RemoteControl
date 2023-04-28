@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Shared.Models;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;

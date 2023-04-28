@@ -1,8 +1,8 @@
-using CommunityToolkit.Mvvm.Messaging;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Nihs.SimpleMessenger;
 using System.Collections.Concurrent;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;

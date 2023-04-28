@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
@@ -76,7 +76,7 @@ public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWi
 
         var ofd = new OpenFileDialog()
         {
-            Title = "Upload File via Remotely",
+            Title = "Upload File to Viewer",
             Multiselect = true,
             CheckFileExists = true,
             InitialDirectory = Directory.Exists(userDir) ? userDir : rootDir

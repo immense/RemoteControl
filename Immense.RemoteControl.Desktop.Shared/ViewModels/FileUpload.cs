@@ -1,17 +1,23 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 
 namespace Immense.RemoteControl.Desktop.Shared.ViewModels;
 
-[ObservableObject]
-public partial class FileUpload
+public partial class FileUpload : ObservableObject
 {
-    [ObservableProperty]
-    private string _filePath = string.Empty;
+    public string FilePath
+    {
+        get => Get(defaultValue: string.Empty);
+        set => Set(value);
+    }
 
-    [ObservableProperty]
-    private double _percentProgress;
+
+    public double PercentProgress
+    {
+        get => Get<double>();
+        set => Set(value);
+    }
 
     public CancellationTokenSource CancellationTokenSource { get; } = new CancellationTokenSource();
 
-    public string DisplayName => Path.GetFileName(_filePath);
+    public string DisplayName => Path.GetFileName(FilePath);
 }

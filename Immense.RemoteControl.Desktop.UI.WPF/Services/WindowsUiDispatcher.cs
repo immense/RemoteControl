@@ -1,11 +1,11 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using Immense.RemoteControl.Desktop.Shared.Messages;
+﻿using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System.Diagnostics;
 using Application = System.Windows.Application;
+using Nihs.SimpleMessenger;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.Services;
 

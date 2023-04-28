@@ -26,7 +26,7 @@ public interface IBrandedViewModelBase
     Task ApplyBranding();
 }
 
-public class BrandedViewModelBase : ObservableObjectEx, IBrandedViewModelBase
+public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
 {
     private static BrandingInfoBase? _brandingInfo;
     private readonly IBrandingProvider _brandingProvider;

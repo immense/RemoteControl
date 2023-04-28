@@ -21,7 +21,7 @@ public interface IBrandedViewModelBase
     Task ApplyBranding();
 }
 
-public abstract class BrandedViewModelBase : ObservableObjectEx, IBrandedViewModelBase
+public abstract class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
 {
     private static BrandingInfoBase? _brandingInfo;
     private readonly IBrandingProvider _brandingProvider;
@@ -101,11 +101,11 @@ public abstract class BrandedViewModelBase : ObservableObjectEx, IBrandedViewMod
 
                 Icon = GetBitmapImageIcon(_brandingInfo);
 
-                OnPropertyChanged(nameof(ProductName));
-                OnPropertyChanged(nameof(TitleBackgroundColor));
-                OnPropertyChanged(nameof(TitleForegroundColor));
-                OnPropertyChanged(nameof(TitleButtonForegroundColor));
-                OnPropertyChanged(nameof(Icon));
+                NotifyPropertyChanged(nameof(ProductName));
+                NotifyPropertyChanged(nameof(TitleBackgroundColor));
+                NotifyPropertyChanged(nameof(TitleForegroundColor));
+                NotifyPropertyChanged(nameof(TitleButtonForegroundColor));
+                NotifyPropertyChanged(nameof(Icon));
             }
             catch (Exception ex)
             {

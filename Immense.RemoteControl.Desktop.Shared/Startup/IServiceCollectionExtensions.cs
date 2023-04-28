@@ -1,9 +1,9 @@
-using CommunityToolkit.Mvvm.Messaging;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nihs.SimpleMessenger;
 
 namespace Immense.RemoteControl.Desktop.Shared.Startup;
 
@@ -28,7 +28,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IIdleTimer, IdleTimer>();
         services.AddSingleton<IImageHelper, ImageHelper>();
         services.AddSingleton<IChatHostService, ChatHostService>();
-        services.AddSingleton<IMessenger>(s => WeakReferenceMessenger.Default);
+        services.AddSingleton(s => WeakReferenceMessenger.Default);
         services.AddSingleton<IEnvironmentHelper, EnvironmentHelper>();
         services.AddSingleton<IDtoMessageHandler, DtoMessageHandler>();
         services.AddSingleton<IAppState, AppState>();

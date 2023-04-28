@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls;
 using Immense.RemoteControl.Desktop.Services;
 using System.Windows.Input;
-using CommunityToolkit.Mvvm.Input;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Controls.Dialogs;

@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels.Fakes;
 
@@ -9,9 +10,9 @@ public class FakePromptForAccessViewModel : FakeBrandedViewModelBase, IPromptFor
     public bool PromptResult { get; set; }
     public string RequesterName { get; set; } = "Test Requester";
 
-    public RelayCommand<Window> SetResultNoCommand { get; } = new(window => { });
+    public ICommand SetResultNoCommand { get; } = new RelayCommand<Window>(window => { });
 
-    public RelayCommand<Window> SetResultYesCommand { get; } = new(window => { });
+    public ICommand SetResultYesCommand { get; } = new RelayCommand<Window>(window => { });
 
     public void SetResultNo(Window? promptWindow)
     {

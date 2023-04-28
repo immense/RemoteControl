@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
+using System.Runtime.Versioning;
 
 namespace Immense.RemoteControl.Desktop.Shared.Startup;
 
@@ -30,6 +31,12 @@ public static class IServiceProviderExtensions
     {
         try
         {
+            var logger = services.GetRequiredService<ILogger<IServiceProvider>>();
+            TaskScheduler.UnobservedTaskException += (object? sender, UnobservedTaskExceptionEventArgs e) =>
+            {
+                HandleUnobservedTask(e, logger);
+            };
+
             if (OperatingSystem.IsWindows() && elevate)
             {
                 RelaunchElevated();
@@ -60,7 +67,8 @@ public static class IServiceProviderExtensions
             return Result.Fail(ex);
         }
        
-    } 
+    }
+
     /// <summary>
     /// Runs the remote control startup as a root command.  This uses the System.CommandLine package.
     /// </summary>
@@ -126,6 +134,17 @@ public static class IServiceProviderExtensions
         }
     }
 
+    // This shouldn't be required in modern .NET to prevent the app from crashing,
+    // but it could be useful to log it.
+    private static void HandleUnobservedTask(
+        UnobservedTaskExceptionEventArgs e, 
+        ILogger<IServiceProvider> logger)
+    {
+        e.SetObserved();
+        logger.LogError(e.Exception, "An unobserved task exception occurred.");
+    }
+
+    [SupportedOSPlatform("windows")]
     private static void RelaunchElevated()
     {
         var commandLine = Win32Interop.GetCommandLine().Replace(" --elevate", "");

@@ -1,9 +1,10 @@
 ﻿using Avalonia.Controls;
 using Immense.RemoteControl.Desktop.Services;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Microsoft.Extensions.Logging;
 using System.Windows.Input;
-using CommunityToolkit.Mvvm.Input;
+
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 
@@ -59,7 +60,7 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
         set
         {
             Set(value);
-            OnPropertyChanged(nameof(RequestMessage));
+            NotifyPropertyChanged(nameof(RequestMessage));
         }
 
     }
@@ -72,7 +73,7 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
         set
         {
             Set(value);
-            OnPropertyChanged(nameof(RequestMessage));
+            NotifyPropertyChanged(nameof(RequestMessage));
         }
     }
 

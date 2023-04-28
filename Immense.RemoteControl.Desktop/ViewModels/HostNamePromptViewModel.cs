@@ -3,7 +3,7 @@ using Immense.RemoteControl.Desktop.Services;
 using System.Windows.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
-using CommunityToolkit.Mvvm.Input;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 

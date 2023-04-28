@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Desktop.Controls.Dialogs;
 using System.Windows.Input;
 

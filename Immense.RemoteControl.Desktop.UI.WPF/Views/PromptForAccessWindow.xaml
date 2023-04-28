@@ -70,13 +70,13 @@
         </StackPanel>
       
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-            <Button Width="60" Height="40" Content="Yes" Margin="10"
+            <Button x:Name="YesButton" Width="60" Height="40" Content="Yes" Margin="10"
                     Style="{StaticResource NormalButton}"
-                    Command="{Binding ViewModel.SetResultYesCommand, ElementName=ThisWindow}"
+                    Command="{Binding ViewModel.SetResultYesCommand, ElementName=ThisWindow, Mode=OneWay}"
                     CommandParameter="{Binding ElementName=ThisWindow, Mode=OneWay}"></Button>
-            <Button Width="60" Height="40" Content="No" Margin="10"
+            <Button x:Name="NoButton" Width="60" Height="40" Content="No" Margin="10"
                     Style="{StaticResource NormalButton}"
-                    Command="{Binding ViewModel.SetResultNoCommand, ElementName=ThisWindow}"
+                    Command="{Binding ViewModel.SetResultNoCommand, ElementName=ThisWindow, Mode=OneWay}"
                     CommandParameter="{Binding ElementName=ThisWindow, Mode=OneWay}"></Button>
         </StackPanel>
 

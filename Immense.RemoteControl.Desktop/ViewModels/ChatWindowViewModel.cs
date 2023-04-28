@@ -6,9 +6,9 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using CommunityToolkit.Mvvm.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 
@@ -30,7 +30,7 @@ public class ChatWindowViewModel : BrandedViewModelBase, IChatWindowViewModel
     private readonly StreamWriter? _streamWriter;
 
     public ChatWindowViewModel(
-                StreamWriter streamWriter,
+        StreamWriter streamWriter,
         string organizationName,
         IBrandingProvider brandingProvider,
         IAvaloniaDispatcher dispatcher,
@@ -67,7 +67,7 @@ public class ChatWindowViewModel : BrandedViewModelBase, IChatWindowViewModel
         set
         {
             Set(value);
-            OnPropertyChanged(nameof(ChatSessionHeader));
+            NotifyPropertyChanged(nameof(ChatSessionHeader));
         }
     }
 

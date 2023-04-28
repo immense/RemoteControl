@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.ViewModels.Fakes;

@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
@@ -7,6 +6,7 @@ using Immense.RemoteControl.Shared.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nihs.SimpleMessenger;
 using System.Diagnostics;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
@@ -383,12 +383,12 @@ public class DesktopHubConnection : IDesktopHubConnection
         }
     }
 
-    private async void HandleWindowsSessionChanged(object recipient, WindowsSessionSwitched message)
+    private async Task HandleWindowsSessionChanged(WindowsSessionSwitched message)
     {
         await NotifySessionChanged(message.Reason, message.SessionId);
     }
 
-    private async void HandleWindowsSessionEnding(object recipient, WindowsSessionEndingMessage message)
+    private async Task HandleWindowsSessionEnding(WindowsSessionEndingMessage message)
     {
         await DisconnectAllViewers();
     }

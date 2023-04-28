@@ -55,7 +55,7 @@
                                     <ProgressBar Value="{Binding PercentProgress}" Maximum="1" LargeChange="0.01" Height="18"></ProgressBar>
                                     <Button Grid.Column="1"
                                             VerticalAlignment="Top"
-                                            Command="{Binding DataContext, ElementName=ThisWindow}" 
+                                            Command="{Binding DataContext.RemoveFileUploadCommand, ElementName=ThisWindow, Mode=OneWay}" 
                                             CommandParameter="{Binding}" 
                                             Content="x"
                                             Style="{StaticResource NormalButton}" 

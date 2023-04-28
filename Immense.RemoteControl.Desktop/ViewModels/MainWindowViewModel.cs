@@ -12,10 +12,10 @@ using System.Windows.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Services;
 using Microsoft.Extensions.Logging;
-using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 using Immense.RemoteControl.Desktop.Controls.Dialogs;
+using Immense.RemoteControl.Desktop.Shared.Reactive;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 
@@ -130,7 +130,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         set
         {
             _selectedViewers = value ?? new List<IViewer>();
-            OnPropertyChanged();
+            NotifyPropertyChanged();
             RemoveViewersCommand.NotifyCanExecuteChanged();
         }
     }

@@ -41,7 +41,7 @@ public class FileTransferServiceWin : IFileTransferService
     public string GetBaseDirectory()
     {
         var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        return Directory.CreateDirectory(Path.Combine(programDataPath, "Remotely", "Shared")).FullName;
+        return Directory.CreateDirectory(Path.Combine(programDataPath, "RemoteControl", "Shared")).FullName;
     }
 
     public void OpenFileTransferWindow(IViewer viewer)

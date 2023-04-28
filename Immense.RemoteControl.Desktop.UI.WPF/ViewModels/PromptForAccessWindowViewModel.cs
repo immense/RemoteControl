@@ -1,8 +1,9 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 
@@ -11,8 +12,8 @@ public interface IPromptForAccessWindowViewModel : IBrandedViewModelBase
     string OrganizationName { get; set; }
     bool PromptResult { get; set; }
     string RequesterName { get; set; }
-    RelayCommand<Window> SetResultNoCommand { get; }
-    RelayCommand<Window> SetResultYesCommand { get; }
+    ICommand SetResultNoCommand { get; }
+    ICommand SetResultYesCommand { get; }
 
     void SetResultNo(Window? promptWindow);
     void SetResultYes(Window? promptWindow);
@@ -55,8 +56,8 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
         set => Set(value);
     }
 
-    public RelayCommand<Window> SetResultNoCommand { get; }
-    public RelayCommand<Window> SetResultYesCommand { get; }
+    public ICommand SetResultNoCommand { get; }
+    public ICommand SetResultYesCommand { get; }
 
 
     public void SetResultNo(Window? promptWindow)
