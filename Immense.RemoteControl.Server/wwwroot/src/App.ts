@@ -48,7 +48,7 @@ export const ViewerApp = {
 
         if (ViewerApp.Mode == RemoteControlMode.Unattended) {
             ViewerApp.ViewerHubConnection.Connect();
-            UI.StatusMessage.innerHTML = "Connecting to remote device...";
+            UI.StatusMessage.innerHTML = "Connecting to remote device";
         }
         else {
             UI.ConnectBox.style.removeProperty("display");
@@ -57,8 +57,15 @@ export const ViewerApp = {
         }
     },
     ConnectToClient: () => {
+        ViewerApp.SessionId = UI.SessionIDInput.value.split(" ").join("").trim();
+
+        if (!ViewerApp.SessionId) {
+            UI.ShowMessage("Session ID is required");
+            UI.SetStatusMessage("Session ID is required.");
+            return;
+        }
+
         UI.ConnectButton.disabled = true;
-        ViewerApp.SessionId = UI.SessionIDInput.value.split(" ").join("");
         ViewerApp.RequesterName = UI.RequesterNameInput.value;
         ViewerApp.Mode = RemoteControlMode.Attended;
         ViewerApp.ViewerHubConnection.Connect();

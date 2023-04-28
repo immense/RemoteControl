@@ -36,7 +36,6 @@ import { UploadFiles } from "./FileTransferService.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { GetDistanceBetween } from "./Utilities.js";
 import { ShowMessage } from "./UI.js";
-import { SetSettings } from "./SettingsService.js";
 
 var isDragging: boolean;
 var currentPointerDevice: string;

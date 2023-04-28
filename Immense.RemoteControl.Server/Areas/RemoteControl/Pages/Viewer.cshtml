@@ -38,7 +38,7 @@
     </environment>
 </head>
 <body>
-    <div class="remotely-header" title="@(Model.ProductName)">
+    <div class="brand-frame" title="@(Model.ProductName)">
         <div class="logo-title">
             @(Model.ProductName)
         </div>
@@ -164,28 +164,30 @@
             <button id="fileDownloadButton" class="horizontal-bar-button">Download File</button>
         </div>
     </div>
-    <div id="connectBox" class="center-connection-box" style="display: none">
-        <h3>Connect to a client:</h3>
-        <div class="form-block">
-            <label>Your Name (shown to client): </label>
-            <br />
-            <input id="nameInput" type="text" value="@Model.UserDisplayName" />
+
+    <div class="connection-box-wrapper">
+
+        <div id="connectBox" class="center-connection-box" style="display: none">
+            <h3>Connect to a client:</h3>
+            <div class="form-block">
+                <label>Your Name (shown to client): </label>
+                <br />
+                <input id="nameInput" type="text" value="@Model.UserDisplayName" />
+            </div>
+            <div class="form-block">
+                <label>Session ID: </label>
+                <br />
+                <input id="sessionIDInput" type="text" pattern="[0-9 ]+" />
+            </div>
+            <div class="right-aligned">
+                <button id="connectButton">Connect</button>
+            </div>
+
         </div>
-        <div class="form-block">
-            <label>Session ID: </label>
-            <br />
-            <input id="sessionIDInput" type="text" pattern="[0-9 ]+" />
-        </div>
-        <div class="right-aligned">
-            <button id="connectButton">Connect</button>
-        </div>
+
         <div id="statusMessage" class="status-message">
-
         </div>
-    </div>
 
-    <div id="disconnectedBox" class="center-connection-box" style="text-align: center; display: none;">
-        <h3>Disconnected from client.</h3>
     </div>
 
 

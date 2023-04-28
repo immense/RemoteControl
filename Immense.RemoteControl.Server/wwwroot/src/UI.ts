@@ -16,7 +16,6 @@ export var ScreenViewerWrapper = document.getElementById("screenViewerWrapper") 
 export var Screen2DContext = ScreenViewer ? ScreenViewer.getContext("2d") : null;
 export var HorizontalBars = document.querySelectorAll(".horizontal-button-bar");
 export var ConnectBox = document.getElementById("connectBox") as HTMLDivElement;
-export var DisconnectedBox = document.getElementById("disconnectedBox") as HTMLDivElement;
 export var ScreenSelectBar = document.getElementById("screenSelectBar") as HTMLDivElement;
 export var ActionsBar = document.getElementById("actionsBar") as HTMLDivElement;
 export var ViewBar = document.getElementById("viewBar") as HTMLDivElement;
@@ -94,6 +93,10 @@ export function SetScreenSize(width: number, height: number) {
     Screen2DContext.clearRect(0, 0, width, height);
 }
 
+export function SetStatusMessage(message: string) {
+    StatusMessage.innerHTML = message;
+}
+
 export function ShowMessage(message: string) {
     var messageDiv = document.createElement("div");
     messageDiv.classList.add("toast-message");
@@ -106,22 +109,19 @@ export function ShowMessage(message: string) {
 
 
 export function ToggleConnectUI(shown: boolean) {
+    ConnectButton.removeAttribute("disabled");
+
     if (shown) {
         Screen2DContext.clearRect(0, 0, ScreenViewer.width, ScreenViewer.height);
         ScreenViewer.setAttribute("hidden", "hidden");
         if (ViewerApp.Mode == RemoteControlMode.Attended) {
             ConnectBox.style.removeProperty("display");
         }
-        else {
-            DisconnectedBox.style.removeProperty("display");
-        }
         BlockInputButton.classList.remove("toggled");
-      AudioButton.classList.remove("toggled");
+        AudioButton.classList.remove("toggled");
     }
     else {
-        ConnectButton.removeAttribute("disabled");
         ConnectBox.style.display = "none";
-        DisconnectedBox.style.display = "none";
         ScreenViewer.removeAttribute("hidden");
         StatusMessage.innerHTML = "";
     }
