@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows7.0</TargetFramework>
+	<UseWPF>true</UseWPF>
+	<UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Immense.RemoteControl.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio.Wasapi" Version="2.1.0" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Immense.RemoteControl.Desktop.Shared\Immense.RemoteControl.Desktop.Shared.csproj" />
+    <ProjectReference Include="..\Immense.RemoteControl.Desktop.UI.WPF\Immense.RemoteControl.Desktop.UI.WPF.csproj" />
+  </ItemGroup>
+	
+</Project>

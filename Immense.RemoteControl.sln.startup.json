@@ -54,40 +54,40 @@
   "MultiProjectConfigurations": {
     "Windows Attended": {
       "Projects": {
-        "ServerExample": {
+        "Immense.RemoteControl.Examples.ServerExample": {
           "ProfileName": "ServerExample"
         },
-        "WindowsDesktopExample": {
+        "Immense.RemoteControl.Examples.WindowsDesktopExample": {
           "ProfileName": "Attended"
         }
       }
     },
     "Windows Unattended": {
       "Projects": {
-        "ServerExample": {
+        "Immense.RemoteControl.Examples.ServerExample": {
           "ProfileName": "ServerExample"
         },
-        "WindowsDesktopExample": {
+        "Immense.RemoteControl.Examples.WindowsDesktopExample": {
           "ProfileName": "Unattended"
         }
       }
     },
     "Linux Attended": {
       "Projects": {
-        "ServerExample": {
+        "Immense.RemoteControl.Examples.ServerExample": {
           "ProfileName": "ServerExample"
         },
-        "LinuxDesktopExample": {
+        "Immense.RemoteControl.Examples.LinuxDesktopExample": {
           "ProfileName": "Attended"
         }
       }
     },
     "Linux Unattended": {
       "Projects": {
-        "ServerExample": {
+        "Immense.RemoteControl.Examples.ServerExample": {
           "ProfileName": "ServerExample"
         },
-        "LinuxDesktopExample": {
+        "Immense.RemoteControl.Examples.LinuxDesktopExample": {
           "ProfileName": "Unattended"
         }
       }

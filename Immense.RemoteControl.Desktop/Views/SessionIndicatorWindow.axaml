@@ -1,0 +1,27 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.ViewModels"
+		xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.ViewModels.Fakes"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="100"
+        Width="300"
+        Height="100"
+        x:Class="Immense.RemoteControl.Desktop.Views.SessionIndicatorWindow"
+        Background="#2b2726" 
+        Title="{Binding ProductName}p"
+        Icon="{Binding WindowIcon}"
+        WindowStartupLocation="Manual"
+        Topmost="True"
+        SizeToContent="WidthAndHeight">
+
+
+  <StackPanel Margin="15 10 40 15">
+    <TextBlock Classes="SectionHeader" Foreground="White">
+      Remote Control Started
+    </TextBlock>
+    <TextBlock Foreground="LightGray">
+      A remote control session has started.
+    </TextBlock>
+  </StackPanel>
+</Window>

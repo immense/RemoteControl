@@ -1,0 +1,96 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>0.5.10</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\remote-control-dark.css" />
+    <None Include="wwwroot\css\remote-control-light.css" />
+    <None Include="wwwroot\css\remote-control.css" />
+    <None Include="wwwroot\favicon.ico" />
+    <None Include="wwwroot\lib\fontawesome\css\all.css" />
+    <None Include="wwwroot\lib\fontawesome\css\all.min.css" />
+    <None Include="wwwroot\lib\fontawesome\css\brands.css" />
+    <None Include="wwwroot\lib\fontawesome\css\brands.min.css" />
+    <None Include="wwwroot\lib\fontawesome\css\fontawesome.css" />
+    <None Include="wwwroot\lib\fontawesome\css\fontawesome.min.css" />
+    <None Include="wwwroot\lib\fontawesome\css\regular.css" />
+    <None Include="wwwroot\lib\fontawesome\css\regular.min.css" />
+    <None Include="wwwroot\lib\fontawesome\css\solid.css" />
+    <None Include="wwwroot\lib\fontawesome\css\solid.min.css" />
+    <None Include="wwwroot\lib\fontawesome\css\svg-with-js.css" />
+    <None Include="wwwroot\lib\fontawesome\css\svg-with-js.min.css" />
+    <None Include="wwwroot\lib\fontawesome\css\v4-shims.css" />
+    <None Include="wwwroot\lib\fontawesome\css\v4-shims.min.css" />
+    <None Include="wwwroot\lib\fontawesome\LICENSE.txt" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-brands-400.eot" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-brands-400.svg" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-brands-400.ttf" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-brands-400.woff" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-brands-400.woff2" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-regular-400.eot" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-regular-400.svg" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-regular-400.ttf" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-regular-400.woff" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-regular-400.woff2" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.eot" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.svg" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.ttf" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.woff" />
+    <None Include="wwwroot\lib\fontawesome\webfonts\fa-solid-900.woff2" />
+    <None Include="wwwroot\src\App.ts" />
+    <None Include="wwwroot\src\CaptureProcessor.ts" />
+    <None Include="wwwroot\src\ClipboardWatcher.ts" />
+    <None Include="wwwroot\src\DtoMessageHandler.ts" />
+    <None Include="wwwroot\src\Enums\DtoType.ts" />
+    <None Include="wwwroot\src\Enums\RemoteControlMode.ts" />
+    <None Include="wwwroot\src\Enums\WindowsSessionType.ts" />
+    <None Include="wwwroot\src\FileTransferService.ts" />
+    <None Include="wwwroot\src\InputEventHandlers.ts" />
+    <None Include="wwwroot\src\Interfaces\Dtos.ts" />
+    <None Include="wwwroot\src\Interfaces\Settings.ts" />
+    <None Include="wwwroot\src\MessageSender.ts" />
+    <None Include="wwwroot\src\Models\CursorInfo.ts" />
+    <None Include="wwwroot\src\Models\HubConnection.ts" />
+    <None Include="wwwroot\src\Models\Point.ts" />
+    <None Include="wwwroot\src\Models\RemoteControlTarget.ts" />
+    <None Include="wwwroot\src\Models\UserOptions.ts" />
+    <None Include="wwwroot\src\Models\WindowsSession.ts" />
+    <None Include="wwwroot\src\SessionRecorder.ts" />
+    <None Include="wwwroot\src\SettingsService.ts" />
+    <None Include="wwwroot\src\Sound.ts" />
+    <None Include="wwwroot\src\UI.ts" />
+    <None Include="wwwroot\src\Utilities.ts" />
+    <None Include="wwwroot\src\ViewerHubConnection.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="7.0.5" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
+    <PackageReference Include="Nihs.ConcurrentList" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Immense.RemoteControl.Shared\Immense.RemoteControl.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\msgpack\" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Attended": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    },
+    "Unattended": {
+      "commandName": "Project",
+      "commandLineArgs": "-m Unattended -s deb9a957-9c88-4705-b58e-b9f20b1e64f0 -a vERyLonGAndCOMpleXKeY -o Immense -r Han"
+    }
+  }
+}
