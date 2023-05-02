@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Enums;
 using System.Diagnostics;
@@ -22,11 +22,6 @@ internal class HubEventHandler : IHubEventHandler
     public Task InvokeCtrlAltDel(RemoteControlSession session, string viewerConnectionId)
     {
         return Task.CompletedTask;
-    }
-
-    public void LogRemoteControlStarted()
-    {
-
     }
 
     public Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReasonEx reason, int currentSessionId)

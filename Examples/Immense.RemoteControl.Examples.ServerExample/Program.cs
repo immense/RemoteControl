@@ -11,7 +11,6 @@ builder.Services.AddRemoteControlServer(config =>
 {
     config.AddHubEventHandler<HubEventHandler>();
     config.AddViewerAuthorizer<ViewerAuthorizer>();
-    config.AddViewerHubDataProvider<ViewerHubDataProvider>();
     config.AddViewerPageDataProvider<ViewerPageDataProvider>();
 });
 

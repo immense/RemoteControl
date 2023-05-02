@@ -113,7 +113,7 @@ export function ToggleConnectUI(shown: boolean) {
 
     if (shown) {
         Screen2DContext.clearRect(0, 0, ScreenViewer.width, ScreenViewer.height);
-        ScreenViewer.setAttribute("hidden", "hidden");
+        ScreenViewerWrapper.setAttribute("hidden", "hidden");
         if (ViewerApp.Mode == RemoteControlMode.Attended) {
             ConnectBox.style.removeProperty("display");
         }
@@ -122,7 +122,7 @@ export function ToggleConnectUI(shown: boolean) {
     }
     else {
         ConnectBox.style.display = "none";
-        ScreenViewer.removeAttribute("hidden");
+        ScreenViewerWrapper.removeAttribute("hidden");
         StatusMessage.innerHTML = "";
     }
 }

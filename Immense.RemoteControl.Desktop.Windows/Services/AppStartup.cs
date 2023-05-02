@@ -108,11 +108,11 @@ internal class AppStartup : IAppStartup
         }
 
         var result = await _desktopHub.SendUnattendedSessionInfo(
-            _appState.SessionId,
-            _appState.AccessKey,
-            Environment.MachineName,
-            _appState.RequesterName,
-            _appState.OrganizationName);
+                 _appState.SessionId,
+                 _appState.AccessKey,
+                 Environment.MachineName,
+                 _appState.RequesterName,
+                 _appState.OrganizationName);
 
         if (!result.IsSuccess)
         {

@@ -1,4 +1,5 @@
-﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Areas.RemoteControl.Pages;
 using Immense.RemoteControl.Server.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -6,13 +7,38 @@ namespace Immense.RemoteControl.Examples.ServerExample.Services;
 
 internal class ViewerPageDataProvider : IViewerPageDataProvider
 {
-    public ViewerPageTheme GetTheme(PageModel pageModel)
+    public Task<string> GetFaviconUrl(ViewerModel viewerModel)
     {
-        return ViewerPageTheme.Dark;
+        return Task.FromResult("/favicon.ico");
     }
 
-    public string GetUserDisplayName(PageModel pageModel)
+    public Task<string> GetPageDescription(ViewerModel viewerModel)
     {
-        return "Han Solo";
+        return Task.FromResult("Open-source remote support tools.");
+    }
+
+    public Task<string> GetPageTitle(PageModel pageModel)
+    {
+        return Task.FromResult("Remotely Remote Control");
+    }
+
+    public Task<string> GetProductName(PageModel pageModel)
+    {
+        return Task.FromResult("Remotely");
+    }
+
+    public Task<string> GetProductSubtitle(PageModel pageModel)
+    {
+        return Task.FromResult("Remote Control");
+    }
+
+    public Task<ViewerPageTheme> GetTheme(PageModel pageModel)
+    {
+        return Task.FromResult(ViewerPageTheme.Dark);
+    }
+
+    public Task<string> GetUserDisplayName(PageModel pageModel)
+    {
+        return Task.FromResult("Han Solo");
     }
 }
