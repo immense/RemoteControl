@@ -321,7 +321,9 @@ public class Viewer : IViewer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while sending DTO type {type} to viewer.", type);
+            _logger.LogError(ex, "Error while sending DTO type {type} to viewer connection ID {viewerId}.", 
+                type,
+                viewerConnectionId);
         }
     }
 }
