@@ -225,7 +225,10 @@ public class DesktopHub : Hub
         }
         finally
         {
-            _streamCache.TryRemove(session.StreamId, out _);
+            if (_streamCache.TryRemove(session.StreamId, out var signaler))
+            {
+                signaler.Dispose();
+            }
         }
     }
     public Task ViewerConnected(string viewerConnectionId)
