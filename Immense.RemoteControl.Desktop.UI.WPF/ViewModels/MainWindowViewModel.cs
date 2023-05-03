@@ -142,7 +142,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
         try
         {
-            var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(10));
+            var result = await _hubConnection.Connect(TimeSpan.FromSeconds(10), _dispatcher.ApplicationExitingToken);
 
             if (result && _hubConnection.Connection is not null)
             {

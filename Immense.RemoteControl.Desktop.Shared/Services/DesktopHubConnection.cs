@@ -16,7 +16,7 @@ public interface IDesktopHubConnection
     HubConnection? Connection { get; }
     HubConnectionState ConnectionState { get; }
     bool IsConnected { get; }
-    Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout);
+    Task<bool> Connect(TimeSpan timeout, CancellationToken cancellationToken);
     Task Disconnect();
     Task DisconnectAllViewers();
     Task DisconnectViewer(IViewer viewer, bool notifyViewer);
@@ -66,7 +66,7 @@ public class DesktopHubConnection : IDesktopHubConnection
     public HubConnectionState ConnectionState => Connection?.State ?? HubConnectionState.Disconnected;
     public bool IsConnected => Connection?.State == HubConnectionState.Connected;
 
-    public async Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout)
+    public async Task<bool> Connect(TimeSpan timeout, CancellationToken cancellationToken)
     {
         try
         {
