@@ -10,8 +10,8 @@ public interface IScreenCapturer : IDisposable
 
     bool CaptureFullscreen { get; set; }
     Rectangle CurrentScreenBounds { get; }
+    bool IsGpuAccelerated { get; }
     string SelectedScreen { get; }
-
     IEnumerable<string> GetDisplayNames();
     SKRect GetFrameDiffArea();
 

@@ -313,7 +313,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
         foreach (var viewer in viewers.OfType<Viewer>().ToArray())
         {
-            ViewerRemoved(this, viewer.ViewerConnectionID);
+            ViewerRemoved(this, viewer.ViewerConnectionId);
             await _hubConnection.DisconnectViewer(viewer, true);
         }
     }
@@ -330,7 +330,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
             }
             else
             {
-                await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerID);
+                await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerId);
             }
         });
     }
@@ -347,7 +347,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         _dispatcher.InvokeWpf(() =>
         {
-            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
+            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionId == viewerID);
             if (viewer != null)
             {
                 Viewers.Remove(viewer);

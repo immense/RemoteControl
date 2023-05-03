@@ -354,7 +354,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         await _dispatcher.InvokeAsync(() =>
         {
-            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
+            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionId == viewerID);
             if (viewer != null)
             {
                 Viewers.Remove(viewer);

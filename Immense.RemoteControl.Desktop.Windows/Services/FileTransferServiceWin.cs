@@ -48,7 +48,7 @@ public class FileTransferServiceWin : IFileTransferService
     {
         _dispatcher.InvokeWpf(() =>
         {
-            if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionID, out var window))
+            if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionId, out var window))
             {
                 window.Activate();
             }
@@ -58,9 +58,9 @@ public class FileTransferServiceWin : IFileTransferService
                 window = new FileTransferWindow(viewModel);
                 window.Closed += (sender, arg) =>
                 {
-                    _fileTransferWindows.Remove(viewer.ViewerConnectionID, out _);
+                    _fileTransferWindows.Remove(viewer.ViewerConnectionId, out _);
                 };
-                _fileTransferWindows.AddOrUpdate(viewer.ViewerConnectionID, window, (k, v) => window);
+                _fileTransferWindows.AddOrUpdate(viewer.ViewerConnectionId, window, (k, v) => window);
                 window.Show();
             }
         });

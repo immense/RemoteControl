@@ -165,6 +165,13 @@ export class SelectScreenDto {
     DisplayName: string;
 }
 
+export interface SessionMetricsDto {
+    Mbps: number;
+    Fps: number;
+    RoundTripLatency: number;
+    IsGpuAccelerated: boolean;
+}
+
 export class TapDto {
     constructor(percentX: number, percentY: number) {
         this.PercentX = percentX;

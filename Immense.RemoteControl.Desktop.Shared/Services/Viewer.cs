@@ -24,8 +24,7 @@ public interface IViewer : IDisposable
     string Name { get; set; }
     ConcurrentQueue<SentFrame> PendingSentFrames { get; }
     TimeSpan RoundTripLatency { get; }
-    string ViewerConnectionID { get; set; }
-
+    string ViewerConnectionId { get; set; }
     void ApplyAutoQuality();
     void CalculateFps();
     void DequeuePendingFrame();
@@ -37,7 +36,7 @@ public interface IViewer : IDisposable
     Task SendScreenCapture(ScreenCaptureDto screenCapture);
     Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
     Task SendScreenSize(int width, int height);
-
+    Task SendSessionMetrics(SessionMetricsDto metrics);
     Task SendViewerConnected();
     Task SendWindowsSessions();
 }
@@ -56,15 +55,19 @@ public class Viewer : IViewer
     private bool _disconnectRequested;
 
     public Viewer(
-        IDesktopHubConnection casterSocket,
+        string requesterName,
+        string viewerHubConnectionId,
+        IDesktopHubConnection desktopHubConnection,
         IScreenCapturer screenCapturer,
         IClipboardService clipboardService,
         IAudioCapturer audioCapturer,
         ISystemTime systemTime,
         ILogger<Viewer> logger)
     {
+        Name = requesterName;
+        ViewerConnectionId = viewerHubConnectionId;
         Capturer = screenCapturer;
-        _desktopHubConnection = casterSocket;
+        _desktopHubConnection = desktopHubConnection;
         _clipboardService = clipboardService;
         _audioCapturer = audioCapturer;
         _systemTime = systemTime;
@@ -101,7 +104,7 @@ public class Viewer : IViewer
     public ConcurrentQueue<SentFrame> PendingSentFrames { get; } = new();
     public TimeSpan RoundTripLatency { get; private set; }
 
-    public string ViewerConnectionID { get; set; } = string.Empty;
+    public string ViewerConnectionId { get; set; } = string.Empty;
 
     public void ApplyAutoQuality()
     {
@@ -109,11 +112,6 @@ public class Viewer : IViewer
         {
             ImageQuality = Math.Min(DefaultQuality, ImageQuality + 2);
         }
-
-        // Limit FPS.
-        _ = WaitHelper.WaitFor(() =>
-            !PendingSentFrames.TryPeek(out var result) || DateTimeOffset.Now - result.Timestamp > TimeSpan.FromMilliseconds(50),
-            TimeSpan.FromSeconds(5));
 
         // Delay based on roundtrip time to prevent too many frames from queuing up on slow connections.
         _ = WaitHelper.WaitFor(() => PendingSentFrames.Count < 1 / RoundTripLatency.TotalSeconds,
@@ -163,13 +161,13 @@ public class Viewer : IViewer
     public async Task SendAudioSample(byte[] audioSample)
     {
         var dto = new AudioSampleDto(audioSample);
-        await TrySendToViewer(dto, DtoType.AudioSample, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.AudioSample, ViewerConnectionId);
     }
 
     public async Task SendClipboardText(string clipboardText)
     {
         var dto = new ClipboardTextDto(clipboardText);
-        await TrySendToViewer(dto, DtoType.ClipboardText,ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.ClipboardText,ViewerConnectionId);
     }
 
     public async Task SendCursorChange(CursorInfo cursorInfo)
@@ -180,7 +178,7 @@ public class Viewer : IViewer
         }
 
         var dto = new CursorChangeDto(cursorInfo.ImageBytes, cursorInfo.HotSpot.X, cursorInfo.HotSpot.Y, cursorInfo.CssOverride);
-        await TrySendToViewer(dto, DtoType.CursorChange, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.CursorChange, ViewerConnectionId);
     }
 
     public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
@@ -207,7 +205,7 @@ public class Viewer : IViewer
                 StartOfFile = true
             };
 
-            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionID);
+            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionId);
 
             using var fs = File.OpenRead(fileUpload.FilePath);
             using var br = new BinaryReader(fs);
@@ -225,7 +223,7 @@ public class Viewer : IViewer
                     MessageId = messageId
                 };
 
-                await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionID);
+                await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionId);
 
                 progressUpdateCallback((double)fs.Position / fs.Length);
             }
@@ -238,7 +236,7 @@ public class Viewer : IViewer
                 StartOfFile = false
             };
 
-            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionID);
+            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionId);
 
             progressUpdateCallback(1);
         }
@@ -252,7 +250,7 @@ public class Viewer : IViewer
     {
         PendingSentFrames.Enqueue(new SentFrame(screenCapture.ImageBytes.Length, _systemTime.Now));
 
-        await TrySendToViewer(screenCapture, DtoType.ScreenCapture, ViewerConnectionID);
+        await TrySendToViewer(screenCapture, DtoType.ScreenCapture, ViewerConnectionId);
     }
 
     public async Task SendScreenData(
@@ -269,18 +267,23 @@ public class Viewer : IViewer
             ScreenWidth = screenWidth,
             ScreenHeight = screenHeight
         };
-        await TrySendToViewer(dto, DtoType.ScreenData, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.ScreenData, ViewerConnectionId);
+    }
+
+    public async Task SendSessionMetrics(SessionMetricsDto metrics)
+    {
+        await TrySendToViewer(metrics, DtoType.SessionMetrics, ViewerConnectionId);
     }
 
     public async Task SendScreenSize(int width, int height)
     {
         var dto = new ScreenSizeDto(width, height);
-        await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionId);
     }
 
     public async Task SendViewerConnected()
     {
-        await _desktopHubConnection.SendViewerConnected(ViewerConnectionID);
+        await _desktopHubConnection.SendViewerConnected(ViewerConnectionId);
     }
 
     public async Task SendWindowsSessions()
@@ -288,7 +291,7 @@ public class Viewer : IViewer
         if (OperatingSystem.IsWindows())
         {
             var dto = new WindowsSessionsDto(Win32Interop.GetActiveSessions());
-            await TrySendToViewer(dto, DtoType.WindowsSessions, ViewerConnectionID);
+            await TrySendToViewer(dto, DtoType.WindowsSessions, ViewerConnectionId);
         }
     }
 

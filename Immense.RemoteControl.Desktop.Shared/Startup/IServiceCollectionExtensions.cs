@@ -23,7 +23,6 @@ public static class IServiceCollectionExtensions
         });
 
         services.AddSingleton<ISystemTime, SystemTime>();
-        services.AddSingleton<IScreenCaster, ScreenCaster>();
         services.AddSingleton<IDesktopHubConnection, DesktopHubConnection>();
         services.AddSingleton<IIdleTimer, IdleTimer>();
         services.AddSingleton<IImageHelper, ImageHelper>();
@@ -32,7 +31,8 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IEnvironmentHelper, EnvironmentHelper>();
         services.AddSingleton<IDtoMessageHandler, DtoMessageHandler>();
         services.AddSingleton<IAppState, AppState>();
-        services.AddTransient<IViewer, Viewer>();
+        services.AddSingleton<IViewerFactory, ViewerFactory>();
+        services.AddTransient<IScreenCaster, ScreenCaster>();
         services.AddTransient<IHubConnectionBuilder>(s => new HubConnectionBuilder());
     }
 }

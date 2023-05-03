@@ -157,7 +157,7 @@ public class DesktopHubConnection : IDesktopHubConnection
 
         viewer.DisconnectRequested = true;
         viewer.Dispose();
-        return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionID, notifyViewer);
+        return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionId, notifyViewer);
     }
 
     public async Task<string> GetSessionID()
@@ -317,7 +317,7 @@ public class DesktopHubConnection : IDesktopHubConnection
                         new ScreenCastRequest()
                         {
                             NotifyUser = notifyUser,
-                            ViewerID = viewerID,
+                            ViewerId = viewerID,
                             RequesterName = requesterName,
                             StreamId = streamId
                         });
@@ -335,7 +335,7 @@ public class DesktopHubConnection : IDesktopHubConnection
             _appState.InvokeScreenCastRequested(new ScreenCastRequest()
             {
                 NotifyUser = notifyUser,
-                ViewerID = viewerID,
+                ViewerId = viewerID,
                 RequesterName = requesterName,
                 StreamId = streamId
             });

@@ -12,7 +12,8 @@ import {
     ScreenSizeDto,
     FileDto,
     WindowsSessionsDto,
-    DtoWrapper
+    DtoWrapper,
+    SessionMetricsDto
 } from "./Interfaces/Dtos.js";
 import { ReceiveFile } from "./FileTransferService.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
@@ -49,6 +50,8 @@ export class DtoMessageHandler {
                 break;
             case DtoType.File:
                 this.HandleFile(wrapper);
+            case DtoType.SessionMetrics:
+                await this.HandleSessionMetrics(wrapper);
             default:
                 break;
         }
@@ -122,6 +125,16 @@ export class DtoMessageHandler {
         }
 
         UI.SetScreenSize(screenSizeDto.Width, screenSizeDto.Height);
+    }
+
+    async HandleSessionMetrics(wrapper: DtoWrapper) {
+        let metricsDto = TryComplete<SessionMetricsDto>(wrapper);
+
+        if (!metricsDto) {
+            return;
+        }
+
+        UI.UpdateMetrics(metricsDto);
     }
 
     HandleWindowsSessions(wrapper: DtoWrapper) {

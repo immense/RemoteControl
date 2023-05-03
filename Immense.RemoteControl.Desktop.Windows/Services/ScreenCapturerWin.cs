@@ -66,8 +66,11 @@ public class ScreenCapturerWin : IScreenCapturer
     public event EventHandler<Rectangle>? ScreenChanged;
 
     public bool CaptureFullscreen { get; set; } = true;
-    public Rectangle CurrentScreenBounds { get; private set; } = Screen.PrimaryScreen.Bounds;
-    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen.DeviceName;
+    public Rectangle CurrentScreenBounds { get; private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
+
+    public bool IsGpuAccelerated { get; private set; }
+
     public void Dispose()
     {
         try
@@ -142,7 +145,7 @@ public class ScreenCapturerWin : IScreenCapturer
                 }
 
                 _currentFrame = result.Value;
-                return result!;
+                return result;
             }
             catch (Exception e)
             {
@@ -290,11 +293,13 @@ public class ScreenCapturerWin : IScreenCapturer
                 default:
                     break;
             }
+            IsGpuAccelerated = true;
             return Result.Ok(bitmap.ToSKBitmap());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while getting DirectX frame.");
+            IsGpuAccelerated = false;
         }
         finally
         {
