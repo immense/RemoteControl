@@ -12,6 +12,7 @@ using MessageBox = System.Windows.MessageBox;
 using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 
@@ -41,7 +42,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     private readonly IWindowsUiDispatcher _dispatcher;
     private readonly IDesktopHubConnection _hubConnection;
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly IScreenCaster _screenCaster;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IShutdownService _shutdownService;
     private readonly IViewModelFactory _viewModelFactory;
 
@@ -50,7 +51,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         IWindowsUiDispatcher dispatcher,
         IAppState appState,
         IDesktopHubConnection hubConnection,
-        IScreenCaster screenCaster,
+        IServiceProvider serviceProvider,
         IShutdownService shutdownService,
         IViewModelFactory viewModelFactory,
         ILogger<MainWindowViewModel> logger)
@@ -59,7 +60,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         _dispatcher = dispatcher;
         _appState = appState;
         _hubConnection = hubConnection;
-        _screenCaster = screenCaster;
+        _serviceProvider = serviceProvider;
         _shutdownService = shutdownService;
         _viewModelFactory = viewModelFactory;
         _logger = logger;
@@ -324,7 +325,8 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
             var result = MessageBox.Show(_dispatcher.CurrentApp.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
-                _screenCaster.BeginScreenCasting(screenCastRequest);
+                using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+                await screenCaster.BeginScreenCasting(screenCastRequest);
             }
             else
             {

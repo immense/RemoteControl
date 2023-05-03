@@ -11,22 +11,24 @@ using Immense.RemoteControl.Shared.Services;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
-public interface IScreenCaster
+public interface IScreenCaster : IDisposable
 {
-    void BeginScreenCasting(ScreenCastRequest screenCastRequest);
+    Task BeginScreenCasting(ScreenCastRequest screenCastRequest);
 }
 
 public class ScreenCaster : IScreenCaster
 {
-    private static CancellationTokenSource? _metricsCts;
     private readonly IAppState _appState;
     private readonly ICursorIconWatcher _cursorIconWatcher;
     private readonly IImageHelper _imageHelper;
     private readonly ILogger<ScreenCaster> _logger;
+    private readonly CancellationTokenSource _metricsCts = new();
     private readonly IServiceProvider _serviceProvider;
     private readonly ISessionIndicator _sessionIndicator;
     private readonly IShutdownService _shutdownService;
     private readonly ISystemTime _systemTime;
+    private bool _disposedValue;
+
     public ScreenCaster(
         IAppState appState,
         ICursorIconWatcher cursorIconWatcher,
@@ -47,9 +49,30 @@ public class ScreenCaster : IScreenCaster
         _logger = logger;
     }
 
-    public void BeginScreenCasting(ScreenCastRequest screenCastRequest)
+    public async Task BeginScreenCasting(ScreenCastRequest screenCastRequest)
     {
-        _ = Task.Run(() => BeginScreenCastingImpl(screenCastRequest));
+        await Task.Run(() => BeginScreenCastingImpl(screenCastRequest));
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _metricsCts?.Cancel();
+                _metricsCts?.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 
     private async Task BeginScreenCastingImpl(ScreenCastRequest screenCastRequest)
@@ -134,10 +157,6 @@ public class ScreenCaster : IScreenCaster
 
     private async IAsyncEnumerable<byte[]> GetDesktopStream(IViewer viewer)
     {
-        _metricsCts?.Cancel();
-        _metricsCts?.Dispose();
-        _metricsCts = new CancellationTokenSource();
-
         try
         {
             _ = Task.Run(async () => await LogMetrics(viewer, _metricsCts.Token));

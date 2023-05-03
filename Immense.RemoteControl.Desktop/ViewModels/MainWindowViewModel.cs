@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 using Immense.RemoteControl.Desktop.Controls.Dialogs;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 
@@ -48,7 +49,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     private readonly IEnvironmentHelper _environment;
     private readonly IDesktopHubConnection _hubConnection;
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly IScreenCaster _screenCaster;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IViewModelFactory _viewModelFactory;
     private IList<IViewer> _selectedViewers = new List<IViewer>();
 
@@ -57,7 +58,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
       IAvaloniaDispatcher dispatcher,
       IAppState appState,
       IDesktopHubConnection hubConnection,
-      IScreenCaster screenCaster,
+      IServiceProvider serviceProvider,
       IViewModelFactory viewModelFactory,
       IEnvironmentHelper environmentHelper,
       ILogger<MainWindowViewModel> logger)
@@ -66,7 +67,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         _dispatcher = dispatcher;
         _appState = appState;
         _hubConnection = hubConnection;
-        _screenCaster = screenCaster;
+        _serviceProvider = serviceProvider;
         _viewModelFactory = viewModelFactory;
         _environment = environmentHelper;
         _logger = logger;
@@ -328,14 +329,15 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
     }
 
-    private void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
+    private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        Dispatcher.UIThread.InvokeAsync(async () =>
+        await Dispatcher.UIThread.InvokeAsync(async () =>
         {
             var result = await MessageBox.Show($"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxType.YesNo);
             if (result == MessageBoxResult.Yes)
             {
-                _screenCaster.BeginScreenCasting(screenCastRequest);
+                using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+                await screenCaster.BeginScreenCasting(screenCastRequest);
             }
         });
     }
