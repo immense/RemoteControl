@@ -9,10 +9,10 @@ using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared.Models;
 using Clipboard = System.Windows.Clipboard;
 using MessageBox = System.Windows.MessageBox;
-using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Microsoft.Extensions.DependencyInjection;
+using Immense.RemoteControl.Desktop.Native.Windows;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 

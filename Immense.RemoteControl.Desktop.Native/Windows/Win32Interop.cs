@@ -1,11 +1,14 @@
-using Immense.RemoteControl.Shared.Models;
+using Immense.RemoteControl.Desktop.Native.DataStructures;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using static Immense.RemoteControl.Desktop.Shared.Native.Win32.ADVAPI32;
-using static Immense.RemoteControl.Desktop.Shared.Native.Win32.User32;
+using static Immense.RemoteControl.Desktop.Native.Windows.ADVAPI32;
+using static Immense.RemoteControl.Desktop.Native.Windows.User32;
 
-namespace Immense.RemoteControl.Desktop.Shared.Native.Win32;
+namespace Immense.RemoteControl.Desktop.Native.Windows;
 
 // TODO: Use https://github.com/dotnet/pinvoke for all p/invokes.  Remove signatures from this project.
 public class Win32Interop
@@ -103,7 +106,8 @@ public class Win32Interop
         return User32.OpenInputDesktop(0, true, ACCESS_MASK.GENERIC_ALL);
     }
 
-    public static bool CreateInteractiveSystemProcess(string applicationName,
+    public static bool CreateInteractiveSystemProcess(
+        string commandLine,
          int targetSessionId,
          bool forceConsoleSession,
          string desktopName,
@@ -189,14 +193,14 @@ public class Win32Interop
         // Create a new process in the current user's logon session.
         var result = CreateProcessAsUser(
             hUserTokenDup,
-            string.Empty,
-            applicationName,
+            null,
+            commandLine,
             ref sa,
             ref sa,
             false,
             dwCreationFlags,
             IntPtr.Zero,
-            string.Empty,
+            null,
             ref si,
             out procInfo);
 

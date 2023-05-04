@@ -6,8 +6,8 @@ using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Microsoft.AspNetCore.SignalR.Client;
-using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Shared.Services;
+using Immense.RemoteControl.Desktop.Native.Windows;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 

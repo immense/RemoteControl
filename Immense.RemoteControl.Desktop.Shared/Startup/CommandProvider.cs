@@ -1,16 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.NamingConventionBinder;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CommunityToolkit.Diagnostics;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
-using Immense.RemoteControl.Desktop.Shared.Native.Win32;
-using Immense.RemoteControl.Desktop.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Immense.RemoteControl.Desktop.Shared.Startup;
 public static class CommandProvider

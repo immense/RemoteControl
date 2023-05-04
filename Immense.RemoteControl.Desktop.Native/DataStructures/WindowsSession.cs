@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace Immense.RemoteControl.Shared.Models;
+namespace Immense.RemoteControl.Desktop.Native.DataStructures;
 
 [DataContract]
 public enum SessionType

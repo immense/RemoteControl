@@ -29,7 +29,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Shared.Native.Linux;
+namespace Immense.RemoteControl.Desktop.Native.Linux;
 
 public static class LibXrandr
 {

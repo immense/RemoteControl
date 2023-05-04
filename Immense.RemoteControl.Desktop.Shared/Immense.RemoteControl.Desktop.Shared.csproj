@@ -35,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Immense.RemoteControl.Desktop.Native\Immense.RemoteControl.Desktop.Native.csproj" />
     <ProjectReference Include="..\Immense.RemoteControl.Shared\Immense.RemoteControl.Shared.csproj" />
   </ItemGroup>
 </Project>
