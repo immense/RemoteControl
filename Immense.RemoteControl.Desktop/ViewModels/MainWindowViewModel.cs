@@ -13,9 +13,10 @@ using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 using Immense.RemoteControl.Desktop.Controls.Dialogs;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
+using Microsoft.Extensions.DependencyInjection;
+using Immense.RemoteControl.Desktop.Native.Linux;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 

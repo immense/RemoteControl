@@ -1,7 +1,8 @@
+using System;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace Immense.RemoteControl.Desktop.Shared.Native.Win32;
+namespace Immense.RemoteControl.Desktop.Native.Windows;
 
 public static class ADVAPI32
 {
@@ -312,14 +313,14 @@ public static class ADVAPI32
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     public static extern bool CreateProcessAsUser(
         IntPtr hToken,
-        string lpApplicationName,
+        string? lpApplicationName,
         string lpCommandLine,
         ref SECURITY_ATTRIBUTES lpProcessAttributes,
         ref SECURITY_ATTRIBUTES lpThreadAttributes,
         bool bInheritHandles,
         uint dwCreationFlags,
         IntPtr lpEnvironment,
-        string lpCurrentDirectory,
+        string? lpCurrentDirectory,
         ref STARTUPINFO lpStartupInfo,
         out PROCESS_INFORMATION lpProcessInformation);
 

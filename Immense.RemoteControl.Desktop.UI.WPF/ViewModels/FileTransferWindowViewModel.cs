@@ -1,6 +1,5 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Reactive;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Shared.Native.Win32;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using Immense.RemoteControl.Desktop.Native.Windows;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 
