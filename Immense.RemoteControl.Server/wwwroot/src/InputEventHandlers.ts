@@ -77,7 +77,12 @@ export function ApplyInputHandlers() {
         ViewerApp.ViewOnlyMode = ViewOnlyButton.classList.contains("toggled");
     });
     TypeClipboardButton.addEventListener("click", (ev) => {
-        if (!navigator.clipboard.readText) {
+        if (!location.protocol.includes("https") &&
+            !location.origin.includes("localhost")) {
+            alert("Clipboard API only works on HTTPS or localhost.");
+        }
+
+        if (!navigator.clipboard?.readText) {
             alert("Clipboard access isn't supported on this browser.");
             return;
         }
