@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.Shared.Services;
+using System.Windows;
 
 var services = new ServiceCollection();
 services.AddRemoteControlWindows(config =>
@@ -39,8 +40,15 @@ Console.CancelKeyPress += async (s, e) =>
 };
 
 var appState = provider.GetRequiredService<IAppState>();
-Console.WriteLine("Unattended session ready at: ");
-Console.WriteLine($"https://localhost:7024/RemoteControl/Viewer?mode=Unattended&sessionId={appState.SessionId}&accessKey={appState.AccessKey}");
+Console.WriteLine("Unattended session ready at (copied to clipboard): ");
+var url = $"https://localhost:7024/RemoteControl/Viewer?mode=Unattended&sessionId={appState.SessionId}&accessKey={appState.AccessKey}";
+Console.WriteLine(url);
+var thread = new Thread(() =>
+{
+    Clipboard.SetText(url);
+});
+thread.SetApartmentState(ApartmentState.STA);
+thread.Start();
 
 Console.WriteLine("Press Ctrl + C to exit.");
 var dispatcher = provider.GetRequiredService<IWindowsUiDispatcher>();

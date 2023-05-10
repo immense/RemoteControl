@@ -75,11 +75,10 @@ public class ViewerHub : Hub
             return Result.Fail("Only available in unattended mode.");
         }
 
+        SessionInfo.ViewerList.Remove(Context.ConnectionId);
         await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
 
-        SessionInfo.ViewerList.Remove(Context.ConnectionId);
         SessionInfo = SessionInfo.CreateNew();
-
         _desktopSessionCache.AddOrUpdate($"{SessionInfo.UnattendedSessionId}", SessionInfo);
 
         await _hubEvents.ChangeWindowsSession(SessionInfo, Context.ConnectionId, targetWindowsSession);

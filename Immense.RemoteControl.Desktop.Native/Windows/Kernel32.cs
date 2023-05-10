@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Immense.RemoteControl.Desktop.Native.Windows;
@@ -10,6 +10,9 @@ public static class Kernel32
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
     public static extern IntPtr GetCommandLine();
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetConsoleWindow();
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -23,6 +26,7 @@ public static class Kernel32
 
     [DllImport("kernel32.dll")]
     public static extern uint WTSGetActiveConsoleSessionId();
+
     /// <summary>
     /// contains information about the current state of both physical and virtual memory, including extended memory
     /// </summary>
