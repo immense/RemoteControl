@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
@@ -31,11 +31,20 @@ public class ShutdownServiceWin : IShutdownService
             _logger.LogInformation("Exiting process ID {procId}.", Environment.ProcessId);
             await TryDisconnectViewers();
             Application.Exit();
-            _dispatcher.InvokeWpf(_dispatcher.CurrentApp.Shutdown);
+            try
+            {
+                _dispatcher.InvokeWpf(_dispatcher.CurrentApp.Shutdown);
+            }
+            // This is expected to happen sometimes.
+            catch (TaskCanceledException)
+            {
+                Environment.Exit(0);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while shutting down.");
+            Environment.Exit(1);
         }
     }
 

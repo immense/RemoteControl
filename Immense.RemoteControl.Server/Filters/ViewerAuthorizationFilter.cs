@@ -1,10 +1,10 @@
-﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Immense.RemoteControl.Server.Filters;
 
-internal class ViewerAuthorizationFilter :  IAuthorizationFilter
+internal class ViewerAuthorizationFilter :  IAsyncAuthorizationFilter
 {
     private readonly IViewerAuthorizer _authorizer;
 
@@ -13,9 +13,9 @@ internal class ViewerAuthorizationFilter :  IAuthorizationFilter
         _authorizer = authorizer;
     }
 
-    public void OnAuthorization(AuthorizationFilterContext context)
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
-        if (_authorizer.IsAuthorized(context))
+        if (await _authorizer.IsAuthorized(context))
         {
             return;
         }

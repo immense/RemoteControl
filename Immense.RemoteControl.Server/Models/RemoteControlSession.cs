@@ -43,7 +43,7 @@ public class RemoteControlSession : IDisposable
     /// <summary>
     /// Contains a collection of viewer SignalR connection IDs.
     /// </summary>
-    public HashSet<string> ViewerList { get; } = new();
+    public HashSet<string> ViewerList { get; private set; } = new();
 
     public bool ViewOnly { get; set; }
     /// <summary>
@@ -62,7 +62,7 @@ public class RemoteControlSession : IDisposable
         clone.Created = DateTimeOffset.Now;
         clone.UnattendedSessionId = Guid.NewGuid();
         clone.AccessKey = RandomGenerator.GenerateAccessKey();
-        clone.ViewerList.Clear();
+        clone.ViewerList = new();
         clone.ViewOnly = false;
         return clone;
     }

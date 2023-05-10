@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -72,7 +72,10 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
                 session.Value.Created < _systemTime.Now.AddMinutes(-1))
             {
                 _logger.LogWarning("Removing expired session: {session}", JsonSerializer.Serialize(session.Value));
-                _sessions.TryRemove(session.Key, out _);
+                if (_sessions.TryRemove(session.Key, out var expiredSession))
+                {
+                    expiredSession.Dispose();
+                }
             }
         }
         return Task.CompletedTask;

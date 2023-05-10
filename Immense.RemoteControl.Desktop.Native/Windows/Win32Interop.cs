@@ -246,4 +246,20 @@ public class Win32Interop
             return false;
         }
     }
+
+    public static void SetConsoleWindowVisibility(bool isVisible)
+    {
+        var handle = Kernel32.GetConsoleWindow();
+
+        if (isVisible)
+        {
+            ShowWindow(handle, (int)SW.SW_SHOW);
+        }
+        else
+        {
+            ShowWindow(handle, (int)SW.SW_HIDE);
+        }
+
+        Kernel32.CloseHandle(handle);
+    }
 }
