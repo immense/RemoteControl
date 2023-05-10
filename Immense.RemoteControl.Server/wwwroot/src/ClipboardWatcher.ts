@@ -9,7 +9,8 @@ export class ClipboardWatcher {
     WatchClipboard() {
         if (!location.protocol.includes("https") &&
             !location.origin.includes("localhost")) {
-            console.warn("Clipboard API only works on HTTPS or localhost.");
+            console.warn("Clipboard API only works in a secure context (i.e. HTTPS or localhost).");
+            return;
         }
 
         if (!navigator.clipboard?.readText) {

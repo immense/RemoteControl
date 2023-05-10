@@ -30,9 +30,6 @@ export class DtoMessageHandler {
             case DtoType.AudioSample:
                 await this.HandleAudioSample(wrapper);
                 break;
-            case DtoType.ScreenCapture:
-                this.HandleScreenCapture(wrapper);
-                break;
             case DtoType.ClipboardText:
                 this.HandleClipboardText(wrapper);
                 break;
@@ -65,16 +62,6 @@ export class DtoMessageHandler {
         }
 
         await Sound.Play(audioSample.Buffer);
-    }
-
-    HandleScreenCapture(wrapper: DtoWrapper) {
-        let screenCapture = TryComplete<ScreenCaptureDto>(wrapper);
-
-        if (!screenCapture) {
-            return;
-        }
-
-        HandleCaptureReceived(screenCapture);
     }
 
     HandleClipboardText(wrapper: DtoWrapper) {

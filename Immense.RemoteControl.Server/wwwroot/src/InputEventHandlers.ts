@@ -79,7 +79,8 @@ export function ApplyInputHandlers() {
     TypeClipboardButton.addEventListener("click", (ev) => {
         if (!location.protocol.includes("https") &&
             !location.origin.includes("localhost")) {
-            alert("Clipboard API only works on HTTPS or localhost.");
+            alert("Clipboard API only works in a secure context (i.e. HTTPS or localhost).");
+            return;
         }
 
         if (!navigator.clipboard?.readText) {

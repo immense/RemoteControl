@@ -6,11 +6,11 @@ import { ShowMessage } from "./UI.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
-import { ChunkDto, TryComplete } from "./DtoChunker.js";
+import { ChunkDto } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
-import { DtoWrapper, ScreenCaptureDto } from "./Interfaces/Dtos.js";
 import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
+import { StreamingSessionState } from "./Models/StreamingSessionState.js";
 
 const MsgPack: MessagePack = window["MessagePack"];
 
@@ -77,12 +77,12 @@ export class ViewerHubConnection {
 
     async SendScreenCastRequestToDevice() {
         await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+        const streamState = new StreamingSessionState();
 
         this.Connection.stream("GetDesktopStream")
             .subscribe({
-                next: async (item: Uint8Array) => {
-                    let wrapper = MsgPack.decode<ScreenCaptureDto>(item) as ScreenCaptureDto;
-                    await HandleCaptureReceived(wrapper);
+                next: async (chunk: Uint8Array) => {
+                    await HandleCaptureReceived(chunk, streamState);
                 },
                 complete: () => {
                     ShowMessage("Desktop stream ended");

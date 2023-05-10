@@ -33,7 +33,6 @@ public interface IViewer : IDisposable
     Task SendCursorChange(CursorInfo cursorInfo);
     Task SendDesktopStream(IAsyncEnumerable<byte[]> asyncEnumerable, Guid streamId);
     Task SendFile(FileUpload fileUpload, Action<double> progressUpdateCallback, CancellationToken cancelToken);
-    Task SendScreenCapture(ScreenCaptureDto screenCapture);
     Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
     Task SendScreenSize(int width, int height);
     Task SendSessionMetrics(SessionMetricsDto metrics);
@@ -244,13 +243,6 @@ public class Viewer : IViewer
         {
             _logger.LogError(ex, "Error while sending file.");
         }
-    }
-
-    public async Task SendScreenCapture(ScreenCaptureDto screenCapture)
-    {
-        PendingSentFrames.Enqueue(new SentFrame(screenCapture.ImageBytes.Length, _systemTime.Now));
-
-        await TrySendToViewer(screenCapture, DtoType.ScreenCapture, ViewerConnectionId);
     }
 
     public async Task SendScreenData(

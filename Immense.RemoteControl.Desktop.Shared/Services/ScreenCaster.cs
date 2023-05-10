@@ -8,6 +8,7 @@ using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Immense.RemoteControl.Shared.Services;
+using Microsoft.IO;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -18,12 +19,12 @@ public interface IScreenCaster : IDisposable
 
 internal class ScreenCaster : IScreenCaster
 {
+    private readonly RecyclableMemoryStreamManager _recycleStreams = new();
     private readonly IAppState _appState;
     private readonly ICursorIconWatcher _cursorIconWatcher;
     private readonly IImageHelper _imageHelper;
     private readonly ILogger<ScreenCaster> _logger;
     private readonly CancellationTokenSource _metricsCts = new();
-    private readonly IServiceProvider _serviceProvider;
     private readonly ISessionIndicator _sessionIndicator;
     private readonly IShutdownService _shutdownService;
     private readonly ISystemTime _systemTime;
@@ -35,7 +36,6 @@ internal class ScreenCaster : IScreenCaster
         IViewerFactory viewerFactory,
         ICursorIconWatcher cursorIconWatcher,
         ISessionIndicator sessionIndicator,
-        IServiceProvider serviceProvider,
         IShutdownService shutdownService,
         IImageHelper imageHelper,
         ISystemTime systemTime,
@@ -44,7 +44,6 @@ internal class ScreenCaster : IScreenCaster
         _appState = appState;
         _cursorIconWatcher = cursorIconWatcher;
         _sessionIndicator = sessionIndicator;
-        _serviceProvider = serviceProvider;
         _shutdownService = shutdownService;
         _imageHelper = imageHelper;
         _systemTime = systemTime;
@@ -209,22 +208,20 @@ internal class ScreenCaster : IScreenCaster
 
             viewer.PendingSentFrames.Enqueue(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
 
-            var instanceId = Guid.NewGuid();
-            var chunks = encodedImageBytes.Chunk(50_000).ToArray();
-            for (int i = 0; i < chunks.Length; i++)
+            using var frameStream = _recycleStreams.GetStream();
+            using var writer = new BinaryWriter(frameStream);
+            writer.Write(encodedImageBytes.Length);
+            writer.Write(diffArea.Left);
+            writer.Write(diffArea.Top);
+            writer.Write(diffArea.Width);
+            writer.Write(diffArea.Height);
+            writer.Write(encodedImageBytes);
+
+            frameStream.Seek(0, SeekOrigin.Begin);
+
+            foreach (var chunk in frameStream.ToArray().Chunk(50_000))
             {
-                var chunk = chunks[i];
-                var dto = new ScreenCaptureDto()
-                {
-                    ImageBytes = chunk,
-                    Top = (int)diffArea.Top,
-                    Left = (int)diffArea.Left,
-                    Width = (int)diffArea.Width,
-                    Height = (int)diffArea.Height,
-                    InstanceId = instanceId,
-                    IsLastChunk = i == chunks.Length - 1
-                };
-                yield return MessagePackSerializer.Serialize(dto);
+                yield return chunk;
             }
         }
 

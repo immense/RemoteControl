@@ -62,6 +62,15 @@ export async function When(predicate: () => boolean, pollingTimeMs: number = 100
     })
 }
 
+// Useful for testing.
+export async function WaitFor(waitMilliseconds: number) : Promise<void> {
+    return new Promise<void>((resolve) => {
+        window.setTimeout(() => {
+            resolve();
+        }, waitMilliseconds);
+    })
+}
+
 export function ConvertBase64ToUInt8Array(base64:string) {
     var binaryString = window.atob(base64);
     var bytes = new Uint8ClampedArray(binaryString.length);
