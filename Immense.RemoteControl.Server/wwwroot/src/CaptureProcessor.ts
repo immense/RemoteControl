@@ -20,8 +20,7 @@ export async function ProcessFrameChunk(chunk: Uint8Array, streamState: Streamin
     }
     catch (ex) {
         console.error("Capture processing error.  Resetting streaming state.", ex);
-        streamState.IsAtFrameStart = false;
-        streamState.Buffer = [];
+        streamState.Buffer = new Blob();
     }
     finally {
         streamState.IsProcessing = false;
@@ -34,43 +33,45 @@ async function processReceivedChunks(streamState: StreamingSessionState): Promis
     }
 
     const chunks = streamState.ReceivedChunks.splice(0);
-    streamState.Buffer.push(...chunks);
-    const bufferSize = streamState.Buffer.reduce((acc, cur) => acc + cur.length, 0);
+    streamState.Buffer = new Blob([streamState.Buffer, ...chunks]);
 
-    if (streamState.IsAtFrameStart && bufferSize >= FrameHeaderSize) {
-        streamState.IsAtFrameStart = false;
+    while (true) {
+        const bufferSize = streamState.Buffer.size;
 
-        const bufferBlob = new Blob(streamState.Buffer);
-        const buffer = await bufferBlob.arrayBuffer();
+        if (bufferSize < FrameHeaderSize) {
+            break;
+        }
+
+        const headerBlob = streamState.Buffer.slice(0, FrameHeaderSize);
+        const buffer = await headerBlob.arrayBuffer();
 
         const dataView = new DataView(buffer);
-        streamState.ImageSize = dataView.getInt32(0, true);
-        streamState.X = dataView.getFloat32(4, true);
-        streamState.Y = dataView.getFloat32(8, true);
-        streamState.Width = dataView.getFloat32(12, true);
-        streamState.Height = dataView.getFloat32(16, true);
-    }
+        const imageSize = dataView.getInt32(0, true);
 
-    if (!streamState.IsAtFrameStart &&
-        bufferSize - FrameHeaderSize >= streamState.ImageSize) {
+        if (bufferSize - FrameHeaderSize < imageSize) {
+            break;
+        }
 
-        streamState.IsAtFrameStart = true;
         ViewerApp.MessageSender.SendFrameReceived();
 
-        const imageBlob = new Blob(streamState.Buffer).slice(FrameHeaderSize, FrameHeaderSize + streamState.ImageSize);
+        const imageX = dataView.getFloat32(4, true);
+        const imageY = dataView.getFloat32(8, true);
+        const imageWidth = dataView.getFloat32(12, true);
+        const imageHeight = dataView.getFloat32(16, true);
+
+        const imageBlob = streamState.Buffer.slice(FrameHeaderSize, FrameHeaderSize + imageSize);
 
         const bitmap = await createImageBitmap(imageBlob);
 
         Screen2DContext.drawImage(bitmap,
-            streamState.X,
-            streamState.Y,
-            streamState.Width,
-            streamState.Height);
+            imageX,
+            imageY,
+            imageWidth,
+            imageHeight);
 
         bitmap.close();
 
-        streamState.Buffer = [];
+        streamState.Buffer = streamState.Buffer.slice(FrameHeaderSize + imageSize);
     }
-
-    await processReceivedChunks(streamState);
+    
 }
