@@ -144,10 +144,10 @@ export class ViewerHubConnection {
             this.Connection.stop();
         });
         hubConnection.on("RelaunchedScreenCasterReady", (newSessionId: string, newAccessKey: string) => {
-            ViewerApp.SessionId = newSessionId;
-            ViewerApp.AccessKey = newAccessKey;
-            this.Connection.stop();
-            this.Connect();
+            const newUrl =
+                `${location.origin}${location.pathname}` +
+                `?mode=Unattended&sessionId=${newSessionId}&accessKey=${newAccessKey}&viewOnly=${ViewerApp.ViewOnlyMode}`;
+            location.assign(newUrl);
         });
       
         hubConnection.on("Reconnecting", () => {
