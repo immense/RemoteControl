@@ -8,7 +8,7 @@ import { DtoType } from "./Enums/DtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
 import { ChunkDto } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
-import { HandleCaptureReceived } from "./CaptureProcessor.js";
+import { ProcessFrameChunk } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
 import { StreamingSessionState } from "./Models/StreamingSessionState.js";
 
@@ -82,7 +82,7 @@ export class ViewerHubConnection {
         this.Connection.stream("GetDesktopStream")
             .subscribe({
                 next: async (chunk: Uint8Array) => {
-                    await HandleCaptureReceived(chunk, streamState);
+                    await ProcessFrameChunk(chunk, streamState);
                 },
                 complete: () => {
                     ShowMessage("Desktop stream ended");

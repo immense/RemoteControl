@@ -1,17 +1,21 @@
 export class StreamingSessionState {
     constructor() {
-        this.MetadataSet = false;
-        this.Chunks = new Uint8Array();
+        this.IsAtFrameStart = true;
+        this.Buffer = [];
+        this.ReceivedChunks = [];
         this.ImageSize = 0;
+        this.IsProcessing = false;
         this.X = 0;
         this.Y = 0;
         this.Width = 0;
         this.Height = 0;
     }
 
-    MetadataSet: boolean;
-    Chunks: Uint8Array;
+    IsAtFrameStart: boolean;
+    Buffer: Uint8Array[];
+    ReceivedChunks: Uint8Array[];
     ImageSize: number;
+    IsProcessing: boolean;
     X: number;
     Y: number;
     Width: number;

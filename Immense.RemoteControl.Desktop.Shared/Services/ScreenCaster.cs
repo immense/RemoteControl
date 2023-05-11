@@ -167,65 +167,71 @@ internal class ScreenCaster : IScreenCaster
         await Task.Yield();
 
         _ = Task.Run(() => LogMetrics(viewer, _metricsCts.Token));
-
-        while (!viewer.DisconnectRequested && viewer.IsConnected)
+        try
         {
-            if (viewer.IsStalled)
+            while (!viewer.DisconnectRequested && viewer.IsConnected)
             {
-                // Viewer isn't responding.  Abort sending.
-                _logger.LogWarning("Viewer stalled.  Ending send loop.");
-                yield break;
+                if (viewer.IsStalled)
+                {
+                    // Viewer isn't responding.  Abort sending.
+                    _logger.LogWarning("Viewer stalled.  Ending send loop.");
+                    yield break;
+                }
+
+                viewer.CalculateFps();
+
+                viewer.ApplyAutoQuality();
+
+                var result = viewer.Capturer.GetNextFrame();
+
+                if (!result.IsSuccess || result.Value is null)
+                {
+                    continue;
+                }
+
+                var diffArea = viewer.Capturer.GetFrameDiffArea();
+
+                if (diffArea.IsEmpty)
+                {
+                    continue;
+                }
+
+                viewer.Capturer.CaptureFullscreen = false;
+
+                using var croppedFrame = _imageHelper.CropBitmap(result.Value, diffArea);
+
+                var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
+
+                if (encodedImageBytes.Length == 0)
+                {
+                    continue;
+                }
+
+                viewer.PendingSentFrames.Enqueue(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
+
+                using var frameStream = _recycleStreams.GetStream();
+                using var writer = new BinaryWriter(frameStream);
+                writer.Write(encodedImageBytes.Length);
+                writer.Write(diffArea.Left);
+                writer.Write(diffArea.Top);
+                writer.Write(diffArea.Width);
+                writer.Write(diffArea.Height);
+                writer.Write(encodedImageBytes);
+
+                frameStream.Seek(0, SeekOrigin.Begin);
+
+                foreach (var chunk in frameStream.ToArray().Chunk(50_000))
+                {
+                    yield return chunk;
+                }
             }
 
-            viewer.CalculateFps();
-
-            viewer.ApplyAutoQuality();
-
-            var result = viewer.Capturer.GetNextFrame();
-
-            if (!result.IsSuccess || result.Value is null)
-            {
-                continue;
-            }
-
-            var diffArea = viewer.Capturer.GetFrameDiffArea();
-
-            if (diffArea.IsEmpty)
-            {
-                continue;
-            }
-
-            viewer.Capturer.CaptureFullscreen = false;
-
-            using var croppedFrame = _imageHelper.CropBitmap(result.Value, diffArea);
-
-            var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
-
-            if (encodedImageBytes.Length == 0)
-            {
-                continue;
-            }
-
-            viewer.PendingSentFrames.Enqueue(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
-
-            using var frameStream = _recycleStreams.GetStream();
-            using var writer = new BinaryWriter(frameStream);
-            writer.Write(encodedImageBytes.Length);
-            writer.Write(diffArea.Left);
-            writer.Write(diffArea.Top);
-            writer.Write(diffArea.Width);
-            writer.Write(diffArea.Height);
-            writer.Write(encodedImageBytes);
-
-            frameStream.Seek(0, SeekOrigin.Begin);
-
-            foreach (var chunk in frameStream.ToArray().Chunk(50_000))
-            {
-                yield return chunk;
-            }
+        }
+        finally
+        {
+            sessionEndedSignal.Release();
         }
 
-        sessionEndedSignal.Release();
     }
 
     private async Task LogMetrics(IViewer viewer, CancellationToken cancellationToken)

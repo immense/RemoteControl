@@ -16,7 +16,7 @@ import {
     SessionMetricsDto
 } from "./Interfaces/Dtos.js";
 import { ReceiveFile } from "./FileTransferService.js";
-import { HandleCaptureReceived } from "./CaptureProcessor.js";
+import { ProcessFrameChunk } from "./CaptureProcessor.js";
 import { TryComplete } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
 
