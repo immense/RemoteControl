@@ -9,7 +9,6 @@ import { ApplyInputHandlers } from "./InputEventHandlers.js";
 import { ViewerHubConnection } from "./ViewerHubConnection.js";
 import { GetSettings, SetSettings } from "./SettingsService.js";
 
-
 var queryString = Utilities.ParseSearchString();
 
 export const ViewerApp = {

@@ -10,7 +10,7 @@ import { ChunkDto } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
 import { ProcessFrameChunk } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
-import { StreamingSessionState } from "./Models/StreamingSessionState.js";
+import { StreamingState } from "./Models/StreamingState.js";
 
 const MsgPack: MessagePack = window["MessagePack"];
 
@@ -77,12 +77,12 @@ export class ViewerHubConnection {
 
     async SendScreenCastRequestToDevice() {
         await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
-        const streamState = new StreamingSessionState();
+        const streamingState = new StreamingState();
 
         this.Connection.stream("GetDesktopStream")
             .subscribe({
                 next: async (chunk: Uint8Array) => {
-                    await ProcessFrameChunk(chunk, streamState);
+                    await ProcessFrameChunk(chunk, streamingState);
                 },
                 complete: () => {
                     ShowMessage("Desktop stream ended");

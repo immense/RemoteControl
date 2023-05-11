@@ -1,11 +1,11 @@
-export class StreamingSessionState {
+export class StreamingState {
     constructor() {
         this.Buffer = new Blob();
-        this.ReceivedChunks = [];
         this.IsProcessing = false;
+        this.ReceivedChunks = [];
     }
 
     Buffer: Blob;
-    ReceivedChunks: Uint8Array[];
     IsProcessing: boolean;
+    ReceivedChunks: Uint8Array[];
 }
