@@ -7,8 +7,8 @@ internal class ViewerAuthorizer : IViewerAuthorizer
 {
     public string UnauthorizedRedirectUrl => "/Error";
 
-    public bool IsAuthorized(AuthorizationFilterContext context)
+    public Task<bool> IsAuthorized(AuthorizationFilterContext context)
     {
-        return true;
+        return Task.FromResult(true);
     }
 }
