@@ -225,12 +225,25 @@ public class DesktopHub : Hub
 
         try
         {
-            session.Stream = stream;
             session.ReadySignal.Release();
-            await session.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+
+            await foreach (var chunk in stream)
+            {
+                var writeResult = await session.WriteToStream(chunk);
+                if (!writeResult.IsSuccess)
+                {
+                    _logger.LogWarning(
+                        "Failed to write to video stream. " +
+                        "Reason: {reason}. StreamId: {id}", 
+                        writeResult.Reason,
+                        streamId);
+                    return;
+                }
+            }
         }
         finally
         {
+            session.EndStream();
             if (_streamCache.TryRemove(session.StreamId, out var signaler))
             {
                 signaler.Dispose();

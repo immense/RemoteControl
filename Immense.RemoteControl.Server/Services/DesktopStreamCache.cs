@@ -58,12 +58,6 @@ public class DesktopStreamCache : IDesktopStreamCache
             return Result.Fail<StreamSignaler>("Timed out while waiting for session.");
         }
 
-        if (session.Stream is null)
-        {
-            _logger.LogError("Stream failed to start.");
-            return Result.Fail<StreamSignaler>("Stream failed to start.");
-        }
-
         return Result.Ok(session);
     }
 }

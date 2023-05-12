@@ -142,11 +142,11 @@ internal class ScreenCaster : IScreenCaster
                 "Ended desktop stream.  " +
                 "Requester: {viewerName}. " +
                 "Viewer ID: {viewerConnectionID}. " +
-                "Viewer WS Connected: {viewerIsConnected}.  " +
+                "Viewer Responsive: {isResponsive}.  " +
                 "Viewer Disconnected Requested: {viewerDisconnectRequested}",
                 viewer.Name,
                 viewer.ViewerConnectionId,
-                viewer.IsConnected,
+                viewer.IsResponsive,
                 viewer.DisconnectRequested);
 
             _appState.Viewers.TryRemove(viewer.ViewerConnectionId, out _);
@@ -167,7 +167,7 @@ internal class ScreenCaster : IScreenCaster
 
         try
         {
-            while (!viewer.DisconnectRequested && viewer.IsConnected)
+            while (!viewer.DisconnectRequested && viewer.IsResponsive)
             {
                 viewer.IncrementFpsCount();
 

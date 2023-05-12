@@ -20,7 +20,7 @@ public interface IViewer : IDisposable
     bool DisconnectRequested { get; set; }
     bool HasControl { get; set; }
     int ImageQuality { get; }
-    bool IsConnected { get; }
+    bool IsResponsive { get; }
     string Name { get; set; }
     TimeSpan RoundTripLatency { get; }
     string ViewerConnectionId { get; set; }
@@ -90,13 +90,11 @@ public class Viewer : IViewer
     }
     public bool HasControl { get; set; } = true;
     public int ImageQuality { get; private set; } = DefaultQuality;
-    public bool IsConnected => _desktopHubConnection.IsConnected;
-
+    public bool IsResponsive { get; private set; } = true;
     public string Name { get; set; } = string.Empty;
     public TimeSpan RoundTripLatency { get; private set; }
 
     public string ViewerConnectionId { get; set; } = string.Empty;
-
     public void AppendSentFrame(SentFrame sentFrame)
     {
         _sentFrames.Enqueue(sentFrame);
@@ -154,6 +152,7 @@ public class Viewer : IViewer
         }
         else
         {
+            IsResponsive = false;
             _logger.LogWarning("Failed to check roundtrip latency: {reason}", latencyResult.Reason);
         }
     }

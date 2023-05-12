@@ -87,33 +87,34 @@ public class ViewerHub : Hub
 
     public async IAsyncEnumerable<byte[]> GetDesktopStream()
     {
-        var result = await _streamCache.WaitForStreamSession(SessionInfo.StreamId, TimeSpan.FromSeconds(30));
+        var sessionResult = await _streamCache.WaitForStreamSession(SessionInfo.StreamId, TimeSpan.FromSeconds(30));
 
-        if (!result.IsSuccess)
+        if (!sessionResult.IsSuccess)
         {
             _logger.LogError("Timed out while waiting for desktop stream.");
             await Clients.Caller.SendAsync("ShowMessage", "Request timed out");
             yield break;
         }
 
-        var signaler = result.Value;
-
-        if (signaler?.Stream is null)
-        {
-            _logger.LogError("Stream was null.");
-            yield break;
-        }
+        var signaler = sessionResult.Value;
 
         try
         {
-            await foreach (var chunk in signaler.Stream)
+            while (!signaler.StreamEnded)
             {
-                yield return chunk;
+                var waitResult = await signaler.TryReadFromStream();
+                if (!waitResult.IsSuccess)
+                {
+                    _logger.LogWarning("{reason}", waitResult.Reason);
+                    await Task.Yield();
+                    continue;
+                }
+
+                yield return waitResult.Value;
             }
         }
         finally
         {
-            signaler.EndSignal.Release();
             _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
         }
     }
