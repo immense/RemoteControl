@@ -146,6 +146,12 @@ public class DesktopHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
+    public async Task<string> PingViewer(string viewerConnectionId)
+    {
+        using var cts = new CancellationTokenSource(5_000);
+        return await _viewerHub.Clients.Client(viewerConnectionId).InvokeAsync<string>("PingViewer", cts.Token);
+    }
+
     public Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
     {
         if (_sessionCache.TryGetValue($"{unattendedSessionId}", out var sessionInfo))

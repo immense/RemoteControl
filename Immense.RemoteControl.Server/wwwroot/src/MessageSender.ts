@@ -33,10 +33,6 @@ export class MessageSender {
     ChangeWindowsSession(sessionId: number) {
         ViewerApp.ViewerHubConnection.ChangeWindowsSession(sessionId);
     }
-    SendFrameReceived() {
-        var dto = new EmptyDto();
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.FrameReceived);
-    }
     SendSelectScreen(displayName: string) {
         var dto = new SelectScreenDto(displayName);
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.SelectScreen);

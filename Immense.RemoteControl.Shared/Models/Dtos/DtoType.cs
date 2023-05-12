@@ -6,8 +6,6 @@ namespace Immense.RemoteControl.Shared.Models.Dtos;
 public enum DtoType
 {
     [EnumMember]
-    ScreenCapture = 0,
-    [EnumMember]
     ScreenData = 1,
     [EnumMember]
     ScreenSize = 2,
@@ -49,8 +47,6 @@ public enum DtoType
     WindowsSessions = 23,
     [EnumMember]
     SetKeyStatesUp = 24,
-    [EnumMember]
-    FrameReceived = 25,
     [EnumMember]
     OpenFileTransferWindow = 27,
     [EnumMember]

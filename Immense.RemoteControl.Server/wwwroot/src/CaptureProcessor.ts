@@ -38,8 +38,6 @@ async function processBuffer(streamingState: StreamingState): Promise<void> {
                 break;;
             }
 
-            ViewerApp.MessageSender.SendFrameReceived();
-
             const imageX = dataView.getFloat32(4, true);
             const imageY = dataView.getFloat32(8, true);
             const imageWidth = dataView.getFloat32(12, true);

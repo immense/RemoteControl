@@ -8,6 +8,7 @@ using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Microsoft.AspNetCore.SignalR.Client;
 using Immense.RemoteControl.Shared.Services;
 using Immense.RemoteControl.Desktop.Native.Windows;
+using System.Diagnostics;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -20,14 +21,13 @@ public interface IViewer : IDisposable
     bool HasControl { get; set; }
     int ImageQuality { get; }
     bool IsConnected { get; }
-    bool IsStalled { get; }
     string Name { get; set; }
-    ConcurrentQueue<SentFrame> PendingSentFrames { get; }
     TimeSpan RoundTripLatency { get; }
     string ViewerConnectionId { get; set; }
+
+    void AppendSentFrame(SentFrame sentFrame);
     Task ApplyAutoQuality();
-    void CalculateFps();
-    void DequeuePendingFrame();
+    Task CalculateMetrics();
     Task SendAudioSample(byte[] audioSample);
     Task SendClipboardText(string clipboardText);
     Task SendCursorChange(CursorInfo cursorInfo);
@@ -49,7 +49,7 @@ public class Viewer : IViewer
     private readonly IDesktopHubConnection _desktopHubConnection;
     private readonly ConcurrentQueue<DateTimeOffset> _fpsQueue = new();
     private readonly ILogger<Viewer> _logger;
-    private readonly ConcurrentQueue<SentFrame> _receivedFrames = new();
+    private readonly ConcurrentQueue<SentFrame> _sentFrames = new();
     private readonly ISystemTime _systemTime;
     private bool _disconnectRequested;
 
@@ -91,66 +91,57 @@ public class Viewer : IViewer
     public int ImageQuality { get; private set; } = DefaultQuality;
     public bool IsConnected => _desktopHubConnection.IsConnected;
 
-    public bool IsStalled
-    {
-        get
-        {
-            return PendingSentFrames.TryPeek(out var result) && DateTimeOffset.Now - result.Timestamp > TimeSpan.FromSeconds(15);
-        }
-    }
-
     public string Name { get; set; } = string.Empty;
-    public ConcurrentQueue<SentFrame> PendingSentFrames { get; } = new();
     public TimeSpan RoundTripLatency { get; private set; }
 
     public string ViewerConnectionId { get; set; } = string.Empty;
 
-    public async Task ApplyAutoQuality()
+    public void AppendSentFrame(SentFrame sentFrame)
+    {
+        _sentFrames.Enqueue(sentFrame);
+    }
+
+    public Task ApplyAutoQuality()
     {
         if (ImageQuality < DefaultQuality)
         {
             ImageQuality = Math.Min(DefaultQuality, ImageQuality + 2);
         }
-
-        // TODO: Now that we're using streaming, we might be able to replace
-        // this with a buffer control mechanism in the StreamSignaler.
-
-        // Delay based on roundtrip time to prevent too many frames from queuing up on slow connections.
-        _ = await WaitHelper.WaitForAsync(() => PendingSentFrames.Count < 1 / RoundTripLatency.TotalSeconds,
-            TimeSpan.FromSeconds(5));
-
-        // Wait until oldest pending frame is within the past 1 second.
-        _ = await WaitHelper.WaitForAsync(() =>
-            !PendingSentFrames.TryPeek(out var result) || DateTimeOffset.Now - result.Timestamp < TimeSpan.FromSeconds(1),
-            TimeSpan.FromSeconds(5));
+        return Task.CompletedTask;
     }
 
-    public void CalculateFps()
+    public async Task CalculateMetrics()
     {
-        _fpsQueue.Enqueue(_systemTime.Now);
+        if (_desktopHubConnection.Connection is null)
+        {
+            return;
+        }
 
+        _fpsQueue.Enqueue(_systemTime.Now);
         while (_fpsQueue.TryPeek(out var oldestTime) &&
             _systemTime.Now - oldestTime > TimeSpan.FromSeconds(1))
         {
             _fpsQueue.TryDequeue(out _);
         }
-
         CurrentFps = _fpsQueue.Count;
-    }
 
-    public void DequeuePendingFrame()
-    {
-        if (PendingSentFrames.TryDequeue(out var frame))
+        while (_sentFrames.TryPeek(out var oldestFrame) &&
+          _systemTime.Now - oldestFrame.Timestamp > TimeSpan.FromSeconds(1))
         {
-            RoundTripLatency = _systemTime.Now - frame.Timestamp;
-            _receivedFrames.Enqueue(new SentFrame(frame.FrameSize, _systemTime.Now));
+            _sentFrames.TryDequeue(out _);
         }
-        while (_receivedFrames.TryPeek(out var oldestFrame) &&
-            _systemTime.Now - oldestFrame.Timestamp > TimeSpan.FromSeconds(1))
+        CurrentMbps = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+
+
+        var latencyResult = await _desktopHubConnection.CheckRoundtripLatency(ViewerConnectionId);
+        if (latencyResult.IsSuccess)
         {
-            _receivedFrames.TryDequeue(out _);
+            RoundTripLatency = latencyResult.Value;
         }
-        CurrentMbps = (double)_receivedFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+        else
+        {
+            _logger.LogWarning("Failed to check roundtrip latency: {reason}", latencyResult.Reason);
+        }
     }
 
     public void Dispose()
@@ -265,17 +256,16 @@ public class Viewer : IViewer
         await TrySendToViewer(dto, DtoType.ScreenData, ViewerConnectionId);
     }
 
-    public async Task SendSessionMetrics(SessionMetricsDto metrics)
-    {
-        await TrySendToViewer(metrics, DtoType.SessionMetrics, ViewerConnectionId);
-    }
-
     public async Task SendScreenSize(int width, int height)
     {
         var dto = new ScreenSizeDto(width, height);
         await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionId);
     }
 
+    public async Task SendSessionMetrics(SessionMetricsDto metrics)
+    {
+        await TrySendToViewer(metrics, DtoType.SessionMetrics, ViewerConnectionId);
+    }
     public async Task SendViewerConnected()
     {
         await _desktopHubConnection.SendViewerConnected(ViewerConnectionId);

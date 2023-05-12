@@ -170,5 +170,6 @@ export class ViewerHubConnection {
         hubConnection.on("WindowsSessions", (windowsSessions: Array<WindowsSession>) => {
             UI.UpdateWindowsSessions(windowsSessions);
         });
+        hubConnection.on("PingViewer", () => "Pong");
     }
 }

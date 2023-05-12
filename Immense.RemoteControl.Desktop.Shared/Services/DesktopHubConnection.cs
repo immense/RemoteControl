@@ -16,6 +16,8 @@ public interface IDesktopHubConnection
     HubConnection? Connection { get; }
     HubConnectionState ConnectionState { get; }
     bool IsConnected { get; }
+
+    Task<Result<TimeSpan>> CheckRoundtripLatency(string viewerConnectionId);
     Task<bool> Connect(TimeSpan timeout, CancellationToken cancellationToken);
     Task Disconnect();
     Task DisconnectAllViewers();
@@ -65,6 +67,25 @@ public class DesktopHubConnection : IDesktopHubConnection
     public HubConnection? Connection { get; private set; }
     public HubConnectionState ConnectionState => Connection?.State ?? HubConnectionState.Disconnected;
     public bool IsConnected => Connection?.State == HubConnectionState.Connected;
+
+    public async Task<Result<TimeSpan>> CheckRoundtripLatency(string viewerConnectionId)
+    {
+        try
+        {
+            if (Connection is null)
+            {
+                return Result.Fail<TimeSpan>("Connection is not yet established.");
+            }
+            var sw = Stopwatch.StartNew();
+            _ = await Connection.InvokeAsync<string>("PingViewer", viewerConnectionId);
+            return Result.Ok(sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check latency.");
+            return Result.Fail<TimeSpan>("An error occurred while checking latency.");
+        }
+    }
 
     public async Task<bool> Connect(TimeSpan timeout, CancellationToken cancellationToken)
     {

@@ -142,12 +142,10 @@ internal class ScreenCaster : IScreenCaster
                 "Requester: {viewerName}. " +
                 "Viewer ID: {viewerConnectionID}. " +
                 "Viewer WS Connected: {viewerIsConnected}.  " +
-                "Viewer Stalled: {viewerIsStalled}.  " +
                 "Viewer Disconnected Requested: {viewerDisconnectRequested}",
                 viewer.Name,
                 viewer.ViewerConnectionId,
                 viewer.IsConnected,
-                viewer.IsStalled,
                 viewer.DisconnectRequested);
 
             _appState.Viewers.TryRemove(viewer.ViewerConnectionId, out _);
@@ -171,14 +169,7 @@ internal class ScreenCaster : IScreenCaster
         {
             while (!viewer.DisconnectRequested && viewer.IsConnected)
             {
-                if (viewer.IsStalled)
-                {
-                    // Viewer isn't responding.  Abort sending.
-                    _logger.LogWarning("Viewer stalled.  Ending send loop.");
-                    yield break;
-                }
-
-                viewer.CalculateFps();
+                await viewer.CalculateMetrics();
 
                 await viewer.ApplyAutoQuality();
 
@@ -207,8 +198,6 @@ internal class ScreenCaster : IScreenCaster
                     continue;
                 }
 
-                viewer.PendingSentFrames.Enqueue(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
-
                 using var frameStream = _recycleStreams.GetStream();
                 using var writer = new BinaryWriter(frameStream);
                 writer.Write(encodedImageBytes.Length);
@@ -224,6 +213,8 @@ internal class ScreenCaster : IScreenCaster
                 {
                     yield return chunk;
                 }
+
+                viewer.AppendSentFrame(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
             }
 
         }

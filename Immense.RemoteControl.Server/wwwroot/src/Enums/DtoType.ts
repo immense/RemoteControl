@@ -20,7 +20,6 @@
     File = 22,
     WindowsSessions = 23,
     SetKeyStatesUp = 24,
-    FrameReceived = 25,
     OpenFileTransferWindow = 27,
     SessionMetrics = 28
 }

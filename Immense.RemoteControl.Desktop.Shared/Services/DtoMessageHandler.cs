@@ -120,9 +120,6 @@ public class DtoMessageHandler : IDtoMessageHandler
                 case DtoType.SetKeyStatesUp:
                     SetKeyStatesUp();
                     break;
-                case DtoType.FrameReceived:
-                    HandleFrameReceived(viewer);
-                    break;
                 case DtoType.OpenFileTransferWindow:
                     OpenFileTransferWindow(viewer);
                     break;
@@ -180,11 +177,6 @@ public class DtoMessageHandler : IDtoMessageHandler
     private async Task GetWindowsSessions(IViewer viewer)
     {
         await viewer.SendWindowsSessions();
-    }
-
-    private void HandleFrameReceived(IViewer viewer)
-    {
-        viewer.DequeuePendingFrame();
     }
 
     private void KeyDown(DtoWrapper wrapper)
