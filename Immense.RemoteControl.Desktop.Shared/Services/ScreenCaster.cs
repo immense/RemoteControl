@@ -124,6 +124,7 @@ internal class ScreenCaster : IScreenCaster
                 await viewer.SendScreenSize(bounds.Width, bounds.Height);
             };
 
+            _ = Task.Run(() => LogMetrics(viewer, _metricsCts.Token));
             using var sessionEndSignal = new SemaphoreSlim(0, 1);
             await viewer.SendDesktopStream(GetDesktopStream(viewer, sessionEndSignal), screenCastRequest.StreamId);
             if (!await sessionEndSignal.WaitAsync(TimeSpan.FromHours(8)))
@@ -164,13 +165,10 @@ internal class ScreenCaster : IScreenCaster
     {
         await Task.Yield();
 
-        _ = Task.Run(() => LogMetrics(viewer, _metricsCts.Token));
         try
         {
             while (!viewer.DisconnectRequested && viewer.IsConnected)
             {
-                await viewer.CalculateMetrics();
-
                 await viewer.ApplyAutoQuality();
 
                 var result = viewer.Capturer.GetNextFrame();
@@ -227,9 +225,10 @@ internal class ScreenCaster : IScreenCaster
 
     private async Task LogMetrics(IViewer viewer, CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
+        while (await timer.WaitForNextTickAsync(cancellationToken))
         {
-            await Task.Delay(3_000, cancellationToken);
+            await viewer.CalculateMetrics();
 
             var metrics = new SessionMetricsDto(
                 Math.Round(viewer.CurrentMbps, 2),
