@@ -28,6 +28,7 @@ public interface IViewer : IDisposable
     void AppendSentFrame(SentFrame sentFrame);
     Task ApplyAutoQuality();
     Task CalculateMetrics();
+    void IncrementFpsCount();
     Task SendAudioSample(byte[] audioSample);
     Task SendClipboardText(string clipboardText);
     Task SendCursorChange(CursorInfo cursorInfo);
@@ -47,6 +48,7 @@ public class Viewer : IViewer
     private readonly IAudioCapturer _audioCapturer;
     private readonly IClipboardService _clipboardService;
     private readonly IDesktopHubConnection _desktopHubConnection;
+    private readonly ConcurrentQueue<DateTimeOffset> _fpsQueue = new();
     private readonly ILogger<Viewer> _logger;
     private readonly ConcurrentQueue<SentFrame> _sentFrames = new();
     private readonly ISystemTime _systemTime;
@@ -116,15 +118,34 @@ public class Viewer : IViewer
             return;
         }
 
-        while (_sentFrames.TryPeek(out var oldestFrame) &&
-          _systemTime.Now - oldestFrame.Timestamp > TimeSpan.FromSeconds(1))
+        if (_sentFrames.Count >= 2)
         {
-            _sentFrames.TryDequeue(out _);
+            var sendTime = _sentFrames.Last().Timestamp - _sentFrames.First().Timestamp;
+            var sentBits = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+            CurrentMbps = sentBits / sendTime.TotalSeconds;
         }
+        else if (_sentFrames.Count == 1)
+        {
+            CurrentMbps = _sentFrames.First().FrameSize / 1024 / 1024 * 8;
+        }
+        else
+        {
+            CurrentMbps = 0;
+        }
+        _sentFrames.Clear();
 
-        CurrentFps = _sentFrames.Count;
-        CurrentMbps = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
 
+        if (_fpsQueue.Count >= 2)
+        {
+            var sendTime = _fpsQueue.Last() - _fpsQueue.First();
+            CurrentFps = _fpsQueue.Count / sendTime.TotalSeconds;
+        }
+        else
+        {
+
+            CurrentFps = _fpsQueue.Count;
+        }
+        _fpsQueue.Clear();
 
         var latencyResult = await _desktopHubConnection.CheckRoundtripLatency(ViewerConnectionId);
         if (latencyResult.IsSuccess)
@@ -142,6 +163,11 @@ public class Viewer : IViewer
         DisconnectRequested = true;
         Disposer.TryDisposeAll(Capturer);
         GC.SuppressFinalize(this);
+    }
+
+    public void IncrementFpsCount()
+    {
+        _fpsQueue.Enqueue(_systemTime.Now);
     }
 
     public async Task SendAudioSample(byte[] audioSample)

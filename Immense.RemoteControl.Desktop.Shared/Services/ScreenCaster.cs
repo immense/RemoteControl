@@ -169,6 +169,8 @@ internal class ScreenCaster : IScreenCaster
         {
             while (!viewer.DisconnectRequested && viewer.IsConnected)
             {
+                viewer.IncrementFpsCount();
+
                 await viewer.ApplyAutoQuality();
 
                 var result = viewer.Capturer.GetNextFrame();
