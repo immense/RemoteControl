@@ -25,7 +25,7 @@ public interface IViewer : IDisposable
     ConcurrentQueue<SentFrame> PendingSentFrames { get; }
     TimeSpan RoundTripLatency { get; }
     string ViewerConnectionId { get; set; }
-    void ApplyAutoQuality();
+    Task ApplyAutoQuality();
     void CalculateFps();
     void DequeuePendingFrame();
     Task SendAudioSample(byte[] audioSample);
@@ -105,19 +105,22 @@ public class Viewer : IViewer
 
     public string ViewerConnectionId { get; set; } = string.Empty;
 
-    public void ApplyAutoQuality()
+    public async Task ApplyAutoQuality()
     {
         if (ImageQuality < DefaultQuality)
         {
             ImageQuality = Math.Min(DefaultQuality, ImageQuality + 2);
         }
 
+        // TODO: Now that we're using streaming, we might be able to replace
+        // this with a buffer control mechanism in the StreamSignaler.
+
         // Delay based on roundtrip time to prevent too many frames from queuing up on slow connections.
-        _ = WaitHelper.WaitFor(() => PendingSentFrames.Count < 1 / RoundTripLatency.TotalSeconds,
+        _ = await WaitHelper.WaitForAsync(() => PendingSentFrames.Count < 1 / RoundTripLatency.TotalSeconds,
             TimeSpan.FromSeconds(5));
 
         // Wait until oldest pending frame is within the past 1 second.
-        _ = WaitHelper.WaitFor(() =>
+        _ = await WaitHelper.WaitForAsync(() =>
             !PendingSentFrames.TryPeek(out var result) || DateTimeOffset.Now - result.Timestamp < TimeSpan.FromSeconds(1),
             TimeSpan.FromSeconds(5));
     }

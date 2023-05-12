@@ -180,7 +180,7 @@ internal class ScreenCaster : IScreenCaster
 
                 viewer.CalculateFps();
 
-                viewer.ApplyAutoQuality();
+                await viewer.ApplyAutoQuality();
 
                 var result = viewer.Capturer.GetNextFrame();
 
