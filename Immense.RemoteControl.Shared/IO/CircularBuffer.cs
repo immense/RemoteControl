@@ -13,16 +13,15 @@ public class CircularBuffer<T> : IDisposable
     private readonly TimestampedItem[] _buffer;
     private readonly Func<T, int> _itemDataSizeFunc;
     private readonly int _maxDataSize;
+    private readonly TimeSpan _maxItemAge;
     private readonly SemaphoreSlim _readLock = new(1, 1);
     private readonly TimeSpan _readTimeout;
-    private readonly TimeSpan _maxItemAge;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly TimeSpan _writeTimeout;
     private volatile int _dataSize;
+    private bool _disposedValue;
     private int _readIndex;
     private int _writeIndex;
-    private bool _disposedValue;
-
     /// <summary>
     /// See full constructor for details.
     /// </summary>
@@ -95,6 +94,19 @@ public class CircularBuffer<T> : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Returns how far behind the reader is compared to the writer.
+    /// </summary>
+    public TimeSpan GetReadLag()
+    {
+        if (TryGetOldestRead(out var oldestUnread))
+        {
+            return DateTimeOffset.Now - oldestUnread;
+        }
+
+        return TimeSpan.Zero;
+    }
+
     public async Task<Result<T>> TryRead()
     {
         await _readLock.WaitAsync();
@@ -150,9 +162,9 @@ public class CircularBuffer<T> : IDisposable
                         return false;
                     }
 
-                    if (_buffer[_readIndex].Value is not null)
+                    if (TryGetOldestRead(out var oldestUnread))
                     {
-                        return DateTimeOffset.Now - _buffer[_readIndex].Created < _maxItemAge;
+                        return DateTimeOffset.Now - oldestUnread < _maxItemAge;
                     }
 
                     return true;
@@ -173,8 +185,8 @@ public class CircularBuffer<T> : IDisposable
                     return Result.Fail($"{message}  Max data size exceeded.");
                 }
 
-                if (_buffer[_readIndex].Value is not null &&
-                    DateTimeOffset.Now - _buffer[_readIndex].Created < _maxItemAge)
+                if (TryGetOldestRead(out var oldestUnread) &&
+                    DateTimeOffset.Now - oldestUnread < _maxItemAge)
                 {
                     return Result.Fail($"{message}  Max item age exceeded.");
                 }
@@ -198,6 +210,7 @@ public class CircularBuffer<T> : IDisposable
             }
         }
     }
+
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposedValue)
@@ -223,6 +236,11 @@ public class CircularBuffer<T> : IDisposable
         return next;
     }
 
+    private bool TryGetOldestRead(out DateTimeOffset oldestUnread)
+    {
+        oldestUnread = _buffer[_readIndex].Created;
+        return oldestUnread != default;
+    }
     private readonly struct TimestampedItem
     {
         public TimestampedItem(T item)
@@ -231,7 +249,7 @@ public class CircularBuffer<T> : IDisposable
             Created = DateTimeOffset.Now;
         }
 
-        public T? Value { get; }
         public DateTimeOffset Created { get; }
+        public T? Value { get; }
     }
 }

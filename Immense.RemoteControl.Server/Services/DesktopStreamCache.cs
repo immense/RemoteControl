@@ -14,7 +14,7 @@ public interface IDesktopStreamCache
 
     bool TryGet(Guid streamId, [NotNullWhen(true)] out StreamSignaler? signaler);
     bool TryRemove(Guid streamId, [NotNullWhen(true)] out StreamSignaler? signaler);
-    Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, TimeSpan timeout);
+    Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, string viewerConnectionId, TimeSpan timeout);
 }
 
 public class DesktopStreamCache : IDesktopStreamCache
@@ -47,9 +47,11 @@ public class DesktopStreamCache : IDesktopStreamCache
         return _streamingSessions.TryRemove(streamId, out signaler);
     }
 
-    public async Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, TimeSpan timeout)
+    public async Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, string viewerConnectionId, TimeSpan timeout)
     {
         var session = _streamingSessions.GetOrAdd(streamId, key => new StreamSignaler(streamId));
+        session.ViewerConnectionId = viewerConnectionId;
+
         var waitResult = await session.ReadySignal.WaitAsync(timeout);
 
         if (!waitResult)

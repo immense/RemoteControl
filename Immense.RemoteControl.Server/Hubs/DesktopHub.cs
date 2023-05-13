@@ -222,13 +222,20 @@ public class DesktopHub : Hub
     public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
     {
         var session = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));
+        session.DesktopConnectionId = Context.ConnectionId;
 
         try
         {
             session.ReadySignal.Release();
-
+            
             await foreach (var chunk in stream)
             {
+                var lag = session.GetViewerLag();
+                if (lag > TimeSpan.FromSeconds(1))
+                {
+                    await Clients.Caller.SendAsync("ApplyBackpressure", session.ViewerConnectionId, lag);
+                }
+
                 var writeResult = await session.WriteToStream(chunk);
                 if (!writeResult.IsSuccess)
                 {

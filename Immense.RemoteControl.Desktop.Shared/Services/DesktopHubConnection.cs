@@ -381,6 +381,14 @@ public class DesktopHubConnection : IDesktopHubConnection
             _appState.InvokeViewerRemoved(viewerID);
 
         });
+
+        connection.On("ApplyBackpressure", (string viewerConnectionId, TimeSpan viewerLag) =>
+        {
+            if (_appState.Viewers.TryGetValue(viewerConnectionId, out var viewer))
+            {
+                viewer.ApplyBackpressure(viewerLag);
+            }
+        });
     }
 
     private Result<HubConnection> BuildConnection()

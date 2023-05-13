@@ -9,6 +9,7 @@ using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.IO;
+using System.Diagnostics;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -213,7 +214,7 @@ internal class ScreenCaster : IScreenCaster
                 {
                     yield return chunk;
                 }
-
+                
                 viewer.AppendSentFrame(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
             }
 

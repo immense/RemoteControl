@@ -28,6 +28,7 @@ public interface IViewer : IDisposable
 
     void AppendSentFrame(SentFrame sentFrame);
     Task ApplyAutoQuality();
+    void ApplyBackpressure(TimeSpan viewerLag);
     Task CalculateMetrics();
     void IncrementFpsCount();
     Task SendAudioSample(byte[] audioSample);
@@ -55,6 +56,7 @@ public class Viewer : IViewer
     private readonly ISystemTime _systemTime;
     private bool _disconnectRequested;
     private int _pingFailures;
+    private TimeSpan _viewerLag;
 
     public Viewer(
         string requesterName,
@@ -102,13 +104,24 @@ public class Viewer : IViewer
         _sentFrames.Enqueue(sentFrame);
     }
 
-    public Task ApplyAutoQuality()
+    public async Task ApplyAutoQuality()
     {
         if (ImageQuality < DefaultQuality)
         {
             ImageQuality = Math.Min(DefaultQuality, ImageQuality + 2);
         }
-        return Task.CompletedTask;
+
+        var waitTime = _viewerLag - TimeSpan.FromSeconds(1);
+        if (waitTime > TimeSpan.Zero)
+        {
+            _viewerLag = TimeSpan.Zero;
+            await Task.Delay(waitTime);
+        }
+    }
+
+    public void ApplyBackpressure(TimeSpan viewerLag)
+    {
+        _viewerLag = viewerLag;
     }
 
     public async Task CalculateMetrics()

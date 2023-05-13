@@ -87,7 +87,10 @@ public class ViewerHub : Hub
 
     public async IAsyncEnumerable<byte[]> GetDesktopStream()
     {
-        var sessionResult = await _streamCache.WaitForStreamSession(SessionInfo.StreamId, TimeSpan.FromSeconds(30));
+        var sessionResult = await _streamCache.WaitForStreamSession(
+            SessionInfo.StreamId,
+            Context.ConnectionId,
+            TimeSpan.FromSeconds(30));
 
         if (!sessionResult.IsSuccess)
         {

@@ -18,13 +18,14 @@ public class StreamSignaler : IDisposable
 
     public StreamSignaler(Guid streamId)
     {
-        
         StreamId = streamId;
     }
 
-    public bool StreamEnded => _streamEnded;
+    public string DesktopConnectionId { get; internal set; } = string.Empty;
     public SemaphoreSlim ReadySignal { get; } = new(0, 1);
+    public bool StreamEnded => _streamEnded;
     public Guid StreamId { get; init; }
+    public string ViewerConnectionId { get; internal set; } = string.Empty;
 
     public void Dispose()
     {
@@ -36,6 +37,11 @@ public class StreamSignaler : IDisposable
     public void EndStream()
     {
         _streamEnded = true;
+    }
+
+    public TimeSpan GetViewerLag()
+    {
+        return _buffer.GetReadLag();
     }
 
     public async Task<Result<byte[]>> TryReadFromStream()
