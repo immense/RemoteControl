@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Immense.RemoteControl.Shared.Services;
 using Immense.RemoteControl.Desktop.Native.Windows;
 using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -53,6 +54,7 @@ public class Viewer : IViewer
     private readonly ConcurrentQueue<SentFrame> _sentFrames = new();
     private readonly ISystemTime _systemTime;
     private bool _disconnectRequested;
+    private int _pingFailures;
 
     public Viewer(
         string requesterName,
@@ -116,45 +118,9 @@ public class Viewer : IViewer
             return;
         }
 
-        if (_sentFrames.Count >= 2)
-        {
-            var sendTime = _sentFrames.Last().Timestamp - _sentFrames.First().Timestamp;
-            var sentBits = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
-            CurrentMbps = sentBits / sendTime.TotalSeconds;
-        }
-        else if (_sentFrames.Count == 1)
-        {
-            CurrentMbps = _sentFrames.First().FrameSize / 1024 / 1024 * 8;
-        }
-        else
-        {
-            CurrentMbps = 0;
-        }
-        _sentFrames.Clear();
-
-
-        if (_fpsQueue.Count >= 2)
-        {
-            var sendTime = _fpsQueue.Last() - _fpsQueue.First();
-            CurrentFps = _fpsQueue.Count / sendTime.TotalSeconds;
-        }
-        else
-        {
-
-            CurrentFps = _fpsQueue.Count;
-        }
-        _fpsQueue.Clear();
-
-        var latencyResult = await _desktopHubConnection.CheckRoundtripLatency(ViewerConnectionId);
-        if (latencyResult.IsSuccess)
-        {
-            RoundTripLatency = latencyResult.Value;
-        }
-        else
-        {
-            IsResponsive = false;
-            _logger.LogWarning("Failed to check roundtrip latency: {reason}", latencyResult.Reason);
-        }
+        CalculateMbps();
+        CalculateFps();
+        await CalculateLatency();
     }
 
     public void Dispose()
@@ -178,7 +144,7 @@ public class Viewer : IViewer
     public async Task SendClipboardText(string clipboardText)
     {
         var dto = new ClipboardTextDto(clipboardText);
-        await TrySendToViewer(dto, DtoType.ClipboardText,ViewerConnectionId);
+        await TrySendToViewer(dto, DtoType.ClipboardText, ViewerConnectionId);
     }
 
     public async Task SendCursorChange(CursorInfo cursorInfo)
@@ -201,7 +167,7 @@ public class Viewer : IViewer
     }
 
     public async Task SendFile(
-        FileUpload fileUpload, 
+        FileUpload fileUpload,
         Action<double> progressUpdateCallback,
         CancellationToken cancelToken)
     {
@@ -284,6 +250,7 @@ public class Viewer : IViewer
     {
         await TrySendToViewer(metrics, DtoType.SessionMetrics, ViewerConnectionId);
     }
+
     public async Task SendViewerConnected()
     {
         await _desktopHubConnection.SendViewerConnected(ViewerConnectionId);
@@ -303,6 +270,58 @@ public class Viewer : IViewer
         await SendAudioSample(sample);
     }
 
+    private void CalculateFps()
+    {
+        if (_fpsQueue.Count >= 2)
+        {
+            var sendTime = _fpsQueue.Last() - _fpsQueue.First();
+            CurrentFps = _fpsQueue.Count / sendTime.TotalSeconds;
+        }
+        else
+        {
+
+            CurrentFps = _fpsQueue.Count;
+        }
+        _fpsQueue.Clear();
+    }
+
+    private async Task CalculateLatency()
+    {
+        var latencyResult = await _desktopHubConnection.CheckRoundtripLatency(ViewerConnectionId);
+        if (latencyResult.IsSuccess)
+        {
+            _pingFailures = 0;
+            IsResponsive = true;
+            RoundTripLatency = latencyResult.Value;
+        }
+        else
+        {
+            _pingFailures++;
+            if (_pingFailures > 3)
+            {
+                IsResponsive = false;
+                _logger.LogWarning("Failed to check roundtrip latency: {reason}", latencyResult.Reason);
+            }
+        }
+    }
+    private void CalculateMbps()
+    {
+        if (_sentFrames.Count >= 2)
+        {
+            var sendTime = _sentFrames.Last().Timestamp - _sentFrames.First().Timestamp;
+            var sentBits = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+            CurrentMbps = sentBits / sendTime.TotalSeconds;
+        }
+        else if (_sentFrames.Count == 1)
+        {
+            CurrentMbps = _sentFrames.First().FrameSize / 1024 / 1024 * 8;
+        }
+        else
+        {
+            CurrentMbps = 0;
+        }
+        _sentFrames.Clear();
+    }
     private async void ClipboardService_ClipboardTextChanged(object? sender, string clipboardText)
     {
         await SendClipboardText(clipboardText);
