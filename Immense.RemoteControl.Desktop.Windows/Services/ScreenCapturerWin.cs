@@ -36,6 +36,7 @@ using Immense.RemoteControl.Shared;
 using Result = Immense.RemoteControl.Shared.Result;
 using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Native.Windows;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
@@ -43,14 +44,12 @@ public class ScreenCapturerWin : IScreenCapturer
 {
     private readonly Dictionary<string, int> _bitBltScreens = new();
     private readonly Dictionary<string, DirectXOutput> _directxScreens = new();
-    private readonly object _screenBoundsLock = new();
     private readonly IImageHelper _imageHelper;
     private readonly ILogger<ScreenCapturerWin> _logger;
-
+    private readonly object _screenBoundsLock = new();
     private SKBitmap? _currentFrame;
-    private SKBitmap? _previousFrame;
     private bool _needsInit;
-
+    private SKBitmap? _previousFrame;
     public ScreenCapturerWin(
         IImageHelper imageHelper,
         ILogger<ScreenCapturerWin> logger)
@@ -67,10 +66,8 @@ public class ScreenCapturerWin : IScreenCapturer
 
     public bool CaptureFullscreen { get; set; } = true;
     public Rectangle CurrentScreenBounds { get; private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
-    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
-
     public bool IsGpuAccelerated { get; private set; }
-
+    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
     public void Dispose()
     {
         try
@@ -88,22 +85,22 @@ public class ScreenCapturerWin : IScreenCapturer
 
     public SKRect GetFrameDiffArea()
     {
-        if (_currentFrame is null)
+        if (CurrentFrame is null)
         {
             return SKRect.Empty;
         }
-        return _imageHelper.GetDiffArea(_currentFrame, _previousFrame, CaptureFullscreen);
+        return _imageHelper.GetDiffArea(CurrentFrame, _previousFrame, CaptureFullscreen);
     }
 
 
     public Result<SKBitmap> GetImageDiff()
     {
         
-        if (_currentFrame is null)
+        if (CurrentFrame is null)
         {
             return Result.Fail<SKBitmap>("Current frame cannot be empty.");
         }
-        return _imageHelper.GetImageDiff(_currentFrame, _previousFrame);
+        return _imageHelper.GetImageDiff(CurrentFrame, _previousFrame);
     }
 
     public Result<SKBitmap> GetNextFrame()
@@ -129,23 +126,30 @@ public class ScreenCapturerWin : IScreenCapturer
                     Init();
                 }
 
-                SwapFrames();
-
                 var result = GetDirectXFrame();
 
-                if (!result.IsSuccess || result.Value is null || IsEmpty(result.Value))
+                if (result.IsSuccess && !result.HadChanges)
                 {
-                    result = GetBitBltFrame();
-                    if (!result.IsSuccess || result.Value is null)
+                    return Result.Fail<SKBitmap>("No screen changes occurred.");
+                }
+
+                if (result.HadChanges && !IsEmpty(result.Bitmap))
+                {
+                    CurrentFrame = result.Bitmap;
+                }
+                else
+                {
+                    var bitBltResult = GetBitBltFrame();
+                    if (!bitBltResult.IsSuccess)
                     {
-                        var ex = result.Exception ?? new("Unknown error.");
+                        var ex = bitBltResult.Exception ?? new("Unknown error.");
                         _logger.LogError(ex, "Error while getting next frame.");
                         return Result.Fail<SKBitmap>(ex);
                     }
+                    CurrentFrame = bitBltResult.Value;
                 }
 
-                _currentFrame = result.Value;
-                return result;
+                return Result.Ok(CurrentFrame);
             }
             catch (Exception e)
             {
@@ -228,11 +232,11 @@ public class ScreenCapturerWin : IScreenCapturer
         }
     }
 
-    internal Result<SKBitmap> GetDirectXFrame()
+    private DxCaptureResult GetDirectXFrame()
     {
         if (!_directxScreens.TryGetValue(SelectedScreen, out var dxOutput))
         {
-            return Result.Fail<SKBitmap>("DirectX output not found.");
+            return DxCaptureResult.Fail("DirectX output not found.");
         }
 
         try
@@ -242,13 +246,13 @@ public class ScreenCapturerWin : IScreenCapturer
             var texture2D = dxOutput.Texture2D;
             var bounds = dxOutput.Bounds;
 
-            var result = outputDuplication.TryAcquireNextFrame(50, out var duplicateFrameInfo, out var screenResource);
-
+            var result = outputDuplication.TryAcquireNextFrame(0, out var duplicateFrameInfo, out var screenResource);
+            
             if (!result.Success)
             {
-                return Result.Fail<SKBitmap>("Next frame did not arrive.");
+                return DxCaptureResult.TryAcquireFailed(result);
             }
-
+            
             if (duplicateFrameInfo.AccumulatedFrames == 0)
             {
                 try
@@ -256,7 +260,7 @@ public class ScreenCapturerWin : IScreenCapturer
                     outputDuplication.ReleaseFrame();
                 }
                 catch { }
-                return Result.Fail<SKBitmap>("No frames were accumulated.");
+                return DxCaptureResult.NoAccumulatedFrames(result);
             }
 
             using Texture2D screenTexture2D = screenResource.QueryInterface<Texture2D>();
@@ -294,7 +298,7 @@ public class ScreenCapturerWin : IScreenCapturer
                     break;
             }
             IsGpuAccelerated = true;
-            return Result.Ok(bitmap.ToSKBitmap());
+            return DxCaptureResult.Ok(bitmap.ToSKBitmap(), result);
         }
         catch (Exception ex)
         {
@@ -310,7 +314,7 @@ public class ScreenCapturerWin : IScreenCapturer
             catch { }
         }
 
-        return Result.Fail<SKBitmap>("Failed to get DirectX frame.");
+        return DxCaptureResult.Fail("Failed to get DirectX frame.");
     }
 
     private void ClearDirectXOutputs()
@@ -325,6 +329,7 @@ public class ScreenCapturerWin : IScreenCapturer
         }
         _directxScreens.Clear();
     }
+
     private void InitBitBlt()
     {
         _bitBltScreens.Clear();
@@ -444,16 +449,90 @@ public class ScreenCapturerWin : IScreenCapturer
         ScreenChanged?.Invoke(this, CurrentScreenBounds);
     }
 
-    private void SwapFrames()
+    private SKBitmap? CurrentFrame
     {
-        if (_currentFrame != null)
+        get => _currentFrame;
+        set
         {
-            _previousFrame?.Dispose();
-            _previousFrame = _currentFrame;
+            if (_currentFrame != null)
+            {
+                _previousFrame?.Dispose();
+                _previousFrame = _currentFrame;
+            }
+            _currentFrame = value;
         }
     }
+
     private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
     {
         RefreshCurrentScreenBounds();
+    }
+
+    private class DxCaptureResult
+    {
+        public SKBitmap? Bitmap { get; init; }
+        public SharpDX.Result? DxResult { get; init; }
+        public string FailureReason { get; init; } = string.Empty;
+
+        [MemberNotNull(nameof(Bitmap))]
+        public bool HadChanges { get; init; }
+
+        public bool IsSuccess { get; init; }
+
+        internal static DxCaptureResult Fail(string failureReason)
+        {
+            return new DxCaptureResult()
+            {
+                FailureReason = failureReason
+            };
+        }
+
+        internal static DxCaptureResult Fail(string failureReason, SharpDX.Result dxResult)
+        {
+            return new DxCaptureResult()
+            {
+                FailureReason = failureReason,
+                DxResult = dxResult
+            };
+        }
+
+        internal static DxCaptureResult NoAccumulatedFrames(SharpDX.Result dxResult)
+        {
+            return new DxCaptureResult()
+            {
+                FailureReason = "No frames were accumulated.",
+                DxResult = dxResult,
+                IsSuccess = true
+            };
+        }
+
+        internal static DxCaptureResult Ok(SKBitmap sKBitmap, SharpDX.Result result)
+        {
+            return new DxCaptureResult()
+            {
+                Bitmap = sKBitmap,
+                DxResult = result,
+                HadChanges = true,
+                IsSuccess = true,
+            };
+        }
+
+        internal static DxCaptureResult TryAcquireFailed(SharpDX.Result dxResult)
+        {
+            if (dxResult.Code == SharpDX.DXGI.ResultCode.WaitTimeout.Code)
+            {
+                return new DxCaptureResult()
+                {
+                    FailureReason = "Timed out while waiting for the next frame.",
+                    DxResult = dxResult,
+                    IsSuccess = true
+                };
+            }
+            return new DxCaptureResult()
+            {
+                FailureReason = "TryAcquireFrame returned failure.",
+                DxResult = dxResult
+            };
+        }
     }
 }

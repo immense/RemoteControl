@@ -182,8 +182,9 @@ internal class ScreenCaster : IScreenCaster
 
                 var result = viewer.Capturer.GetNextFrame();
 
-                if (!result.IsSuccess || result.Value is null)
+                if (!result.IsSuccess)
                 {
+                    await Task.Yield();
                     continue;
                 }
 
@@ -191,6 +192,7 @@ internal class ScreenCaster : IScreenCaster
 
                 if (diffArea.IsEmpty)
                 {
+                    await Task.Yield();
                     continue;
                 }
 
