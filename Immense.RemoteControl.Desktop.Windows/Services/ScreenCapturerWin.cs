@@ -246,7 +246,7 @@ public class ScreenCapturerWin : IScreenCapturer
             var texture2D = dxOutput.Texture2D;
             var bounds = dxOutput.Bounds;
 
-            var result = outputDuplication.TryAcquireNextFrame(0, out var duplicateFrameInfo, out var screenResource);
+            var result = outputDuplication.TryAcquireNextFrame(25, out var duplicateFrameInfo, out var screenResource);
             
             if (!result.Success)
             {
