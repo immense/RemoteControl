@@ -174,6 +174,12 @@ internal class ScreenCaster : IScreenCaster
 
                 await viewer.ApplyAutoQuality();
 
+                if (!await viewer.WaitForViewer())
+                {
+                    _logger.LogWarning(
+                        "Viewer is behind on frames and did not catch up in time.");
+                }
+
                 var result = viewer.Capturer.GetNextFrame();
 
                 if (!result.IsSuccess || result.Value is null)
@@ -199,6 +205,8 @@ internal class ScreenCaster : IScreenCaster
                     continue;
                 }
 
+                viewer.AppendSentFrame(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
+
                 using var frameStream = _recycleStreams.GetStream();
                 using var writer = new BinaryWriter(frameStream);
                 writer.Write(encodedImageBytes.Length);
@@ -206,18 +214,16 @@ internal class ScreenCaster : IScreenCaster
                 writer.Write(diffArea.Top);
                 writer.Write(diffArea.Width);
                 writer.Write(diffArea.Height);
+                writer.Write(DateTimeOffset.Now.ToUnixTimeMilliseconds());
                 writer.Write(encodedImageBytes);
 
                 frameStream.Seek(0, SeekOrigin.Begin);
-
+                
                 foreach (var chunk in frameStream.ToArray().Chunk(50_000))
                 {
                     yield return chunk;
                 }
-                
-                viewer.AppendSentFrame(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
             }
-
         }
         finally
         {

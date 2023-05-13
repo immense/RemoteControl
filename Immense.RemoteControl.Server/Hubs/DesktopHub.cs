@@ -226,31 +226,12 @@ public class DesktopHub : Hub
 
         try
         {
+            session.Stream = stream;
             session.ReadySignal.Release();
-            
-            await foreach (var chunk in stream)
-            {
-                var lag = session.GetViewerLag();
-                if (lag > TimeSpan.FromSeconds(1))
-                {
-                    await Clients.Caller.SendAsync("ApplyBackpressure", session.ViewerConnectionId, lag);
-                }
-
-                var writeResult = await session.WriteToStream(chunk);
-                if (!writeResult.IsSuccess)
-                {
-                    _logger.LogWarning(
-                        "Failed to write to video stream. " +
-                        "Reason: {reason}. StreamId: {id}", 
-                        writeResult.Reason,
-                        streamId);
-                    return;
-                }
-            }
+            await session.EndSignal.WaitAsync(TimeSpan.FromHours(8));
         }
         finally
         {
-            session.EndStream();
             if (_streamCache.TryRemove(session.StreamId, out var signaler))
             {
                 signaler.Dispose();

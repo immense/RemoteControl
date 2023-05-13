@@ -120,6 +120,9 @@ public class DtoMessageHandler : IDtoMessageHandler
                 case DtoType.SetKeyStatesUp:
                     SetKeyStatesUp();
                     break;
+                case DtoType.FrameReceived:
+                    HandleFrameReceived(wrapper, viewer);
+                    break;
                 case DtoType.OpenFileTransferWindow:
                     OpenFileTransferWindow(viewer);
                     break;
@@ -133,23 +136,13 @@ public class DtoMessageHandler : IDtoMessageHandler
         }
     }
 
-    private void CtrlAltDel()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            // Might as well try both.
-            User32.SendSAS(false);
-            User32.SendSAS(true);
-        }
-    }
-
     private async Task ClipboardTransfer(DtoWrapper wrapper)
     {
         if (!DtoChunker.TryComplete<ClipboardTransferDto>(wrapper, out var dto))
         {
             return;
         }
-        
+
         if (dto!.TypeText)
         {
             _keyboardMouseInput.SendText(dto.Text);
@@ -160,13 +153,23 @@ public class DtoMessageHandler : IDtoMessageHandler
         }
     }
 
+    private void CtrlAltDel()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            // Might as well try both.
+            User32.SendSAS(false);
+            User32.SendSAS(true);
+        }
+    }
+
     private async Task DownloadFile(DtoWrapper wrapper)
     {
         if (!DtoChunker.TryComplete<FileDto>(wrapper, out var dto))
         {
             return;
         }
-        
+
         await _fileTransferService.ReceiveFile(dto!.Buffer,
             dto.FileName,
             dto.MessageId,
@@ -179,6 +182,15 @@ public class DtoMessageHandler : IDtoMessageHandler
         await viewer.SendWindowsSessions();
     }
 
+    private void HandleFrameReceived(DtoWrapper wrapper, IViewer viewer)
+    {
+        if (!DtoChunker.TryComplete<FrameReceivedDto>(wrapper, out var dto))
+        {
+            return;
+        }
+        var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(dto.Timestamp);
+        viewer.SetLastFrameReceived(timestamp.ToLocalTime());
+    }
     private void KeyDown(DtoWrapper wrapper)
     {
         if (!DtoChunker.TryComplete<KeyDownDto>(wrapper, out var dto))

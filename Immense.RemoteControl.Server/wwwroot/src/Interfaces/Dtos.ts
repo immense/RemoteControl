@@ -165,6 +165,14 @@ export class SelectScreenDto {
     DisplayName: string;
 }
 
+export class FrameReceivedDto {
+    constructor(timestamp: number) {
+        this.Timestamp = timestamp;
+    }
+
+    Timestamp: number;
+}
+
 export interface SessionMetricsDto {
     Mbps: number;
     Fps: number;

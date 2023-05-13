@@ -101,23 +101,22 @@ public class ViewerHub : Hub
 
         var signaler = sessionResult.Value;
 
+        if (signaler.Stream is null)
+        {
+            _logger.LogError("Stream was null.");
+            yield break;
+        }
+
         try
         {
-            while (!signaler.StreamEnded)
+            await foreach (var chunk in signaler.Stream)
             {
-                var waitResult = await signaler.TryReadFromStream();
-                if (!waitResult.IsSuccess)
-                {
-                    _logger.LogWarning("{reason}", waitResult.Reason);
-                    await Task.Yield();
-                    continue;
-                }
-
-                yield return waitResult.Value;
+                yield return chunk;
             }
         }
         finally
         {
+            signaler.EndSignal.Release();
             _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
         }
     }

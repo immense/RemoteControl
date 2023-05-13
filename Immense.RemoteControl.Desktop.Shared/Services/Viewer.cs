@@ -28,7 +28,6 @@ public interface IViewer : IDisposable
 
     void AppendSentFrame(SentFrame sentFrame);
     Task ApplyAutoQuality();
-    void ApplyBackpressure(TimeSpan viewerLag);
     Task CalculateMetrics();
     void IncrementFpsCount();
     Task SendAudioSample(byte[] audioSample);
@@ -41,6 +40,8 @@ public interface IViewer : IDisposable
     Task SendSessionMetrics(SessionMetricsDto metrics);
     Task SendViewerConnected();
     Task SendWindowsSessions();
+    void SetLastFrameReceived(DateTimeOffset timestamp);
+    Task<bool> WaitForViewer();
 }
 
 public class Viewer : IViewer
@@ -55,8 +56,9 @@ public class Viewer : IViewer
     private readonly ConcurrentQueue<SentFrame> _sentFrames = new();
     private readonly ISystemTime _systemTime;
     private bool _disconnectRequested;
+    private DateTimeOffset _lastFrameReceived = DateTimeOffset.Now;
+    private DateTimeOffset _lastFrameSent = DateTimeOffset.Now;
     private int _pingFailures;
-    private TimeSpan _viewerLag;
 
     public Viewer(
         string requesterName,
@@ -101,27 +103,17 @@ public class Viewer : IViewer
     public string ViewerConnectionId { get; set; } = string.Empty;
     public void AppendSentFrame(SentFrame sentFrame)
     {
+        _lastFrameSent = sentFrame.Timestamp;
         _sentFrames.Enqueue(sentFrame);
     }
 
-    public async Task ApplyAutoQuality()
+    public Task ApplyAutoQuality()
     {
         if (ImageQuality < DefaultQuality)
         {
             ImageQuality = Math.Min(DefaultQuality, ImageQuality + 2);
         }
-
-        var waitTime = _viewerLag - TimeSpan.FromSeconds(1);
-        if (waitTime > TimeSpan.Zero)
-        {
-            _viewerLag = TimeSpan.Zero;
-            await Task.Delay(waitTime);
-        }
-    }
-
-    public void ApplyBackpressure(TimeSpan viewerLag)
-    {
-        _viewerLag = viewerLag;
+        return Task.CompletedTask;
     }
 
     public async Task CalculateMetrics()
@@ -278,6 +270,17 @@ public class Viewer : IViewer
         }
     }
 
+    public void SetLastFrameReceived(DateTimeOffset timestamp)
+    {
+        _lastFrameReceived = timestamp;
+    }
+
+    public async Task<bool> WaitForViewer()
+    {
+        return await WaitHelper.WaitForAsync(
+            () => _lastFrameSent - _lastFrameReceived < TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(5));
+    }
     private async void AudioCapturer_AudioSampleReady(object? sender, byte[] sample)
     {
         await SendAudioSample(sample);

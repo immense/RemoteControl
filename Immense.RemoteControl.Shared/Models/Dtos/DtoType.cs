@@ -48,6 +48,8 @@ public enum DtoType
     [EnumMember]
     SetKeyStatesUp = 24,
     [EnumMember]
+    FrameReceived = 25,
+    [EnumMember]
     OpenFileTransferWindow = 27,
     [EnumMember]
     SessionMetrics = 28

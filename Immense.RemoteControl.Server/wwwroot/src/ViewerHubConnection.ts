@@ -82,7 +82,6 @@ export class ViewerHubConnection {
         this.Connection.stream("GetDesktopStream")
             .subscribe({
                 next: (chunk: Uint8Array) => {
-                    console.log("next");
                     ProcessFrameChunk(chunk, streamingState);
                 },
                 complete: () => {
