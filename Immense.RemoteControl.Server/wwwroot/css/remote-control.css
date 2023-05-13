@@ -54,7 +54,7 @@ button {
     top: 5px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1;
+    z-index: 3;
     font-size: 1.2em;
     padding: 4px 7px;
 }
