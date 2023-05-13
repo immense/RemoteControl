@@ -10,8 +10,7 @@ namespace Immense.RemoteControl.Shared.IO;
 /// <typeparam name="T"></typeparam>
 public class CircularBuffer<T> : IDisposable
 {
-    private readonly T[] _buffer;
-    private readonly ConcurrentQueue<DateTimeOffset> _writeTimes = new();
+    private readonly TimestampedItem[] _buffer;
     private readonly Func<T, int> _itemDataSizeFunc;
     private readonly int _maxDataSize;
     private readonly SemaphoreSlim _readLock = new(1, 1);
@@ -22,7 +21,7 @@ public class CircularBuffer<T> : IDisposable
     private volatile int _dataSize;
     private int _readIndex;
     private int _writeIndex;
-    private bool disposedValue;
+    private bool _disposedValue;
 
     /// <summary>
     /// See full constructor for details.
@@ -81,7 +80,7 @@ public class CircularBuffer<T> : IDisposable
         TimeSpan readTimeout,
         TimeSpan maxItemAge)
     {
-        _buffer = new T[bufferCapacity];
+        _buffer = new TimestampedItem[bufferCapacity];
         _maxDataSize = maxDataSize;
         _itemDataSizeFunc = itemDataSizeFunc;
         _writeTimeout = writeTimeout;
@@ -112,17 +111,26 @@ public class CircularBuffer<T> : IDisposable
             }
 
             var item = _buffer[_readIndex];
+
+            if (item.Value is null)
+            {
+                throw new InvalidOperationException("Buffer item value is null.");
+            }
+
             Array.Clear(_buffer, _readIndex, 1);
-            _writeTimes.TryDequeue(out _);
-            var itemSize = _itemDataSizeFunc(item);
+            var itemSize = _itemDataSizeFunc(item.Value);
             Interlocked.Exchange(ref _dataSize, _dataSize - itemSize);
 
             _readIndex = GetNextIndex(_readIndex);
-            return Result.Ok(item);
+
+            return Result.Ok(item.Value);
         }
         finally
         {
-            _readLock.Release();
+            if (!_disposedValue)
+            {
+                _readLock.Release();
+            }
         }
     }
 
@@ -142,9 +150,9 @@ public class CircularBuffer<T> : IDisposable
                         return false;
                     }
 
-                    if (_writeTimes.TryPeek(out var oldest))
+                    if (_buffer[_readIndex].Value is not null)
                     {
-                        return DateTimeOffset.Now - oldest < _maxItemAge;
+                        return DateTimeOffset.Now - _buffer[_readIndex].Created < _maxItemAge;
                     }
 
                     return true;
@@ -165,30 +173,34 @@ public class CircularBuffer<T> : IDisposable
                     return Result.Fail($"{message}  Max data size exceeded.");
                 }
 
-                if (_writeTimes.TryPeek(out var oldest) &&
-                    DateTimeOffset.Now - oldest < _maxItemAge)
+                if (_buffer[_readIndex].Value is not null &&
+                    DateTimeOffset.Now - _buffer[_readIndex].Created < _maxItemAge)
                 {
                     return Result.Fail($"{message}  Max item age exceeded.");
                 }
+
+                return Result.Fail($"{message}  Unknown write problem.");
             }
 
             var itemSize = _itemDataSizeFunc(item);
             Interlocked.Exchange(ref _dataSize, _dataSize + itemSize);
 
-            _buffer[_writeIndex] = item;
+            _buffer[_writeIndex] = new TimestampedItem(item);
             _writeIndex = next;
-            _writeTimes.Enqueue(DateTimeOffset.Now);
 
             return Result.Ok();
         }
         finally
         {
-            _writeLock.Release();
+            if (!_disposedValue)
+            {
+                _writeLock.Release();
+            }
         }
     }
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (!_disposedValue)
         {
             if (disposing)
             {
@@ -197,7 +209,7 @@ public class CircularBuffer<T> : IDisposable
             }
 
             Array.Clear(_buffer);
-            disposedValue = true;
+            _disposedValue = true;
         }
     }
 
@@ -209,5 +221,17 @@ public class CircularBuffer<T> : IDisposable
             next = 0;
         }
         return next;
+    }
+
+    private readonly struct TimestampedItem
+    {
+        public TimestampedItem(T item)
+        {
+            Value = item;
+            Created = DateTimeOffset.Now;
+        }
+
+        public T? Value { get; }
+        public DateTimeOffset Created { get; }
     }
 }
