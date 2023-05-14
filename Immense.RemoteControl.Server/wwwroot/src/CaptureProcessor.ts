@@ -5,18 +5,12 @@ import { GetUint64 } from "./Utilities.js";
 
 const FrameHeaderSize = 28;
 
-export async function ProcessFrameChunk(chunk: Uint8Array, streamingState: StreamingState) {
-    streamingState.ReceivedChunks.push(chunk);
 
-    if (streamingState.IsProcessing) {
+export async function ProcessStream(streamingState: StreamingState): Promise<void> {
+    if (streamingState.StreamEnded) {
         return;
     }
 
-    streamingState.IsProcessing = true;
-    await processBuffer(streamingState);
-}
-
-async function processBuffer(streamingState: StreamingState): Promise<void> {
     try {
         const chunks = streamingState.ReceivedChunks.splice(0);
         streamingState.Buffer = new Blob([streamingState.Buffer, ...chunks]);
@@ -36,7 +30,7 @@ async function processBuffer(streamingState: StreamingState): Promise<void> {
 
         if (bufferSize - FrameHeaderSize < imageSize) {
             streamingState.IsProcessing = false;
-            return;;
+            return;
         }
 
         const imageX = dataView.getFloat32(4, true);
@@ -60,13 +54,14 @@ async function processBuffer(streamingState: StreamingState): Promise<void> {
         streamingState.Buffer = streamingState.Buffer.slice(FrameHeaderSize + imageSize);
 
         ViewerApp.MessageSender.SendFrameReceived(timestamp);
-
-        requestAnimationFrame(() => {
-            processBuffer(streamingState);
-        });
     }
     catch (ex) {
         console.error("Capture processing error.  Resetting stream buffer.", ex);
         streamingState.Buffer = new Blob();
+    }
+    finally {
+        requestAnimationFrame(() => {
+            ProcessStream(streamingState);
+        });
     }
 }

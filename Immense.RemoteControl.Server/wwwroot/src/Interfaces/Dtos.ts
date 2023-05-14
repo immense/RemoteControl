@@ -19,16 +19,6 @@ export interface AudioSampleDto {
     Buffer: Uint8Array;
 }
 
-export interface ScreenCaptureDto {
-    Left: number;
-    Top: number;
-    Width: number;
-    Height: number;
-    ImageBytes: Uint8Array;
-    IsLastChunk: boolean;
-    InstanceId: string;
-}
-
 export interface ClipboardTextDto {
     ClipboardText: string;
 }
