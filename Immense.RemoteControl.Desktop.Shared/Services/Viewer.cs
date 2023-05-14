@@ -56,6 +56,7 @@ public class Viewer : IViewer
     private readonly ConcurrentQueue<SentFrame> _sentFrames = new();
     private readonly ISystemTime _systemTime;
     private bool _disconnectRequested;
+    private volatile int _framesSentSinceLastReceipt;
     private DateTimeOffset _lastFrameReceived = DateTimeOffset.Now;
     private DateTimeOffset _lastFrameSent = DateTimeOffset.Now;
     private int _pingFailures;
@@ -103,6 +104,7 @@ public class Viewer : IViewer
     public string ViewerConnectionId { get; set; } = string.Empty;
     public void AppendSentFrame(SentFrame sentFrame)
     {
+        Interlocked.Increment(ref _framesSentSinceLastReceipt);
         _lastFrameSent = sentFrame.Timestamp;
         _sentFrames.Enqueue(sentFrame);
     }
@@ -273,14 +275,24 @@ public class Viewer : IViewer
     public void SetLastFrameReceived(DateTimeOffset timestamp)
     {
         _lastFrameReceived = timestamp;
+        _framesSentSinceLastReceipt = 0;
     }
 
     public async Task<bool> WaitForViewer()
     {
-        return await WaitHelper.WaitForAsync(
+        // Prevent publisher from overwhelming consumer bewteen receipts.
+        var result = await WaitHelper.WaitForAsync(
+            () => _framesSentSinceLastReceipt < 10,
+            TimeSpan.FromSeconds(5));
+
+        // Prevent viewer from getting too far behind.
+        result &= await WaitHelper.WaitForAsync(
             () => _lastFrameSent - _lastFrameReceived < TimeSpan.FromSeconds(1),
             TimeSpan.FromSeconds(5));
+
+        return result;
     }
+
     private async void AudioCapturer_AudioSampleReady(object? sender, byte[] sample)
     {
         await SendAudioSample(sample);
