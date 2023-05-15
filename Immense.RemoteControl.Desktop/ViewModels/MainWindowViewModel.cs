@@ -331,15 +331,19 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
     private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        await Dispatcher.UIThread.InvokeAsync(async () =>
+        var result = await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            var result = await MessageBox.Show($"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxType.YesNo);
-            if (result == MessageBoxResult.Yes)
-            {
-                using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
-                await screenCaster.BeginScreenCasting(screenCastRequest);
-            }
+            return await MessageBox.Show(
+                $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", 
+                "Connection Request", 
+                MessageBoxType.YesNo);
         });
+
+        if (result == MessageBoxResult.Yes)
+        {
+            using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+            await screenCaster.BeginScreenCasting(screenCastRequest);
+        }
     }
 
     private async void ViewerAdded(object? sender, IViewer viewer)

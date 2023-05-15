@@ -54,7 +54,7 @@ internal class ScreenCaster : IScreenCaster
 
     public async Task BeginScreenCasting(ScreenCastRequest screenCastRequest)
     {
-        await Task.Run(() => BeginScreenCastingImpl(screenCastRequest));
+        await BeginScreenCastingImpl(screenCastRequest).ConfigureAwait(false);
     }
 
     public void Dispose()

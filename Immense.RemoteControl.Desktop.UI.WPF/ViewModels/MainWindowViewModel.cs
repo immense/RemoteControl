@@ -319,20 +319,26 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     }
     private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        await _dispatcher.InvokeWpfAsync(async () =>
+        var result = _dispatcher.InvokeWpf(() =>
         {
             _dispatcher.CurrentApp.MainWindow.Activate();
-            var result = MessageBox.Show(_dispatcher.CurrentApp.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
-                await screenCaster.BeginScreenCasting(screenCastRequest);
-            }
-            else
-            {
-                await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerId);
-            }
+            return MessageBox.Show(
+                _dispatcher.CurrentApp.MainWindow,
+                $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", 
+                "Connection Request",
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
         });
+
+        if (result == MessageBoxResult.Yes)
+        {
+            using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+            await screenCaster.BeginScreenCasting(screenCastRequest);
+        }
+        else
+        {
+            await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerId);
+        }
     }
 
     private void ViewerAdded(object? sender, IViewer viewer)
