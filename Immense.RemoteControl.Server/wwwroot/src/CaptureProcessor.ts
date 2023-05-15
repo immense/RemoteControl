@@ -18,7 +18,6 @@ export async function ProcessStream(streamingState: StreamingState): Promise<voi
         const bufferSize = streamingState.Buffer.size;
 
         if (bufferSize < FrameHeaderSize) {
-            streamingState.IsProcessing = false;
             return;
         }
 
@@ -29,7 +28,6 @@ export async function ProcessStream(streamingState: StreamingState): Promise<voi
         const imageSize = dataView.getInt32(0, true);
 
         if (bufferSize - FrameHeaderSize < imageSize) {
-            streamingState.IsProcessing = false;
             return;
         }
 
