@@ -158,7 +158,7 @@ public class DtoMessageHandler : IDtoMessageHandler
         if (OperatingSystem.IsWindows())
         {
             // Might as well try both.
-            User32.SendSAS(false);
+            User32.SendSAS(AsUser: false);
             User32.SendSAS(true);
         }
     }
