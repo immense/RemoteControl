@@ -204,11 +204,11 @@
         <div id="connectBox" class="center-connection-box" style="display: none">
             <div class="form-block">
                 <label class="input-label">Your Name (shown to client)</label>
-                <input id="nameInput" type="text" value="@Model.UserDisplayName" />
+                <input id="nameInput" type="text" required value="@Model.UserDisplayName" />
             </div>
             <div class="form-block">
                 <label class="input-label">Session ID</label>
-                <input id="sessionIDInput" type="text" pattern="[0-9 ]+" />
+                <input id="sessionIDInput" required type="text" pattern="[0-9 ]+" />
             </div>
             <div>
                 <button id="connectButton" class="bg-primary">

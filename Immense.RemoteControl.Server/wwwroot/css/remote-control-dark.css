@@ -32,22 +32,25 @@ button {
     border-color: #323334;
 }
 
+  button:hover {
+    background-color: #33ffe9;
+  }
+
+  button:active {
+    background-color: #01ad9b;
+    border: 1px solid #01ad9b;
+  }
+
+  button:disabled {
+      background-color: #555555;
+      color: #dedede;
+      cursor: no-drop;
+      border: none;
+  }
+
 .bg-primary {
     background-color: #01EAD1;
 }
-
-
-button:hover {
-    background-color: #33ffe9;
-}
-
-
-button[disabled] {
-    background-color: #555555;
-    color: #dedede;
-    cursor: no-drop;
-}
-
 
 .menu-options-header {
     color: lightgray;
