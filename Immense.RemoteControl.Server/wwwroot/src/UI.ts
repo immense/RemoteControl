@@ -17,6 +17,8 @@ export var ScreenViewerWrapper = document.getElementById("screenViewerWrapper") 
 export var Screen2DContext = ScreenViewer ? ScreenViewer.getContext("2d") : null;
 export var HorizontalBars = document.querySelectorAll(".horizontal-button-bar");
 export var ConnectBox = document.getElementById("connectBox") as HTMLDivElement;
+export var ConnectHeader = document.getElementById("connectHeader") as HTMLHeadingElement;
+export var ConnectForm = document.getElementById("connectForm") as HTMLFormElement;
 export var ScreenSelectBar = document.getElementById("screenSelectBar") as HTMLDivElement;
 export var ActionsBar = document.getElementById("actionsBar") as HTMLDivElement;
 export var ViewBar = document.getElementById("viewBar") as HTMLDivElement;
@@ -102,7 +104,7 @@ export function SetStatusMessage(message: string) {
     StatusMessage.innerHTML = message;
 }
 
-export function ShowMessage(message: string) {
+export function ShowToast(message: string) {
     var messageDiv = document.createElement("div");
     messageDiv.classList.add("toast-message");
     messageDiv.innerHTML = message;
@@ -114,22 +116,24 @@ export function ShowMessage(message: string) {
 
 
 export function ToggleConnectUI(shown: boolean) {
-    ConnectButton.removeAttribute("disabled");
-
     if (shown) {
         Screen2DContext.clearRect(0, 0, ScreenViewer.width, ScreenViewer.height);
         ScreenViewerWrapper.setAttribute("hidden", "hidden");
         if (ViewerApp.Mode == RemoteControlMode.Attended) {
             ConnectBox.style.removeProperty("display");
+            ConnectHeader.style.removeProperty("display");
         }
         BlockInputButton.classList.remove("toggled");
         AudioButton.classList.remove("toggled");
     }
     else {
         ConnectBox.style.display = "none";
+        ConnectHeader.style.display = "none";
         ScreenViewerWrapper.removeAttribute("hidden");
         StatusMessage.innerHTML = "";
     }
+
+    ConnectButton.disabled = !ViewerApp.RequesterName || !ViewerApp.SessionId;
 }
 
 export function UpdateCursor(imageBytes: Uint8Array, hotSpotX: number, hotSpotY: number, cssOverride: string) {

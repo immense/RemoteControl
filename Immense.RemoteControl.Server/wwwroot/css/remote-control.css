@@ -293,7 +293,6 @@ button {
     margin-bottom: 10px;
     opacity: 1;
     color: white;
-    border-radius: 5px;
     user-select: none;
     pointer-events: none;
     animation-name: toast-message;

@@ -1,7 +1,7 @@
 import * as UI from "./UI.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { ViewerApp } from "./App.js";
-import { ShowMessage } from "./UI.js";
+import { ShowToast } from "./UI.js";
 import { Sound } from "./Sound.js";
 import {
     AudioSampleDto,

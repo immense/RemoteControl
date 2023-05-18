@@ -50,16 +50,16 @@ export const ViewerApp = {
             UI.StatusMessage.innerHTML = "Connecting to remote device";
         }
         else {
-            UI.ConnectBox.style.removeProperty("display");
             UI.SessionIDInput.value = ViewerApp.SessionId;
             UI.RequesterNameInput.value = ViewerApp.RequesterName;
+            UI.ToggleConnectUI(true);
         }
     },
     ConnectToClient: () => {
         ViewerApp.SessionId = UI.SessionIDInput.value.split(" ").join("").trim();
 
         if (!ViewerApp.SessionId) {
-            UI.ShowMessage("Session ID is required");
+            UI.ShowToast("Session ID is required");
             UI.SetStatusMessage("Session ID is required.");
             return;
         }

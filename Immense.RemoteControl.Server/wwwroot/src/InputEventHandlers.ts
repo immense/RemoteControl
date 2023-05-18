@@ -27,7 +27,10 @@ import {
     FileUploadButtton,
     FileDownloadButton,
     ViewOnlyButton,
-    FullScreenButton
+    FullScreenButton,
+    RequesterNameInput,
+    SessionIDInput,
+    ConnectForm
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -35,7 +38,7 @@ import { Point } from "./Models/Point.js";
 import { UploadFiles } from "./FileTransferService.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { GetDistanceBetween } from "./Utilities.js";
-import { ShowMessage } from "./UI.js";
+import { ShowToast } from "./UI.js";
 
 var isDragging: boolean;
 var currentPointerDevice: string;
@@ -95,16 +98,19 @@ export function ApplyInputHandlers() {
 
         navigator.clipboard.readText().then(text => {
             ViewerApp.MessageSender.SendClipboardTransfer(text, true);
-            ShowMessage("Clipboard sent!");
+            ShowToast("Clipboard sent!");
         }, reason => {
             alert("Unable to read clipboard.  Please check your permissions.");
             console.log("Unable to read clipboard.  Reason: " + reason);
         });
     });
-    ConnectButton.addEventListener("click", (ev) => {
+    ConnectButton.addEventListener("click", () => {
+        if (!ConnectForm.checkValidity()) {
+            return;
+        }
         ViewerApp.ConnectToClient();
     });
-    CtrlAltDelButton.addEventListener("click", (ev) => {
+    CtrlAltDelButton.addEventListener("click", () => {
         if (ViewerApp.ViewOnlyMode) {
             alert("View-only mode is enabled.");
             return;
@@ -120,12 +126,26 @@ export function ApplyInputHandlers() {
             window.close();
         }
     });
-    document.querySelectorAll("#sessionIDInput, #nameInput").forEach(x => {
+
+    [SessionIDInput, RequesterNameInput].forEach(x => {
         x.addEventListener("keypress", (ev: KeyboardEvent) => {
+            if (!SessionIDInput.value || !RequesterNameInput.value) {
+                return;
+            }
+
             if (ev.key.toLowerCase() == "enter") {
                 ViewerApp.ConnectToClient();
             }
         })
+
+        x.addEventListener("input", () => {
+            if (!SessionIDInput.value || !RequesterNameInput.value) {
+                ConnectButton.setAttribute("disabled", "disabled");
+            }
+            else {
+                ConnectButton.removeAttribute("disabled");
+            }
+        });
     });
     FileTransferButton.addEventListener("click", (ev) => {
         closeAllHorizontalBars(FileTransferBar.id);
@@ -181,7 +201,7 @@ export function ApplyInputHandlers() {
             url = `${location.origin}${location.pathname}?mode=Unattended&sessionId=${ViewerApp.SessionId}&accessKey=${ViewerApp.AccessKey}`;
         }
         ViewerApp.ClipboardWatcher.SetClipboardText(url);
-        ShowMessage("Link copied to clipboard.");
+        ShowToast("Link copied to clipboard.");
     });
     KeyboardButton.addEventListener("click", (ev) => {
         closeAllHorizontalBars(null);
@@ -531,7 +551,7 @@ export function ApplyInputHandlers() {
         ViewerApp.MessageSender.GetWindowsSessions();
     });
     WindowsSessionSelect.addEventListener("change", () => {
-        ShowMessage("Switching sessions");
+        ShowToast("Switching sessions");
         ViewerApp.MessageSender.ChangeWindowsSession(Number(WindowsSessionSelect.selectedOptions[0].value));
     });
     RecordSessionButton.addEventListener("click", () => {
