@@ -38,13 +38,17 @@
     </environment>
 </head>
 <body>
-    <div class="brand-frame" title="@(Model.ProductName)">
-        <div class="logo-title">
-            @(Model.ProductName)
-        </div>
-        <div class="logo-subtitle">
-            @(Model.ProductSubtitle)
-        </div>
+    <div class="background-layers">
+        <div class="background-layer-1"></div>
+        <div class="background-layer-2"></div>
+        <div class="background-layer-3"></div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
+        {
+            <div class="logo-frame">
+                <img src="@(Model.LogoUrl)" />
+            </div>
+        }
     </div>
 
     <button id="keyboardButton" hidden="hidden" title="Invoke the mobile touch keyboard.">
@@ -192,21 +196,24 @@
     </div>
 
     <div class="connection-box-wrapper">
-
+        <div class="text-center">
+            <h2 class="connect-header">
+                Connect to a Client
+            </h2>
+        </div>
         <div id="connectBox" class="center-connection-box" style="display: none">
-            <h3>Connect to a client:</h3>
             <div class="form-block">
-                <label>Your Name (shown to client): </label>
-                <br />
+                <label class="input-label">Your Name (shown to client)</label>
                 <input id="nameInput" type="text" value="@Model.UserDisplayName" />
             </div>
             <div class="form-block">
-                <label>Session ID: </label>
-                <br />
+                <label class="input-label">Session ID</label>
                 <input id="sessionIDInput" type="text" pattern="[0-9 ]+" />
             </div>
-            <div class="right-aligned">
-                <button id="connectButton">Connect</button>
+            <div>
+                <button id="connectButton" class="bg-primary">
+                    Connect
+                </button>
             </div>
 
         </div>
@@ -217,7 +224,7 @@
     </div>
 
 
-    <div id="screenViewerWrapper" hidden="hidden" class="center-aligned">
+    <div id="screenViewerWrapper" hidden="hidden" class="text-center">
         <canvas id="screenViewer"></canvas>
         <input id="fileTransferInput" hidden="hidden" type="file" multiple />
         <textarea id="touchKeyboardTextArea" value=" #"> #</textarea>
@@ -234,7 +241,7 @@
     </div>
 
     <footer>
-        <div class="footer-wrapper">
+        <div class="copyright-text">
             &copy; @(DateTime.Now.Year) - Immense Networks
         </div>
     </footer>

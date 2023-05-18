@@ -1,30 +1,51 @@
 ﻿body {
-    background-color: #222;
-    color: #888888;
-}
-
-button {
-    background-color: rgb(40,40,40);
+    background-color: black;
     color: white;
 }
 
 
+.background-layer-1 {
+    background-image: radial-gradient(#fafafa 1%, transparent 2.8%);
+    background-color: black;
+}
+
+.background-layer-2 {
+    background-image: url("../images/viewer-background-gradient-dark.svg");
+}
+
+.center-connection-box {
+    background-color: #151718;
+}
+
+input {
+    background-color: #0D0D0D;
+    border-color: #323334;
+    color: white;
+}
+
+    input:focus {
+        border-color: white;
+    }
+
+
+button {
+    border-color: #323334;
+}
+
+.bg-primary {
+    background-color: #01EAD1;
+}
+
+
 button:hover {
-    background-color: rgb(100,100,100);
+    background-color: #33ffe9;
 }
 
-button:active {
-    background-color: rgb(80,80,80);
-}
-
-button.toggled {
-    background-color: rgb(220, 220, 220);
-    color: black;
-}
 
 button[disabled] {
-    background-color: rgb(90,90,90);
-    color: gray;
+    background-color: #555555;
+    color: #dedede;
+    cursor: no-drop;
 }
 
 
@@ -62,12 +83,6 @@ button[disabled] {
 }
 
 
-.center-connection-box {
-    background-color: rgb(60, 60, 60);
-    color: white;
-}
-
-
 .logo-subtitle {
     color: deepskyblue;
 }
@@ -95,12 +110,4 @@ footer a {
 .modal-prompt {
     background-color: rgb(60, 60, 60);
     color: white;
-}
-
-#connectionRelayedIcon {
-    background-color: orange;
-}
-
-#connectionP2PIcon {
-    background-color: green;
 }

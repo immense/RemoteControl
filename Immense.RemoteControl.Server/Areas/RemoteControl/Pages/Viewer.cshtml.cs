@@ -17,10 +17,9 @@ public class ViewerModel : PageModel
     }
 
     public string FaviconUrl { get; private set; } = string.Empty;
+    public string LogoUrl { get; private set; } = string.Empty;
     public string PageDescription { get; private set; } = string.Empty;
     public string PageTitle { get; private set; } = string.Empty;
-    public string ProductName { get; private set; } = string.Empty;
-    public string ProductSubtitle { get; private set; } = string.Empty;
     public string ThemeUrl { get; private set; } = string.Empty;
     public string UserDisplayName { get; private set; } = string.Empty;
     public async Task OnGet()
@@ -35,9 +34,8 @@ public class ViewerModel : PageModel
         };
         UserDisplayName = await _viewerDataProvider.GetUserDisplayName(this);
         PageTitle = await _viewerDataProvider.GetPageTitle(this);
-        ProductName = await _viewerDataProvider.GetProductName(this);
-        ProductSubtitle = await _viewerDataProvider.GetProductSubtitle(this);
         PageDescription = await _viewerDataProvider.GetPageDescription(this);
         FaviconUrl = await _viewerDataProvider.GetFaviconUrl(this);
+        LogoUrl = await _viewerDataProvider.GetLogoUrl(this);
     }
 }
