@@ -5,17 +5,16 @@ import { ShowMessage } from "./UI.js";
 import { Sound } from "./Sound.js";
 import {
     AudioSampleDto,
-    ScreenCaptureDto,
     ClipboardTextDto,
     CursorChangeDto,
     ScreenDataDto,
     ScreenSizeDto,
     FileDto,
     WindowsSessionsDto,
-    DtoWrapper
+    DtoWrapper,
+    SessionMetricsDto
 } from "./Interfaces/Dtos.js";
 import { ReceiveFile } from "./FileTransferService.js";
-import { HandleCaptureReceived } from "./CaptureProcessor.js";
 import { TryComplete } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
 
@@ -28,9 +27,6 @@ export class DtoMessageHandler {
         switch (wrapper.DtoType) {
             case DtoType.AudioSample:
                 await this.HandleAudioSample(wrapper);
-                break;
-            case DtoType.ScreenCapture:
-                this.HandleScreenCapture(wrapper);
                 break;
             case DtoType.ClipboardText:
                 this.HandleClipboardText(wrapper);
@@ -49,6 +45,8 @@ export class DtoMessageHandler {
                 break;
             case DtoType.File:
                 this.HandleFile(wrapper);
+            case DtoType.SessionMetrics:
+                await this.HandleSessionMetrics(wrapper);
             default:
                 break;
         }
@@ -62,16 +60,6 @@ export class DtoMessageHandler {
         }
 
         await Sound.Play(audioSample.Buffer);
-    }
-
-    HandleScreenCapture(wrapper: DtoWrapper) {
-        let screenCapture = TryComplete<ScreenCaptureDto>(wrapper);
-
-        if (!screenCapture) {
-            return;
-        }
-
-        HandleCaptureReceived(screenCapture);
     }
 
     HandleClipboardText(wrapper: DtoWrapper) {
@@ -122,6 +110,16 @@ export class DtoMessageHandler {
         }
 
         UI.SetScreenSize(screenSizeDto.Width, screenSizeDto.Height);
+    }
+
+    async HandleSessionMetrics(wrapper: DtoWrapper) {
+        let metricsDto = TryComplete<SessionMetricsDto>(wrapper);
+
+        if (!metricsDto) {
+            return;
+        }
+
+        UI.UpdateMetrics(metricsDto);
     }
 
     HandleWindowsSessions(wrapper: DtoWrapper) {

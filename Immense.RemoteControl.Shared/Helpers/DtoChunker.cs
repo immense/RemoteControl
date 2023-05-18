@@ -1,6 +1,7 @@
 ﻿using Immense.RemoteControl.Shared.Models.Dtos;
 using MessagePack;
 using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Immense.RemoteControl.Shared.Helpers;
 
@@ -31,7 +32,7 @@ public static class DtoChunker
         }
     }
 
-    public static bool TryComplete<T>(DtoWrapper wrapper, out T? result)
+    public static bool TryComplete<T>(DtoWrapper wrapper, [NotNullWhen(true)] out T? result)
     {
         result = default;
 

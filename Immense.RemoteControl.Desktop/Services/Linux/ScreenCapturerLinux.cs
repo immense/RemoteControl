@@ -36,6 +36,7 @@ public class ScreenCapturerLinux : IScreenCapturer
     public bool CaptureFullscreen { get; set; } = true;
     public Rectangle CurrentScreenBounds { get; private set; }
     public IntPtr Display { get; private set; }
+    public bool IsGpuAccelerated => false;
     public string SelectedScreen { get; private set; } = string.Empty;
 
     public void Dispose()

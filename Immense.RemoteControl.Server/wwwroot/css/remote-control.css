@@ -39,12 +39,22 @@ button {
     font-size: .9em;
 }
 
+.metrics-body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    white-space: nowrap;
+    text-align: left;
+    margin-left: 5px;
+    font-size: 0.8em;
+}
+
 #keyboardButton {
     position: fixed;
     top: 5px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1;
+    z-index: 3;
     font-size: 1.2em;
     padding: 4px 7px;
 }

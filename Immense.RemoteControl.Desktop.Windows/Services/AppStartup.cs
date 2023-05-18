@@ -101,7 +101,7 @@ internal class AppStartup : IAppStartup
 
     private async Task StartScreenCasting()
     {
-        if (!await _desktopHub.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(30)))
+        if (!await _desktopHub.Connect(TimeSpan.FromSeconds(30), _dispatcher.ApplicationExitingToken))
         {
             await _shutdownService.Shutdown();
             return;

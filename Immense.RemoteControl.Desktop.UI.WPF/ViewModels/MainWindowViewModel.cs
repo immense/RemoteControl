@@ -42,7 +42,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     private readonly IWindowsUiDispatcher _dispatcher;
     private readonly IDesktopHubConnection _hubConnection;
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly IScreenCaster _screenCaster;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IShutdownService _shutdownService;
     private readonly IViewModelFactory _viewModelFactory;
 
@@ -51,7 +51,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         IWindowsUiDispatcher dispatcher,
         IAppState appState,
         IDesktopHubConnection hubConnection,
-        IScreenCaster screenCaster,
+        IServiceProvider serviceProvider,
         IShutdownService shutdownService,
         IViewModelFactory viewModelFactory,
         ILogger<MainWindowViewModel> logger)
@@ -60,7 +60,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         _dispatcher = dispatcher;
         _appState = appState;
         _hubConnection = hubConnection;
-        _screenCaster = screenCaster;
+        _serviceProvider = serviceProvider;
         _shutdownService = shutdownService;
         _viewModelFactory = viewModelFactory;
         _logger = logger;
@@ -143,7 +143,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
         try
         {
-            var result = await _hubConnection.Connect(_dispatcher.ApplicationExitingToken, TimeSpan.FromSeconds(10));
+            var result = await _hubConnection.Connect(TimeSpan.FromSeconds(10), _dispatcher.ApplicationExitingToken);
 
             if (result && _hubConnection.Connection is not null)
             {
@@ -313,25 +313,32 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
         foreach (var viewer in viewers.OfType<Viewer>().ToArray())
         {
-            ViewerRemoved(this, viewer.ViewerConnectionID);
+            ViewerRemoved(this, viewer.ViewerConnectionId);
             await _hubConnection.DisconnectViewer(viewer, true);
         }
     }
     private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        await _dispatcher.InvokeWpfAsync(async () =>
+        var result = _dispatcher.InvokeWpf(() =>
         {
             _dispatcher.CurrentApp.MainWindow.Activate();
-            var result = MessageBox.Show(_dispatcher.CurrentApp.MainWindow, $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                _screenCaster.BeginScreenCasting(screenCastRequest);
-            }
-            else
-            {
-                await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerID);
-            }
+            return MessageBox.Show(
+                _dispatcher.CurrentApp.MainWindow,
+                $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", 
+                "Connection Request",
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
         });
+
+        if (result == MessageBoxResult.Yes)
+        {
+            using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+            await screenCaster.BeginScreenCasting(screenCastRequest);
+        }
+        else
+        {
+            await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerId);
+        }
     }
 
     private void ViewerAdded(object? sender, IViewer viewer)
@@ -346,7 +353,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         _dispatcher.InvokeWpf(() =>
         {
-            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
+            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionId == viewerID);
             if (viewer != null)
             {
                 Viewers.Remove(viewer);

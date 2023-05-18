@@ -3,6 +3,7 @@ import { ConvertUInt8ArrayToBase64 } from "./Utilities.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { WindowsSessionType } from "./Enums/WindowsSessionType.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
+import { SessionMetricsDto } from "./Interfaces/Dtos.js";
 
 export var AudioButton = document.getElementById("audioButton") as HTMLButtonElement;
 export var MenuButton = document.getElementById("menuButton") as HTMLButtonElement;
@@ -45,6 +46,10 @@ export var DownloadRecordingButton = document.getElementById("downloadRecordingB
 export var ViewOnlyButton = document.getElementById("viewOnlyButton") as HTMLButtonElement;
 export var FullScreenButton = document.getElementById("fullScreenButton") as HTMLButtonElement;
 export var ToastsWrapper = document.getElementById("toastsWrapper") as HTMLDivElement;
+export var MbpsDiv = document.getElementById("mbpsDiv") as HTMLDivElement;
+export var FpsDiv = document.getElementById("fpsDiv") as HTMLDivElement;
+export var LatencyDiv = document.getElementById("latencyDiv") as HTMLDivElement;
+export var GpuDiv = document.getElementById("gpuAcceleratedDiv") as HTMLDivElement;
 
 
 export function Prompt(promptMessage: string): Promise<string> {
@@ -160,6 +165,13 @@ export function UpdateDisplays(selectedDisplay: string, displayNames: string[]) 
     }
 }
 
+
+export function UpdateMetrics(metricsDto: SessionMetricsDto) {
+    FpsDiv.innerHTML = metricsDto.Fps.toFixed(0);
+    MbpsDiv.innerHTML = metricsDto.Mbps.toFixed(2);
+    LatencyDiv.innerHTML = `${metricsDto.RoundTripLatency.toFixed(2)}ms`;
+    GpuDiv.innerHTML = metricsDto.IsGpuAccelerated ? "Enabled" : "Unavailable";
+}
 
 export function UpdateWindowsSessions(windowsSessions: Array<WindowsSession>) {
     while (WindowsSessionSelect.options.length > 0) {

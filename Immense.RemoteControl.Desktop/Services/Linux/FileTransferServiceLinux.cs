@@ -49,7 +49,7 @@ public class FileTransferServiceLinux : IFileTransferService
     {
         _dispatcher.Post(() =>
         {
-            if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionID, out var window))
+            if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionId, out var window))
             {
                 window.Activate();
             }
@@ -61,9 +61,9 @@ public class FileTransferServiceLinux : IFileTransferService
                 };
                 window.Closed += (sender, arg) =>
                 {
-                    _fileTransferWindows.Remove(viewer.ViewerConnectionID, out _);
+                    _fileTransferWindows.Remove(viewer.ViewerConnectionId, out _);
                 };
-                _fileTransferWindows.AddOrUpdate(viewer.ViewerConnectionID, window, (k, v) => window);
+                _fileTransferWindows.AddOrUpdate(viewer.ViewerConnectionId, window, (k, v) => window);
                 window.Show();
             }
         });

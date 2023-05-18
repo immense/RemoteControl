@@ -19,16 +19,6 @@ export interface AudioSampleDto {
     Buffer: Uint8Array;
 }
 
-export interface ScreenCaptureDto {
-    Left: number;
-    Top: number;
-    Width: number;
-    Height: number;
-    ImageBytes: Uint8Array;
-    IsLastChunk: boolean;
-    InstanceId: string;
-}
-
 export interface ClipboardTextDto {
     ClipboardText: string;
 }
@@ -163,6 +153,21 @@ export class SelectScreenDto {
     }
 
     DisplayName: string;
+}
+
+export class FrameReceivedDto {
+    constructor(timestamp: number) {
+        this.Timestamp = timestamp;
+    }
+
+    Timestamp: number;
+}
+
+export interface SessionMetricsDto {
+    Mbps: number;
+    Fps: number;
+    RoundTripLatency: number;
+    IsGpuAccelerated: boolean;
 }
 
 export class TapDto {

@@ -1,5 +1,4 @@
 ﻿export enum DtoType {
-    ScreenCapture = 0,
     ScreenData = 1,
     ScreenSize = 2,
     ClipboardText = 4,
@@ -22,5 +21,6 @@
     WindowsSessions = 23,
     SetKeyStatesUp = 24,
     FrameReceived = 25,
-    OpenFileTransferWindow = 27
+    OpenFileTransferWindow = 27,
+    SessionMetrics = 28
 }

@@ -2,6 +2,7 @@
 using Immense.RemoteControl.Shared;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Immense.RemoteControl.Server.Services;
 
@@ -11,9 +12,9 @@ public interface IDesktopStreamCache
 
     StreamSignaler GetOrAdd(Guid streamId, Func<Guid, StreamSignaler> createFactory);
 
-    bool TryGet(Guid streamId, out StreamSignaler signaler);
-    void TryRemove(Guid streamId, out StreamSignaler signaler);
-    Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, TimeSpan timeout);
+    bool TryGet(Guid streamId, [NotNullWhen(true)] out StreamSignaler? signaler);
+    bool TryRemove(Guid streamId, [NotNullWhen(true)] out StreamSignaler? signaler);
+    Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, string viewerConnectionId, TimeSpan timeout);
 }
 
 public class DesktopStreamCache : IDesktopStreamCache
@@ -36,37 +37,27 @@ public class DesktopStreamCache : IDesktopStreamCache
         return _streamingSessions.GetOrAdd(streamId, createFactory);
     }
 
-    public bool TryGet(Guid streamId, out StreamSignaler signaler)
+    public bool TryGet(Guid streamId, [NotNullWhen(true)] out StreamSignaler? signaler)
     {
-        if (_streamingSessions.TryGetValue(streamId, out var result))
-        {
-            signaler = result;
-            return true;
-        }
-        signaler = StreamSignaler.Empty;
-        return false;
-    }
-    public void TryRemove(Guid streamId, out StreamSignaler signaler)
-    {
-        _streamingSessions.TryRemove(streamId, out var result);
-        signaler = result ?? StreamSignaler.Empty;
+        return _streamingSessions.TryGetValue(streamId, out signaler);
     }
 
-    public async Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, TimeSpan timeout)
+    public bool TryRemove(Guid streamId, [NotNullWhen(true)] out StreamSignaler? signaler)
+    {
+        return _streamingSessions.TryRemove(streamId, out signaler);
+    }
+
+    public async Task<Result<StreamSignaler>> WaitForStreamSession(Guid streamId, string viewerConnectionId, TimeSpan timeout)
     {
         var session = _streamingSessions.GetOrAdd(streamId, key => new StreamSignaler(streamId));
+        session.ViewerConnectionId = viewerConnectionId;
+
         var waitResult = await session.ReadySignal.WaitAsync(timeout);
 
         if (!waitResult)
         {
             _logger.LogError("Timed out while waiting for session.");
             return Result.Fail<StreamSignaler>("Timed out while waiting for session.");
-        }
-
-        if (session.Stream is null)
-        {
-            _logger.LogError("Stream failed to start.");
-            return Result.Fail<StreamSignaler>("Stream failed to start.");
         }
 
         return Result.Ok(session);

@@ -16,7 +16,8 @@ import {
     FileDto,
     WindowsSessionsDto,
     DtoWrapper,
-    EmptyDto
+    EmptyDto,
+    FrameReceivedDto
 } from "./Interfaces/Dtos.js";
 import { CreateGUID, When } from "./Utilities.js";
 import { FileTransferProgress } from "./UI.js";
@@ -33,8 +34,8 @@ export class MessageSender {
     ChangeWindowsSession(sessionId: number) {
         ViewerApp.ViewerHubConnection.ChangeWindowsSession(sessionId);
     }
-    SendFrameReceived() {
-        var dto = new EmptyDto();
+    SendFrameReceived(timestamp: number) {
+        var dto = new FrameReceivedDto(timestamp);
         ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.FrameReceived);
     }
     SendSelectScreen(displayName: string) {

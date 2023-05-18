@@ -6,11 +6,11 @@ import { ShowMessage } from "./UI.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
-import { ChunkDto, TryComplete } from "./DtoChunker.js";
+import { ChunkDto } from "./DtoChunker.js";
 import { MessagePack } from "./Interfaces/MessagePack.js";
-import { DtoWrapper, ScreenCaptureDto } from "./Interfaces/Dtos.js";
-import { HandleCaptureReceived } from "./CaptureProcessor.js";
+import { ProcessStream } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
+import { StreamingState } from "./Models/StreamingState.js";
 
 const MsgPack: MessagePack = window["MessagePack"];
 
@@ -77,20 +77,23 @@ export class ViewerHubConnection {
 
     async SendScreenCastRequestToDevice() {
         await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+        const streamingState = new StreamingState();
+        ProcessStream(streamingState);
 
         this.Connection.stream("GetDesktopStream")
             .subscribe({
-                next: async (item: Uint8Array) => {
-                    let wrapper = MsgPack.decode<ScreenCaptureDto>(item) as ScreenCaptureDto;
-                    await HandleCaptureReceived(wrapper);
+                next: (chunk: Uint8Array) => {
+                    streamingState.ReceivedChunks.push(chunk);
                 },
                 complete: () => {
+                    streamingState.StreamEnded = true;
                     ShowMessage("Desktop stream ended");
                     UI.SetStatusMessage("Desktop stream ended");
                     UI.ToggleConnectUI(true);
                 },
                 error: (err) => {
                     console.warn(err);
+                    streamingState.StreamEnded = true;
                     ShowMessage("Desktop stream ended");
                     UI.SetStatusMessage("Desktop stream ended");
                     UI.ToggleConnectUI(true);
@@ -144,10 +147,10 @@ export class ViewerHubConnection {
             this.Connection.stop();
         });
         hubConnection.on("RelaunchedScreenCasterReady", (newSessionId: string, newAccessKey: string) => {
-            ViewerApp.SessionId = newSessionId;
-            ViewerApp.AccessKey = newAccessKey;
-            this.Connection.stop();
-            this.Connect();
+            const newUrl =
+                `${location.origin}${location.pathname}` +
+                `?mode=Unattended&sessionId=${newSessionId}&accessKey=${newAccessKey}&viewOnly=${ViewerApp.ViewOnlyMode}`;
+            location.assign(newUrl);
         });
       
         hubConnection.on("Reconnecting", () => {
@@ -170,5 +173,6 @@ export class ViewerHubConnection {
         hubConnection.on("WindowsSessions", (windowsSessions: Array<WindowsSession>) => {
             UI.UpdateWindowsSessions(windowsSessions);
         });
+        hubConnection.on("PingViewer", () => "Pong");
     }
 }

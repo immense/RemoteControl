@@ -5,52 +5,52 @@ namespace Immense.RemoteControl.Shared.Models.Dtos;
 [DataContract]
 public enum DtoType
 {
-    [EnumMember(Value = "CaptureFrame")]
-    ScreenCapture = 0,
-    [EnumMember(Value = "ScreenData")]
+    [EnumMember]
     ScreenData = 1,
-    [EnumMember(Value = "ScreenSize")]
+    [EnumMember]
     ScreenSize = 2,
-    [EnumMember(Value = "ClipboardText")]
+    [EnumMember]
     ClipboardText = 4,
-    [EnumMember(Value = "AudioSample")]
+    [EnumMember]
     AudioSample = 5,
-    [EnumMember(Value = "CursorChange")]
+    [EnumMember]
     CursorChange = 6,
-    [EnumMember(Value = "SelectScreen")]
+    [EnumMember]
     SelectScreen = 7,
-    [EnumMember(Value = "MouseMove")]
+    [EnumMember]
     MouseMove = 8,
-    [EnumMember(Value = "MouseDown")]
+    [EnumMember]
     MouseDown = 9,
-    [EnumMember(Value = "MouseUp")]
+    [EnumMember]
     MouseUp = 10,
-    [EnumMember(Value = "Tap")]
+    [EnumMember]
     Tap = 11,
-    [EnumMember(Value = "MouseWheel")]
+    [EnumMember]
     MouseWheel = 12,
-    [EnumMember(Value = "KeyDown")]
+    [EnumMember]
     KeyDown = 13,
-    [EnumMember(Value = "KeyUp")]
+    [EnumMember]
     KeyUp = 14,
-    [EnumMember(Value = "CtrlAltDel")]
+    [EnumMember]
     CtrlAltDel = 15,
-    [EnumMember(Value = "ToggleAudio")]
+    [EnumMember]
     ToggleAudio = 17,
-    [EnumMember(Value = "ToggleBlockInput")]
+    [EnumMember]
     ToggleBlockInput = 18,
-    [EnumMember(Value = "ClipboardTransfer")]
+    [EnumMember]
     ClipboardTransfer = 19,
-    [EnumMember(Value = "KeyPress")]
+    [EnumMember]
     KeyPress = 20,
-    [EnumMember(Value = "File")]
+    [EnumMember]
     File = 22,
-    [EnumMember(Value = "WindowsSessions")]
+    [EnumMember]
     WindowsSessions = 23,
-    [EnumMember(Value = "SetKeyStatesUp")]
+    [EnumMember]
     SetKeyStatesUp = 24,
-    [EnumMember(Value = "FrameReceived")]
+    [EnumMember]
     FrameReceived = 25,
-    [EnumMember(Value = "OpenFileTransferWindow")]
-    OpenFileTransferWindow = 27
+    [EnumMember]
+    OpenFileTransferWindow = 27,
+    [EnumMember]
+    SessionMetrics = 28
 }

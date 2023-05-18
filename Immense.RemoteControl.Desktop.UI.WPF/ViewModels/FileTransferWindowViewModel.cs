@@ -43,7 +43,7 @@ public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWi
         _viewer = viewer;
         _dispatcher = dispatcher;
         ViewerName = viewer.Name;
-        ViewerConnectionId = viewer.ViewerConnectionID;
+        ViewerConnectionId = viewer.ViewerConnectionId;
 
         OpenFileDialogCommand = new AsyncRelayCommand(OpenFileUploadDialog);
         RemoveFileUploadCommand = new RelayCommand<FileUpload>(RemoveFileUpload);

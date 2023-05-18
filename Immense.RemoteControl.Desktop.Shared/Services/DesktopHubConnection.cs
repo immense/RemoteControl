@@ -16,7 +16,9 @@ public interface IDesktopHubConnection
     HubConnection? Connection { get; }
     HubConnectionState ConnectionState { get; }
     bool IsConnected { get; }
-    Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout);
+
+    Task<Result<TimeSpan>> CheckRoundtripLatency(string viewerConnectionId);
+    Task<bool> Connect(TimeSpan timeout, CancellationToken cancellationToken);
     Task Disconnect();
     Task DisconnectAllViewers();
     Task DisconnectViewer(IViewer viewer, bool notifyViewer);
@@ -42,11 +44,11 @@ public class DesktopHubConnection : IDesktopHubConnection
     private readonly ILogger<DesktopHubConnection> _logger;
     private readonly IDtoMessageHandler _messageHandler;
     private readonly IRemoteControlAccessService _remoteControlAccessService;
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IServiceProvider _serviceProvider;
 
     public DesktopHubConnection(
         IDtoMessageHandler messageHandler,
-        IServiceScopeFactory scopeFactory,
+        IServiceProvider serviceProvider,
         IAppState appState,
         IRemoteControlAccessService remoteControlAccessService,
         IMessenger messenger,
@@ -54,7 +56,7 @@ public class DesktopHubConnection : IDesktopHubConnection
     {
         _messageHandler = messageHandler;
         _remoteControlAccessService = remoteControlAccessService;
-        _scopeFactory = scopeFactory;
+        _serviceProvider = serviceProvider;
         _appState = appState;
         _logger = logger;
 
@@ -66,7 +68,26 @@ public class DesktopHubConnection : IDesktopHubConnection
     public HubConnectionState ConnectionState => Connection?.State ?? HubConnectionState.Disconnected;
     public bool IsConnected => Connection?.State == HubConnectionState.Connected;
 
-    public async Task<bool> Connect(CancellationToken cancellationToken, TimeSpan timeout)
+    public async Task<Result<TimeSpan>> CheckRoundtripLatency(string viewerConnectionId)
+    {
+        try
+        {
+            if (Connection is null)
+            {
+                return Result.Fail<TimeSpan>("Connection is not yet established.");
+            }
+            var sw = Stopwatch.StartNew();
+            _ = await Connection.InvokeAsync<string>("PingViewer", viewerConnectionId);
+            return Result.Ok(sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check latency.");
+            return Result.Fail<TimeSpan>("An error occurred while checking latency.");
+        }
+    }
+
+    public async Task<bool> Connect(TimeSpan timeout, CancellationToken cancellationToken)
     {
         try
         {
@@ -157,7 +178,7 @@ public class DesktopHubConnection : IDesktopHubConnection
 
         viewer.DisconnectRequested = true;
         viewer.Dispose();
-        return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionID, notifyViewer);
+        return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionId, notifyViewer);
     }
 
     public async Task<string> GetSessionID()
@@ -308,15 +329,19 @@ public class DesktopHubConnection : IDesktopHubConnection
                     }
                 }
 
-                using var scope = _scopeFactory.CreateScope();
-                var screenCaster = scope.ServiceProvider.GetRequiredService<IScreenCaster>();
-
-                screenCaster.BeginScreenCasting(new ScreenCastRequest()
+                // We don't want to tie up the invocation from the server, so we'll
+                // start this in a new task.
+                _ = Task.Run(async () =>
                 {
-                    NotifyUser = notifyUser,
-                    ViewerID = viewerID,
-                    RequesterName = requesterName,
-                    StreamId = streamId
+                    using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+                    await screenCaster.BeginScreenCasting(
+                        new ScreenCastRequest()
+                        {
+                            NotifyUser = notifyUser,
+                            ViewerId = viewerID,
+                            RequesterName = requesterName,
+                            StreamId = streamId
+                        });
                 });
             }
             catch (Exception ex)
@@ -331,7 +356,7 @@ public class DesktopHubConnection : IDesktopHubConnection
             _appState.InvokeScreenCastRequested(new ScreenCastRequest()
             {
                 NotifyUser = notifyUser,
-                ViewerID = viewerID,
+                ViewerId = viewerID,
                 RequesterName = requesterName,
                 StreamId = streamId
             });
@@ -367,8 +392,7 @@ public class DesktopHubConnection : IDesktopHubConnection
                 return Result.Fail<HubConnection>("Invalid server URI.");
             }
 
-            using var scope = _scopeFactory.CreateScope();
-            var builder = scope.ServiceProvider.GetRequiredService<IHubConnectionBuilder>();
+            var builder = _serviceProvider.GetRequiredService<IHubConnectionBuilder>();
 
             var connection = builder
                 .WithUrl($"{_appState.Host.Trim().TrimEnd('/')}/hubs/desktop")

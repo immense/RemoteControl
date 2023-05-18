@@ -8,6 +8,8 @@ using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Microsoft.AspNetCore.SignalR.Client;
 using Immense.RemoteControl.Shared.Services;
 using Immense.RemoteControl.Desktop.Native.Windows;
+using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -19,27 +21,27 @@ public interface IViewer : IDisposable
     bool DisconnectRequested { get; set; }
     bool HasControl { get; set; }
     int ImageQuality { get; }
-    bool IsConnected { get; }
-    bool IsStalled { get; }
+    bool IsResponsive { get; }
     string Name { get; set; }
-    ConcurrentQueue<SentFrame> PendingSentFrames { get; }
     TimeSpan RoundTripLatency { get; }
-    string ViewerConnectionID { get; set; }
+    string ViewerConnectionId { get; set; }
 
-    void ApplyAutoQuality();
-    void CalculateFps();
-    void DequeuePendingFrame();
+    void AppendSentFrame(SentFrame sentFrame);
+    Task ApplyAutoQuality();
+    Task CalculateMetrics();
+    void IncrementFpsCount();
     Task SendAudioSample(byte[] audioSample);
     Task SendClipboardText(string clipboardText);
     Task SendCursorChange(CursorInfo cursorInfo);
     Task SendDesktopStream(IAsyncEnumerable<byte[]> asyncEnumerable, Guid streamId);
     Task SendFile(FileUpload fileUpload, Action<double> progressUpdateCallback, CancellationToken cancelToken);
-    Task SendScreenCapture(ScreenCaptureDto screenCapture);
     Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
     Task SendScreenSize(int width, int height);
-
+    Task SendSessionMetrics(SessionMetricsDto metrics);
     Task SendViewerConnected();
     Task SendWindowsSessions();
+    void SetLastFrameReceived(DateTimeOffset timestamp);
+    Task<bool> WaitForViewer();
 }
 
 public class Viewer : IViewer
@@ -51,20 +53,28 @@ public class Viewer : IViewer
     private readonly IDesktopHubConnection _desktopHubConnection;
     private readonly ConcurrentQueue<DateTimeOffset> _fpsQueue = new();
     private readonly ILogger<Viewer> _logger;
-    private readonly ConcurrentQueue<SentFrame> _receivedFrames = new();
+    private readonly ConcurrentQueue<SentFrame> _sentFrames = new();
     private readonly ISystemTime _systemTime;
     private bool _disconnectRequested;
+    private volatile int _framesSentSinceLastReceipt;
+    private DateTimeOffset _lastFrameReceived = DateTimeOffset.Now;
+    private DateTimeOffset _lastFrameSent = DateTimeOffset.Now;
+    private int _pingFailures;
 
     public Viewer(
-        IDesktopHubConnection casterSocket,
+        string requesterName,
+        string viewerHubConnectionId,
+        IDesktopHubConnection desktopHubConnection,
         IScreenCapturer screenCapturer,
         IClipboardService clipboardService,
         IAudioCapturer audioCapturer,
         ISystemTime systemTime,
         ILogger<Viewer> logger)
     {
+        Name = requesterName;
+        ViewerConnectionId = viewerHubConnectionId;
         Capturer = screenCapturer;
-        _desktopHubConnection = casterSocket;
+        _desktopHubConnection = desktopHubConnection;
         _clipboardService = clipboardService;
         _audioCapturer = audioCapturer;
         _systemTime = systemTime;
@@ -87,70 +97,37 @@ public class Viewer : IViewer
     }
     public bool HasControl { get; set; } = true;
     public int ImageQuality { get; private set; } = DefaultQuality;
-    public bool IsConnected => _desktopHubConnection.IsConnected;
-
-    public bool IsStalled
-    {
-        get
-        {
-            return PendingSentFrames.TryPeek(out var result) && DateTimeOffset.Now - result.Timestamp > TimeSpan.FromSeconds(15);
-        }
-    }
-
+    public bool IsResponsive { get; private set; } = true;
     public string Name { get; set; } = string.Empty;
-    public ConcurrentQueue<SentFrame> PendingSentFrames { get; } = new();
     public TimeSpan RoundTripLatency { get; private set; }
 
-    public string ViewerConnectionID { get; set; } = string.Empty;
+    public string ViewerConnectionId { get; set; } = string.Empty;
+    public void AppendSentFrame(SentFrame sentFrame)
+    {
+        Interlocked.Increment(ref _framesSentSinceLastReceipt);
+        _lastFrameSent = sentFrame.Timestamp;
+        _sentFrames.Enqueue(sentFrame);
+    }
 
-    public void ApplyAutoQuality()
+    public Task ApplyAutoQuality()
     {
         if (ImageQuality < DefaultQuality)
         {
             ImageQuality = Math.Min(DefaultQuality, ImageQuality + 2);
         }
-
-        // Limit FPS.
-        _ = WaitHelper.WaitFor(() =>
-            !PendingSentFrames.TryPeek(out var result) || DateTimeOffset.Now - result.Timestamp > TimeSpan.FromMilliseconds(50),
-            TimeSpan.FromSeconds(5));
-
-        // Delay based on roundtrip time to prevent too many frames from queuing up on slow connections.
-        _ = WaitHelper.WaitFor(() => PendingSentFrames.Count < 1 / RoundTripLatency.TotalSeconds,
-            TimeSpan.FromSeconds(5));
-
-        // Wait until oldest pending frame is within the past 1 second.
-        _ = WaitHelper.WaitFor(() =>
-            !PendingSentFrames.TryPeek(out var result) || DateTimeOffset.Now - result.Timestamp < TimeSpan.FromSeconds(1),
-            TimeSpan.FromSeconds(5));
+        return Task.CompletedTask;
     }
 
-    public void CalculateFps()
+    public async Task CalculateMetrics()
     {
-        _fpsQueue.Enqueue(_systemTime.Now);
-
-        while (_fpsQueue.TryPeek(out var oldestTime) &&
-            _systemTime.Now - oldestTime > TimeSpan.FromSeconds(1))
+        if (_desktopHubConnection.Connection is null)
         {
-            _fpsQueue.TryDequeue(out _);
+            return;
         }
 
-        CurrentFps = _fpsQueue.Count;
-    }
-
-    public void DequeuePendingFrame()
-    {
-        if (PendingSentFrames.TryDequeue(out var frame))
-        {
-            RoundTripLatency = _systemTime.Now - frame.Timestamp;
-            _receivedFrames.Enqueue(new SentFrame(frame.FrameSize, _systemTime.Now));
-        }
-        while (_receivedFrames.TryPeek(out var oldestFrame) &&
-            _systemTime.Now - oldestFrame.Timestamp > TimeSpan.FromSeconds(1))
-        {
-            _receivedFrames.TryDequeue(out _);
-        }
-        CurrentMbps = (double)_receivedFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+        CalculateMbps();
+        CalculateFps();
+        await CalculateLatency();
     }
 
     public void Dispose()
@@ -160,16 +137,21 @@ public class Viewer : IViewer
         GC.SuppressFinalize(this);
     }
 
+    public void IncrementFpsCount()
+    {
+        _fpsQueue.Enqueue(_systemTime.Now);
+    }
+
     public async Task SendAudioSample(byte[] audioSample)
     {
         var dto = new AudioSampleDto(audioSample);
-        await TrySendToViewer(dto, DtoType.AudioSample, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.AudioSample, ViewerConnectionId);
     }
 
     public async Task SendClipboardText(string clipboardText)
     {
         var dto = new ClipboardTextDto(clipboardText);
-        await TrySendToViewer(dto, DtoType.ClipboardText,ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.ClipboardText, ViewerConnectionId);
     }
 
     public async Task SendCursorChange(CursorInfo cursorInfo)
@@ -180,7 +162,7 @@ public class Viewer : IViewer
         }
 
         var dto = new CursorChangeDto(cursorInfo.ImageBytes, cursorInfo.HotSpot.X, cursorInfo.HotSpot.Y, cursorInfo.CssOverride);
-        await TrySendToViewer(dto, DtoType.CursorChange, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.CursorChange, ViewerConnectionId);
     }
 
     public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
@@ -192,7 +174,7 @@ public class Viewer : IViewer
     }
 
     public async Task SendFile(
-        FileUpload fileUpload, 
+        FileUpload fileUpload,
         Action<double> progressUpdateCallback,
         CancellationToken cancelToken)
     {
@@ -207,7 +189,7 @@ public class Viewer : IViewer
                 StartOfFile = true
             };
 
-            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionID);
+            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionId);
 
             using var fs = File.OpenRead(fileUpload.FilePath);
             using var br = new BinaryReader(fs);
@@ -225,7 +207,7 @@ public class Viewer : IViewer
                     MessageId = messageId
                 };
 
-                await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionID);
+                await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionId);
 
                 progressUpdateCallback((double)fs.Position / fs.Length);
             }
@@ -238,7 +220,7 @@ public class Viewer : IViewer
                 StartOfFile = false
             };
 
-            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionID);
+            await TrySendToViewer(fileDto, DtoType.File, ViewerConnectionId);
 
             progressUpdateCallback(1);
         }
@@ -246,13 +228,6 @@ public class Viewer : IViewer
         {
             _logger.LogError(ex, "Error while sending file.");
         }
-    }
-
-    public async Task SendScreenCapture(ScreenCaptureDto screenCapture)
-    {
-        PendingSentFrames.Enqueue(new SentFrame(screenCapture.ImageBytes.Length, _systemTime.Now));
-
-        await TrySendToViewer(screenCapture, DtoType.ScreenCapture, ViewerConnectionID);
     }
 
     public async Task SendScreenData(
@@ -269,18 +244,23 @@ public class Viewer : IViewer
             ScreenWidth = screenWidth,
             ScreenHeight = screenHeight
         };
-        await TrySendToViewer(dto, DtoType.ScreenData, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.ScreenData, ViewerConnectionId);
     }
 
     public async Task SendScreenSize(int width, int height)
     {
         var dto = new ScreenSizeDto(width, height);
-        await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionID);
+        await TrySendToViewer(dto, DtoType.ScreenSize, ViewerConnectionId);
+    }
+
+    public async Task SendSessionMetrics(SessionMetricsDto metrics)
+    {
+        await TrySendToViewer(metrics, DtoType.SessionMetrics, ViewerConnectionId);
     }
 
     public async Task SendViewerConnected()
     {
-        await _desktopHubConnection.SendViewerConnected(ViewerConnectionID);
+        await _desktopHubConnection.SendViewerConnected(ViewerConnectionId);
     }
 
     public async Task SendWindowsSessions()
@@ -288,8 +268,29 @@ public class Viewer : IViewer
         if (OperatingSystem.IsWindows())
         {
             var dto = new WindowsSessionsDto(Win32Interop.GetActiveSessions());
-            await TrySendToViewer(dto, DtoType.WindowsSessions, ViewerConnectionID);
+            await TrySendToViewer(dto, DtoType.WindowsSessions, ViewerConnectionId);
         }
+    }
+
+    public void SetLastFrameReceived(DateTimeOffset timestamp)
+    {
+        _lastFrameReceived = timestamp;
+        _framesSentSinceLastReceipt = 0;
+    }
+
+    public async Task<bool> WaitForViewer()
+    {
+        // Prevent publisher from overwhelming consumer bewteen receipts.
+        var result = await WaitHelper.WaitForAsync(
+            () => _framesSentSinceLastReceipt < 10,
+            TimeSpan.FromSeconds(5));
+
+        // Prevent viewer from getting too far behind.
+        result &= await WaitHelper.WaitForAsync(
+            () => _lastFrameSent - _lastFrameReceived < TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(5));
+
+        return result;
     }
 
     private async void AudioCapturer_AudioSampleReady(object? sender, byte[] sample)
@@ -297,6 +298,58 @@ public class Viewer : IViewer
         await SendAudioSample(sample);
     }
 
+    private void CalculateFps()
+    {
+        if (_fpsQueue.Count >= 2)
+        {
+            var sendTime = _fpsQueue.Last() - _fpsQueue.First();
+            CurrentFps = _fpsQueue.Count / sendTime.TotalSeconds;
+        }
+        else
+        {
+
+            CurrentFps = _fpsQueue.Count;
+        }
+        _fpsQueue.Clear();
+    }
+
+    private async Task CalculateLatency()
+    {
+        var latencyResult = await _desktopHubConnection.CheckRoundtripLatency(ViewerConnectionId);
+        if (latencyResult.IsSuccess)
+        {
+            _pingFailures = 0;
+            IsResponsive = true;
+            RoundTripLatency = latencyResult.Value;
+        }
+        else
+        {
+            _pingFailures++;
+            if (_pingFailures > 3)
+            {
+                IsResponsive = false;
+                _logger.LogWarning("Failed to check roundtrip latency: {reason}", latencyResult.Reason);
+            }
+        }
+    }
+    private void CalculateMbps()
+    {
+        if (_sentFrames.Count >= 2)
+        {
+            var sendTime = _sentFrames.Last().Timestamp - _sentFrames.First().Timestamp;
+            var sentBits = (double)_sentFrames.Sum(x => x.FrameSize) / 1024 / 1024 * 8;
+            CurrentMbps = sentBits / sendTime.TotalSeconds;
+        }
+        else if (_sentFrames.Count == 1)
+        {
+            CurrentMbps = _sentFrames.First().FrameSize / 1024 / 1024 * 8;
+        }
+        else
+        {
+            CurrentMbps = 0;
+        }
+        _sentFrames.Clear();
+    }
     private async void ClipboardService_ClipboardTextChanged(object? sender, string clipboardText)
     {
         await SendClipboardText(clipboardText);
@@ -321,7 +374,9 @@ public class Viewer : IViewer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while sending DTO type {type} to viewer.", type);
+            _logger.LogError(ex, "Error while sending DTO type {type} to viewer connection ID {viewerId}.", 
+                type,
+                viewerConnectionId);
         }
     }
 }

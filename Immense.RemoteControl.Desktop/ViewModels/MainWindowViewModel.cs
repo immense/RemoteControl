@@ -49,7 +49,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     private readonly IEnvironmentHelper _environment;
     private readonly IDesktopHubConnection _hubConnection;
     private readonly ILogger<MainWindowViewModel> _logger;
-    private readonly IScreenCaster _screenCaster;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IViewModelFactory _viewModelFactory;
     private IList<IViewer> _selectedViewers = new List<IViewer>();
 
@@ -58,7 +58,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
       IAvaloniaDispatcher dispatcher,
       IAppState appState,
       IDesktopHubConnection hubConnection,
-      IScreenCaster screenCaster,
+      IServiceProvider serviceProvider,
       IViewModelFactory viewModelFactory,
       IEnvironmentHelper environmentHelper,
       ILogger<MainWindowViewModel> logger)
@@ -67,7 +67,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
         _dispatcher = dispatcher;
         _appState = appState;
         _hubConnection = hubConnection;
-        _screenCaster = screenCaster;
+        _serviceProvider = serviceProvider;
         _viewModelFactory = viewModelFactory;
         _environment = environmentHelper;
         _logger = logger;
@@ -211,7 +211,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
         try
         {
-            var result = await _hubConnection.Connect(_dispatcher.AppCancellationToken, TimeSpan.FromSeconds(10));
+            var result = await _hubConnection.Connect(TimeSpan.FromSeconds(10), _dispatcher.AppCancellationToken);
 
             if (result && _hubConnection.Connection is not null)
             {
@@ -329,16 +329,21 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
     }
 
-    private void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
+    private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        Dispatcher.UIThread.InvokeAsync(async () =>
+        var result = await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            var result = await MessageBox.Show($"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", "Connection Request", MessageBoxType.YesNo);
-            if (result == MessageBoxResult.Yes)
-            {
-                _screenCaster.BeginScreenCasting(screenCastRequest);
-            }
+            return await MessageBox.Show(
+                $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?", 
+                "Connection Request", 
+                MessageBoxType.YesNo);
         });
+
+        if (result == MessageBoxResult.Yes)
+        {
+            using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+            await screenCaster.BeginScreenCasting(screenCastRequest);
+        }
     }
 
     private async void ViewerAdded(object? sender, IViewer viewer)
@@ -353,7 +358,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
     {
         await _dispatcher.InvokeAsync(() =>
         {
-            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionID == viewerID);
+            var viewer = Viewers.FirstOrDefault(x => x.ViewerConnectionId == viewerID);
             if (viewer != null)
             {
                 Viewers.Remove(viewer);
