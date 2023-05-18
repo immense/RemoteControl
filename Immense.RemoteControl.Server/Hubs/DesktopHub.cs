@@ -148,7 +148,7 @@ public class DesktopHub : Hub
 
     public async Task<string> PingViewer(string viewerConnectionId)
     {
-        using var cts = new CancellationTokenSource(5_000);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         return await _viewerHub.Clients.Client(viewerConnectionId).InvokeAsync<string>("PingViewer", cts.Token);
     }
 
