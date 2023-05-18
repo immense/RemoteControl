@@ -48,8 +48,6 @@ var isPinchZooming: boolean;
 var startPinchPoint1: Point;
 var startPinchPoint2: Point;
 var lastPinchDistance: number;
-var isMenuButtonDragging: boolean;
-var startMenuDraggingY: number;
 var startLongPressTimeout: number;
 var lastPinchCenterX: number;
 var lastPinchCenterY: number;
@@ -121,6 +119,7 @@ export function ApplyInputHandlers() {
     });
     DisconnectButton.addEventListener("click", (ev) => {
         ConnectButton.removeAttribute("disabled");
+        ConnectButton.innerText = "Connect";
         ViewerApp.ViewerHubConnection.Connection.stop();
         if (location.search.includes("fromApi=true")) {
             window.close();
@@ -168,12 +167,10 @@ export function ApplyInputHandlers() {
     FitToScreenButton.addEventListener("click", (ev) => {
         FitToScreenButton.classList.toggle("toggled");
         if (FitToScreenButton.classList.contains("toggled")) {
-            ScreenViewer.style.removeProperty("max-width");
-            ScreenViewer.style.removeProperty("max-height");
+            ScreenViewer.classList.add("fit");
         }
         else {
-            ScreenViewer.style.maxWidth = "unset";
-            ScreenViewer.style.maxHeight = "unset";
+            ScreenViewer.classList.remove("fit");
         }
     });
     FullScreenButton.addEventListener("click", () => {
@@ -211,20 +208,9 @@ export function ApplyInputHandlers() {
         MenuButton.classList.remove("open");
     });
     MenuButton.addEventListener("click", (ev) => {
-        if (isMenuButtonDragging) {
-            isMenuButtonDragging = false;
-            return;
-        }
         MenuFrame.classList.toggle("open");
         MenuButton.classList.toggle("open");
         closeAllHorizontalBars(null);
-    });
-    MenuButton.addEventListener("mousedown", (ev) => {
-        isMenuButtonDragging = false;
-        startMenuDraggingY = ev.clientY;
-        window.addEventListener("mousemove", moveMenuButton);
-        window.addEventListener("mouseup", removeMouseButtonWindowListeners);
-        window.addEventListener("mouseleave", removeMouseButtonWindowListeners);
     });
     MenuButton.addEventListener("touchmove", (ev) => {
         ev.preventDefault();
@@ -622,20 +608,4 @@ function closeAllHorizontalBars(exceptBarId: string) {
             x.classList.remove('open');
         }
     })
-}
-
-function moveMenuButton(ev: MouseEvent) {
-    if (Math.abs(ev.clientY - startMenuDraggingY) > 5) {
-        if (ev.clientY < 0 || ev.clientY > window.innerHeight) {
-            return;
-        }
-        isMenuButtonDragging = true;
-        MenuButton.style.top = `${ev.clientY}px`;
-    }
-}
-
-function removeMouseButtonWindowListeners(ev: MouseEvent) {
-    window.removeEventListener("mousemove", moveMenuButton);
-    window.removeEventListener("mouseup", removeMouseButtonWindowListeners);
-    window.removeEventListener("mouseleave", removeMouseButtonWindowListeners);
 }

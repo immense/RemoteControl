@@ -32,21 +32,23 @@ button {
     border-color: #323334;
 }
 
-  button:hover {
-    background-color: #33ffe9;
-  }
+    button:hover {
+        background-color: #33ffe9;
+    }
 
-  button:active {
-    background-color: #01ad9b;
-    border: 1px solid #01ad9b;
-  }
+    button:active {
+        background-color: #01ad9b;
+        border: 1px solid #009888;
+    }
 
-  button:disabled {
-      background-color: #555555;
-      color: #dedede;
-      cursor: no-drop;
-      border: none;
-  }
+    button:disabled {
+        /* background-color: #555555;
+        color: #dedede;*/
+        background-color: #152826;
+        color: #01EAD1;
+        cursor: no-drop;
+        border: none;
+    }
 
 .bg-primary {
     background-color: #01EAD1;
@@ -57,29 +59,38 @@ button {
 }
 
 #menuButton {
-    color: gray;
-    background-color: rgb(50,50,50);
+    color: #01EAD1;
+    background-color: #212526;
 }
-#menuButton:hover {
-    color: white;
-}
+
+    #menuButton:hover {
+        color: #33ffe9;
+    }
 
 
 #menuFrame {
-    position: absolute;
     color: white;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background-color: rgb(50,50,50);
-    width: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    text-align: center;
-    opacity: 0;
-    z-index: 3;
-    transition: .5s ease all;
+    background-color: #212526;
 }
+
+    #menuFrame button {
+        background-color: #212526;
+        color: #FFFFFF;
+        border: 1px solid #212526;
+    }
+
+        #menuFrame button:hover {
+            border: 1px solid #384346;
+        }
+
+        #menuFrame button:active {
+            border: 1px solid #33ffe9;
+        }
+
+        #menuFrame button.toggled {
+            background-color: #16191a;
+            color: #07b5a4;
+        }
 
 .horizontal-button-bar {
     background-color: rgb(90, 90, 90);

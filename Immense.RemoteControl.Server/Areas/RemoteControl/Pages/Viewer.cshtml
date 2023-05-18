@@ -38,7 +38,7 @@
     </environment>
 </head>
 <body>
-    <div class="background-layers">
+    <div id="backgroundLayers" class="background-layers">
         <div class="background-layer-1"></div>
         <div class="background-layer-2"></div>
         <div class="background-layer-3"></div>
@@ -55,48 +55,24 @@
         <i class="fas fa-keyboard align-middle"></i>
     </button>
 
-
-    <button id="menuButton">
-        <i class="fas fa-chevron-circle-right"></i>
-    </button>
-
-    <div id="menuFrame">
+    <div style="display: none">
 
         <div class="menu-options-header">
             Actions
         </div>
 
         <div>
-            <button id="viewOnlyButton" class="option-button" title="If toggled, prevents sending commnads and input to the remote computer.">
-                View Only <i class="fas fa-eye"></i>
-            </button>
 
-            <button id="clipboardTransferButton" class="option-button" title="Type the current clipboard text on the remote computer.">
-                Clipboard  <i class="fas fa-clipboard"></i>
-            </button>
-
-            <button id="blockInputButton" class="option-button" title="Prevent remote user from using keyboard and mouse.">
-                Block Remote Input <i class="fas fa-mouse"></i>
-            </button>
-
-            <button id="inviteButton" class="option-button" title="Copy a link that lets another person view the remote screen.">
+            <button id="inviteButton" title="Copy a link that lets another person view the remote screen.">
                 Invite Others  <i class="fas fa-user-plus"></i>
             </button>
 
-            <button id="audioButton" class="option-button" title="Windows only.  Stream the remote audio to the browser.">
+            <button id="audioButton" title="Windows only.  Stream the remote audio to the browser.">
                 Audio <i class="fas fa-volume-up"></i>
             </button>
 
-            <button id="fileTransferButton" class="option-button" title="Transfer files to the remote computer.">
+            <button id="fileTransferButton" title="Transfer files to the remote computer.">
                 File Transfer  <i class="fas fa-file-upload"></i>
-            </button>
-
-            <button id="ctrlAltDelButton" class="option-button" title="Simulate the Ctrl+Alt+Del command on the remote computer.">
-                Ctrl+Alt+Del <i class="fas fa-sign-in-alt"></i>
-            </button>
-
-            <button id="disconnectButton" class="option-button" title="Disconnect from the current session.">
-                Disconnect <i class="fas fa-window-close"></i>
             </button>
         </div>
 
@@ -106,18 +82,8 @@
         </div>
 
         <div>
-            <button id="changeScreenButton" class="option-button" title="Switch monitors on remote multi-monitor setups.">
-                Monitors <i class="fas fa-desktop"></i>
-            </button>
-
-            <button id="fullScreenButton" class="option-button" title="Enter fullscreen mode.">
-                Fullscreen <i class="fas fa-window-maximize"></i>
-            </button>
 
 
-            <button id="fitToScreenButton" class="toggled option-button" title="If toggled, will resize image to fit in the window.">
-                Fit <i class="fas fa-expand"></i>
-            </button>
         </div>
 
 
@@ -126,11 +92,11 @@
         </div>
 
         <div>
-            <button id="recordSessionButton" class="option-button" title="Record session as a WEBM video in the browser.">
+            <button id="recordSessionButton" title="Record session as a WEBM video in the browser.">
                 Start <i class="fas fa-record-vinyl"></i>
             </button>
 
-            <button id="downloadRecordingButton" class="option-button" title="Download the recorded session as a WEBM file.">
+            <button id="downloadRecordingButton" title="Download the recorded session as a WEBM file.">
                 Download <i class="fas fa-download"></i>
             </button>
         </div>
@@ -141,7 +107,7 @@
         <div>
             <select id="windowsSessionSelect"
                     title="Switch to a different Windows session."
-                    class="option-button"
+                   
                     style="height: 30px; width: 90%; margin: 5px 0;"></select>
         </div>
 
@@ -172,26 +138,26 @@
         </div>
     </div>
 
-    <div id="screenSelectBar" class="horizontal-button-bar">
+    <div id="screenSelectBar" class="d-none">
 
     </div>
 
-    <div id="clipboardTransferBar" class="horizontal-button-bar">
-        <div style="color:white; font-size:12px">
+    <div id="clipboardTransferBar" class="d-none">
+        <div>
             Shared Clipboard
         </div>
-        <div style="color:white; font-size:12px;">
-            <button id="typeClipboardButton" class="horizontal-bar-button">Type Clipboard</button>
+        <div>
+            <button id="typeClipboardButton">Type Clipboard</button>
         </div>
     </div>
 
-    <div id="fileTransferBar" class="horizontal-button-bar">
-        <div style="color:white; font-size:12px">
+    <div id="fileTransferBar" class="d-none">
+        <div>
             File Transfer
         </div>
-        <div style="color:white; font-size:12px;">
-            <button id="fileUploadButton" class="horizontal-bar-button">Upload File</button>
-            <button id="fileDownloadButton" class="horizontal-bar-button">Download File</button>
+        <div>
+            <button id="fileUploadButton">Upload File</button>
+            <button id="fileDownloadButton">Download File</button>
         </div>
     </div>
 
@@ -225,10 +191,91 @@
 
     </div>
 
-    <div id="screenViewerWrapper" hidden="hidden" class="text-center">
-        <canvas id="screenViewer"></canvas>
-        <input id="fileTransferInput" hidden="hidden" type="file" multiple />
-        <textarea id="touchKeyboardTextArea" value=" #"> #</textarea>
+    <div id="workAreaGrid" style="display: none;">
+        <div>
+            <div id="menuFrame">
+                <div class="text-left">
+                    @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
+                    {
+                        <img class="menu-logo" src="@(Model.LogoUrl)" />
+                    }
+                </div>
+                 <div>
+                    <button 
+                        id="changeScreenButton" 
+                        title="Switch monitors on remote multi-monitor setups.">
+                        <i class="fas fa-desktop"></i>
+                        Monitors
+                    </button>
+
+                    <button 
+                        id="viewOnlyButton" 
+                        title="If toggled, prevents sending commnads and input to the remote computer.">
+                        <i class="fas fa-eye"></i>
+                        View Only
+                    </button>
+
+                    <button 
+                        id="clipboardTransferButton"  
+                        title="Type the current clipboard text on the remote computer.">
+                         <i class="fas fa-clipboard"></i>
+                         Clipboard
+                    </button>
+
+                    <button
+                        id="blockInputButton" 
+                        title="Prevent remote user from using keyboard and mouse.">
+                        <i class="fas fa-mouse"></i>
+                        Block Remote Input
+                    </button>
+
+                    <button 
+                        id="ctrlAltDelButton" 
+                        title="Simulate the Ctrl+Alt+Del command on the remote computer."
+                        class="d-none">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Ctrl+Alt+Del
+                    </button>
+                </div>
+
+                <div class="menu-right-column">
+                    <button 
+                        id="disconnectButton"
+                        title="Disconnect from the current session.">
+                        x
+                    </button>
+
+                    <button id="moreMenuButton">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+
+                    <button id="fullScreenButton" title="Enter fullscreen mode.">
+                        <i class="fas fa-window-maximize"></i>
+                    </button>
+
+                    <button 
+                        id="fitToScreenButton" 
+                        class="toggled" 
+                        title="If toggled, will resize image to fit in the window.">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button id="menuButton">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+        <div>
+            <div id="screenViewerWrapper">
+                <canvas id="screenViewer" class="fit"></canvas>
+                <input id="fileTransferInput" hidden="hidden" type="file" multiple />
+                <textarea id="touchKeyboardTextArea" value=" #"> #</textarea>
+            </div>
+        </div>
+
     </div>
 
     <div id="toastsWrapper">

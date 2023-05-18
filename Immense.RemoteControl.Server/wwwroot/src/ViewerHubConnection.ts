@@ -21,7 +21,7 @@ export class ViewerHubConnection {
     Connection: HubConnection;
     PartialCaptureFrames: Uint8Array[] = [];
 
- 
+
     Connect() {
         if (this.Connection) {
             this.Connection.stop();
@@ -117,23 +117,27 @@ export class ViewerHubConnection {
 
         hubConnection.on("ConnectionFailed", () => {
             UI.ConnectButton.removeAttribute("disabled");
+            UI.ConnectButton.innerText = "Connect";
             UI.SetStatusMessage("Connection failed or was denied.");
             ShowToast("Connection failed.  Please reconnect.");
             this.Connection.stop();
         });
         hubConnection.on("ReconnectFailed", () => {
-          UI.ConnectButton.removeAttribute("disabled");
-          UI.SetStatusMessage("Unable to reconnect.");
-          ShowToast("Unable to reconnect.");
-          this.Connection.stop();
+            UI.ConnectButton.removeAttribute("disabled");
+            UI.ConnectButton.innerText = "Connect";
+            UI.SetStatusMessage("Unable to reconnect.");
+            ShowToast("Unable to reconnect.");
+            this.Connection.stop();
         });
         hubConnection.on("ConnectionRequestDenied", () => {
+            UI.ConnectButton.innerText = "Connect";
             this.Connection.stop();
             UI.SetStatusMessage("Connection request denied.");
             ShowToast("Connection request denied.");
         });
         hubConnection.on("ViewerRemoved", () => {
             UI.ConnectButton.removeAttribute("disabled");
+            UI.ConnectButton.innerText = "Connect";
             UI.SetStatusMessage("The session was stopped by your partner.");
             ShowToast("Session ended");
             this.Connection.stop();
@@ -148,7 +152,7 @@ export class ViewerHubConnection {
                 `?mode=Unattended&sessionId=${newSessionId}&accessKey=${newAccessKey}&viewOnly=${ViewerApp.ViewOnlyMode}`;
             location.assign(newUrl);
         });
-      
+
         hubConnection.on("Reconnecting", () => {
             UI.SetStatusMessage("Reconnecting");
             ShowToast("Reconnecting");
@@ -156,11 +160,6 @@ export class ViewerHubConnection {
 
         hubConnection.on("CursorChange", (cursor: CursorInfo) => {
             UI.UpdateCursor(cursor.ImageBytes, cursor.HotSpot.X, cursor.HotSpot.Y, cursor.CssOverride);
-        });
-
-        hubConnection.on("RequestingScreenCast", () => {
-            UI.SetStatusMessage("Requesting remote control");
-            ShowToast("Requesting remote control");
         });
 
         hubConnection.on("ShowMessage", (message: string) => {

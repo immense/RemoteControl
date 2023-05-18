@@ -206,7 +206,6 @@ public class ViewerHub : Hub
         else
         {
             SessionInfo.Mode = RemoteControlMode.Attended;
-            await Clients.Caller.SendAsync("RequestingScreenCast");
             await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
                 "RequestScreenCast", 
                 Context.ConnectionId, 

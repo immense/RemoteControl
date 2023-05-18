@@ -52,6 +52,8 @@ export var MbpsDiv = document.getElementById("mbpsDiv") as HTMLDivElement;
 export var FpsDiv = document.getElementById("fpsDiv") as HTMLDivElement;
 export var LatencyDiv = document.getElementById("latencyDiv") as HTMLDivElement;
 export var GpuDiv = document.getElementById("gpuAcceleratedDiv") as HTMLDivElement;
+export var WorkAreaGrid = document.getElementById("workAreaGrid") as HTMLDivElement;
+export var BackgroundLayers = document.getElementById("backgroundLayers") as HTMLDivElement;
 
 
 export function Prompt(promptMessage: string): Promise<string> {
@@ -125,12 +127,16 @@ export function ToggleConnectUI(shown: boolean) {
         }
         BlockInputButton.classList.remove("toggled");
         AudioButton.classList.remove("toggled");
+        WorkAreaGrid.style.display = "none";
+        BackgroundLayers.classList.remove("d-none");
     }
     else {
         ConnectBox.style.display = "none";
         ConnectHeader.style.display = "none";
         ScreenViewerWrapper.removeAttribute("hidden");
         StatusMessage.innerHTML = "";
+        WorkAreaGrid.style.removeProperty("display");
+        BackgroundLayers.classList.add("d-none");
     }
 
     ConnectButton.disabled = !ViewerApp.RequesterName || !ViewerApp.SessionId;

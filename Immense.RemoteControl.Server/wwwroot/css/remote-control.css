@@ -124,24 +124,83 @@ button {
     cursor: pointer;
     border: none;
     height: 40px;
+    min-width: 40px;
+}
+
+#menuButton {
+    pointer-events: all;
+    cursor: pointer;
+    z-index: 3;
+    transition: .5s ease all;
+    width: 50px;
+    height: 30px;
+}
+
+    #menuButton:focus {
+        outline: none;
+    }
+
+    #menuButton i {
+        transform: rotateX(0);
+        transition: .5s ease all;
+    }
+
+    #menuButton.open i {
+        transform: rotateX(180deg);
+        transition: .5s ease all;
+    }
+
+#menuFrame {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-column-gap: 10px;
+    overflow: hidden;
+    text-align: center;
+    height: 0;
+    z-index: 3;
+    transition: .3s ease all;
+}
+
+    #menuFrame.open {
+        padding-left: 10px;
+        padding-bottom: 5px;
+        height: auto;
+        transition: .3s ease all;
+    }
+
+    #menuFrame #disconnectButton {
+        background-color: #a61930;
+        border: 1px solid #a61930;
+        color: #fff;
+        font-size: 16px;
+    }
+
+.menu-logo {
+    margin-top: 10px;
+}
+
+.menu-right-column {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.d-none {
+    display: none;
 }
 
 .text-center {
     text-align: center;
 }
 
-.option-button {
-    position: relative;
-    height: 40px;
-    margin: 5px 0;
-    width: 90%;
-    user-select: none;
+.text-left {
+    text-align: left;
 }
 
-.horizontal-bar-button {
-    height: 35px;
-    margin: 5px;
+.text-right {
+    text-align: right;
 }
+
 
 .menu-options-header {
     text-align: center;
@@ -170,52 +229,6 @@ button {
     padding: 4px 7px;
 }
 
-#menuButton {
-    position: absolute;
-    display: none;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-    font-size: 1.5em;
-    padding: 20px 5px;
-    border-radius: 0 3px 3px 0;
-    pointer-events: all;
-    cursor: pointer;
-    z-index: 3;
-    transition: .5s ease left;
-}
-
-    #menuButton:focus {
-        outline: none;
-    }
-
-    #menuButton.open {
-        left: 150px;
-        transform: translateY(-50%) rotateY(180deg);
-        border-radius: 3px 0 0 3px;
-        transition: .5s ease left;
-    }
-
-#menuFrame {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    text-align: center;
-    opacity: 0;
-    z-index: 3;
-    transition: .5s ease all;
-}
-
-    #menuFrame.open {
-        width: 150px;
-        opacity: 1;
-        transition: .5s ease all;
-    }
-
 
 
 .horizontal-button-bar {
@@ -240,24 +253,39 @@ button {
         transition: all 250ms;
     }
 
-
-#screenViewerWrapper {
+#workAreaGrid {
     position: fixed;
+    display: grid;
+    text-align: left;
+    grid-template-rows: auto 1fr;
+    grid-row-gap: 5px;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 2;
+}
+
+#screenViewerWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
     overflow: auto;
     -ms-touch-action: pan-x pan-y;
     touch-action: pan-x pan-y;
 }
 
 #screenViewer {
-    max-width: 99vw;
-    max-height: 99vh;
+    position: absolute;
     -ms-touch-action: pan-x pan-y;
     touch-action: pan-x pan-y;
+}
+#screenViewer.fit {
+    max-width: 99%;
+    max-height: 99%;
+    left: 50%;
+    transform: translateX(-50%);
+    object-fit: contain;
 }
 
 
