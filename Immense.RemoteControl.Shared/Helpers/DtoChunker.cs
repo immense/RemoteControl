@@ -68,6 +68,6 @@ public static class DtoChunker
         var buffer = chunks.SelectMany(x => x.DtoChunk).ToArray();
 
         result = MessagePackSerializer.Deserialize<T>(buffer);
-        return true;
+        return result is not null;
     }
 }
