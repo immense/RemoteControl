@@ -1,8 +1,8 @@
 ﻿body {
-    background-color: black;
+    background-color: #151718;
+    background-image: radial-gradient(#fafafa 1%, transparent 2.6%);
     color: white;
 }
-
 
 .background-layer-1 {
     background-image: radial-gradient(#fafafa 1%, transparent 2.8%);
@@ -17,30 +17,35 @@
     background-color: #151718;
 }
 
-input {
+input, select {
     background-color: #0D0D0D;
     border-color: #323334;
     color: white;
 }
 
-    input:focus {
+    input:focus, select:focus {
         border-color: white;
     }
 
-
 button {
-    border-color: #323334;
+    background-color: #212526;
+    border: 1px solid #212526;
+    color: #FFFFFF;
 }
 
+    button.toggled {
+        background-color: #16191a;
+        border: 1px solid #16191a;
+        color: #07b5a4;
+    }
+
     button:hover {
-        background-color: #33ffe9;
+        border: 1px solid #384346;
     }
 
     button:active {
-        background-color: #01ad9b;
         border: 1px solid #009888;
     }
-
     button:disabled {
         /* background-color: #555555;
         color: #dedede;*/
@@ -73,36 +78,9 @@ button {
     background-color: #212526;
 }
 
-    #menuFrame button {
-        background-color: #212526;
-        color: #FFFFFF;
-        border: 1px solid #212526;
-    }
-
-        #menuFrame button:hover {
-            border: 1px solid #384346;
-        }
-
-        #menuFrame button:active {
-            border: 1px solid #33ffe9;
-        }
-
-        #menuFrame button.toggled {
-            background-color: #16191a;
-            color: #07b5a4;
-        }
-
-.horizontal-button-bar {
-    background-color: rgb(90, 90, 90);
-}
-
-
-.logo-subtitle {
-    color: deepskyblue;
-}
-
-.logo-title {
+.popup-menu {
     color: white;
+    background-color: #212526;
 }
 
 

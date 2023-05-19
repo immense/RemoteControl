@@ -49,6 +49,7 @@ export const ViewerApp = {
             // Ctrl+Alt+Del only works when screen caster is launched from
             // a service (i.e. unattended mode).
             UI.CtrlAltDelButton.classList.remove("d-none");
+            UI.WindowsSessionMenuButton.classList.remove("d-none");
             ViewerApp.ViewerHubConnection.Connect();
             UI.StatusMessage.innerHTML = "Connecting to remote device";
         }

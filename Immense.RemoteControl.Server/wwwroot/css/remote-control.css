@@ -7,6 +7,8 @@ body {
     -ms-touch-action: none;
     touch-action: none;
     overscroll-behavior-y: contain;
+    background-position: 0 0;
+    background-size: 40px 40px;
 }
 
 .background-layers {
@@ -70,7 +72,7 @@ body {
     white-space: nowrap;
 }
 
-input {
+input, select {
     font-style: normal;
     font-weight: 300;
     font-size: 14px;
@@ -120,6 +122,10 @@ input:focus {
     width: 100%;
 }
 
+#windowsSessionSelect {
+    width: 200px;
+}
+
 button {
     cursor: pointer;
     border: none;
@@ -163,7 +169,6 @@ button {
 
     #menuFrame.open {
         padding-left: 10px;
-        padding-bottom: 5px;
         height: auto;
         transition: .3s ease all;
     }
@@ -185,6 +190,39 @@ button {
     flex-wrap: wrap;
     align-items: flex-start;
 }
+
+.popup-menu {
+    position: absolute;
+    overflow: hidden;
+    height: 0;
+}
+
+.popup-menu.open {
+    height: auto;
+    z-index: 5;
+    padding: 10px;
+    transition: .2s ease all;
+}
+
+.popup-menu button {
+    display: block;
+    white-space: nowrap;
+    width: 100%;
+}
+
+#extrasMenu button {
+    text-align: left;
+}
+#extrasMenu button i {
+    margin-right: 8px;
+}
+
+#fileTransferProgress {
+    vertical-align: middle;
+    width: 100%;
+    background-color: limegreen;
+}
+
 .d-none {
     display: none;
 }
@@ -223,12 +261,11 @@ button {
     position: fixed;
     top: 5px;
     left: 50%;
-    transform: translateX(-50%);
-    z-index: 3;
+    transform: translateX(40px);
+    z-index: 6;
     font-size: 1.2em;
     padding: 4px 7px;
 }
-
 
 
 .horizontal-button-bar {

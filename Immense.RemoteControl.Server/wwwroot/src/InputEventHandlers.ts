@@ -1,10 +1,10 @@
 import {
     AudioButton,
     ChangeScreenButton,
-    HorizontalBars,
-    ScreenSelectBar,
+    PopupMenus,
+    ScreenSelectMenu,
     ClipboardTransferButton,
-    ClipboardTransferBar,
+    ClipboardTransferMenu,
     TypeClipboardButton,
     ConnectButton,
     CtrlAltDelButton,
@@ -22,15 +22,19 @@ import {
     ScreenViewerWrapper,
     WindowsSessionSelect,
     RecordSessionButton,
-    DownloadRecordingButton,
-    FileTransferBar,
+    FileTransferMenu,
     FileUploadButtton,
     FileDownloadButton,
     ViewOnlyButton,
     FullScreenButton,
     RequesterNameInput,
     SessionIDInput,
-    ConnectForm
+    ConnectForm,
+    CloseAllPopupMenus,
+    ExtrasMenu,
+    ExtrasMenuButton,
+    WindowsSessionMenuButton,
+    WindowsSessionMenu
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -66,12 +70,29 @@ export function ApplyInputHandlers() {
         ViewerApp.MessageSender.SendToggleAudio(toggleOn);
     });
     ChangeScreenButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars("screenSelectBar");
-        ScreenSelectBar.classList.toggle("open");
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(ScreenSelectMenu.id);
+
+        // This could be put into a re-usable "openPopup" function that takes
+        // "target element" and "placement" as inputs, but all this is
+        // temporary, so I don't think it's worth the time.
+        const x = ChangeScreenButton.getBoundingClientRect().left;
+        const left = `${x.toFixed(0)}px`;
+        const y = ChangeScreenButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        ScreenSelectMenu.style.left = left;
+        ScreenSelectMenu.style.top = top;
+        ScreenSelectMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     ClipboardTransferButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars("clipboardTransferBar");
-        ClipboardTransferBar.classList.toggle("open");
+        CloseAllPopupMenus("clipboardTransferMenu");
+        ClipboardTransferMenu.classList.toggle("open");
     });
     ViewOnlyButton.addEventListener("click", () => {
         ViewOnlyButton.classList.toggle("toggled");
@@ -114,7 +135,7 @@ export function ApplyInputHandlers() {
             return;
         }
 
-        closeAllHorizontalBars(null);
+        CloseAllPopupMenus(null);
         ViewerApp.MessageSender.SendCtrlAltDel();
     });
     DisconnectButton.addEventListener("click", (ev) => {
@@ -146,9 +167,41 @@ export function ApplyInputHandlers() {
             }
         });
     });
+    ExtrasMenuButton.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(ExtrasMenu.id);
+
+        const x = document.body.clientWidth - ExtrasMenuButton.getBoundingClientRect().right;
+        const right = `${x.toFixed(0)}px`;
+        const y = ExtrasMenuButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        ExtrasMenu.style.right = right;
+        ExtrasMenu.style.top = top;
+        ExtrasMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
+    });
     FileTransferButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars(FileTransferBar.id);
-        FileTransferBar.classList.toggle("open");
+        ev.stopPropagation();
+
+        const x = document.body.clientWidth - FileTransferButton.getBoundingClientRect().right;
+        const right = `${x.toFixed(0)}px`;
+        const y = FileTransferButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        FileTransferMenu.style.right = right;
+        FileTransferMenu.style.top = top;
+        FileTransferMenu.classList.toggle("open");
+        const buttonZindex = Number.parseInt(getComputedStyle(FileTransferButton.parentElement).zIndex);
+        FileTransferMenu.style.zIndex = `${buttonZindex + 1}`;
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     FileUploadButtton.addEventListener("click", (ev) => {
         FileTransferInput.click();
@@ -174,7 +227,14 @@ export function ApplyInputHandlers() {
         }
     });
     FullScreenButton.addEventListener("click", () => {
-        document.body.requestFullscreen();
+        FullScreenButton.classList.toggle("toggled");
+
+        if (FullScreenButton.classList.contains("toggled")) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
     })
     BlockInputButton.addEventListener("click", (ev) => {
         if (ViewerApp.ViewOnlyMode) {
@@ -201,7 +261,7 @@ export function ApplyInputHandlers() {
         ShowToast("Link copied to clipboard.");
     });
     KeyboardButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars(null);
+        CloseAllPopupMenus(null);
         TouchKeyboardTextArea.focus();
         TouchKeyboardTextArea.setSelectionRange(TouchKeyboardTextArea.value.length, TouchKeyboardTextArea.value.length);
         MenuFrame.classList.remove("open");
@@ -210,7 +270,7 @@ export function ApplyInputHandlers() {
     MenuButton.addEventListener("click", (ev) => {
         MenuFrame.classList.toggle("open");
         MenuButton.classList.toggle("open");
-        closeAllHorizontalBars(null);
+        CloseAllPopupMenus(null);
     });
     MenuButton.addEventListener("touchmove", (ev) => {
         ev.preventDefault();
@@ -533,6 +593,27 @@ export function ApplyInputHandlers() {
             TouchKeyboardTextArea.setSelectionRange(TouchKeyboardTextArea.value.length, TouchKeyboardTextArea.value.length);
         });
     });
+    WindowsSessionMenuButton.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(WindowsSessionMenu.id);
+
+        const x = document.body.clientWidth - WindowsSessionMenuButton.getBoundingClientRect().right;
+        const right = `${x.toFixed(0)}px`;
+        const y = WindowsSessionMenuButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        WindowsSessionMenu.style.right = right;
+        WindowsSessionMenu.style.top = top;
+        WindowsSessionMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
+    });
+    WindowsSessionSelect.addEventListener("click", ev => {
+        ev.stopPropagation();
+    });
     WindowsSessionSelect.addEventListener("focus", () => {
         ViewerApp.MessageSender.GetWindowsSessions();
     });
@@ -543,16 +624,14 @@ export function ApplyInputHandlers() {
     RecordSessionButton.addEventListener("click", () => {
         RecordSessionButton.classList.toggle("toggled");
         if (RecordSessionButton.classList.contains("toggled")) {
-            RecordSessionButton.innerHTML = `Stop <i class="fas fa-record-vinyl">`;
+            RecordSessionButton.innerHTML = `<i class="fas fa-record-vinyl"> Stop`;
             ViewerApp.SessionRecorder.Start();
         }
         else {
-            RecordSessionButton.innerHTML = `Start <i class="fas fa-record-vinyl">`;
+            RecordSessionButton.innerHTML = `<i class="fas fa-record-vinyl">Record`;
             ViewerApp.SessionRecorder.Stop();
+            ViewerApp.SessionRecorder.DownloadVideo();
         }
-    });
-    DownloadRecordingButton.addEventListener("click", () => {
-        ViewerApp.SessionRecorder.DownloadVideo();
     });
 
     window.addEventListener("keydown", function (e) {
@@ -600,12 +679,4 @@ export function ApplyInputHandlers() {
         }
         UploadFiles(e.dataTransfer.files);
     };
-}
-
-function closeAllHorizontalBars(exceptBarId: string) {
-    HorizontalBars.forEach(x => {
-        if (x.id != exceptBarId) {
-            x.classList.remove('open');
-        }
-    })
 }

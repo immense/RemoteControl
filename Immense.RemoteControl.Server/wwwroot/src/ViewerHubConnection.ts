@@ -65,7 +65,7 @@ export class ViewerHubConnection {
         this.Connection.invoke("InvokeCtrlAltDel");
     }
 
-    SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
+    async SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
 
         if (this.Connection?.state != HubConnectionState.Connected) {
             return;
@@ -75,7 +75,7 @@ export class ViewerHubConnection {
 
         for (var i = 0; i < chunks.length; i++) {
             const chunk = MsgPack.encode(chunks[i]);
-            this.Connection.invoke("SendDtoToClient", chunk);
+            await this.Connection.invoke("SendDtoToClient", chunk);
         }
     }
 

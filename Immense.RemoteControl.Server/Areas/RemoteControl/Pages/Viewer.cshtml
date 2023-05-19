@@ -20,9 +20,9 @@
     <link href="/_content/Immense.RemoteControl.Server/css/remote-control.css" rel="stylesheet" asp-append-version="true" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ThemeUrl))
-{
-    <link href="@(Model.ThemeUrl)" rel="stylesheet" asp-append-version="true" />
-}
+    {
+        <link href="@(Model.ThemeUrl)" rel="stylesheet" asp-append-version="true" />
+    }
 
     <link href="/_content/Immense.RemoteControl.Server/lib/fontawesome/css/all.min.css" rel="stylesheet" />
 
@@ -56,59 +56,10 @@
     </button>
 
     <div style="display: none">
-
-        <div class="menu-options-header">
-            Actions
-        </div>
-
-        <div>
-
-            <button id="inviteButton" title="Copy a link that lets another person view the remote screen.">
-                Invite Others  <i class="fas fa-user-plus"></i>
-            </button>
-
-            <button id="audioButton" title="Windows only.  Stream the remote audio to the browser.">
-                Audio <i class="fas fa-volume-up"></i>
-            </button>
-
-            <button id="fileTransferButton" title="Transfer files to the remote computer.">
-                File Transfer  <i class="fas fa-file-upload"></i>
-            </button>
-        </div>
-
-
-        <div class="menu-options-header">
-            View
-        </div>
-
-        <div>
-
-
-        </div>
-
-
-        <div class="menu-options-header">
-            Recording
-        </div>
-
-        <div>
-            <button id="recordSessionButton" title="Record session as a WEBM video in the browser.">
-                Start <i class="fas fa-record-vinyl"></i>
-            </button>
-
-            <button id="downloadRecordingButton" title="Download the recorded session as a WEBM file.">
-                Download <i class="fas fa-download"></i>
-            </button>
-        </div>
-
         <div class="menu-options-header">
             Windows Session
         </div>
         <div>
-            <select id="windowsSessionSelect"
-                    title="Switch to a different Windows session."
-                   
-                    style="height: 30px; width: 90%; margin: 5px 0;"></select>
         </div>
 
         <div class="menu-options-header">
@@ -138,27 +89,58 @@
         </div>
     </div>
 
-    <div id="screenSelectBar" class="d-none">
-
+    <div id="screenSelectMenu" class="popup-menu">
     </div>
 
-    <div id="clipboardTransferBar" class="d-none">
-        <div>
-            Shared Clipboard
-        </div>
-        <div>
-            <button id="typeClipboardButton">Type Clipboard</button>
-        </div>
+    <div id="clipboardTransferMenu" class="popup-menu">
+        <button id="typeClipboardButton">Type Clipboard</button>
     </div>
 
-    <div id="fileTransferBar" class="d-none">
-        <div>
+    <div id="fileTransferMenu" class="popup-menu">
+        <button id="fileUploadButton">Upload File</button>
+        <button id="fileDownloadButton">Download File</button>
+    </div>
+
+    <div id="windowsSessionMenu" class="popup-menu">
+        <div class="text-center" style="margin-bottom: 5px;">
+            Change Windows Session
+        </div>
+        <select id="windowsSessionSelect"
+                title="Switch to a different Windows session.">
+        </select>
+    </div>
+
+    <div id="extrasMenu" class="popup-menu">
+
+        <button id="audioButton"
+                title="Windows only.  Stream the remote audio to the browser.">
+            <i class="fas fa-volume-up"></i>
+            Audio
+        </button>
+
+        <button id="fileTransferButton"
+                title="Transfer files to the remote computer.">
+            <i class="fas fa-file-upload"></i>
             File Transfer
-        </div>
-        <div>
-            <button id="fileUploadButton">Upload File</button>
-            <button id="fileDownloadButton">Download File</button>
-        </div>
+        </button>
+
+        <button id="recordSessionButton"
+                title="Record session as a WEBM video in the browser.">
+            <i class="fas fa-record-vinyl"></i>
+            Record
+        </button>
+
+        <button id="inviteButton"
+                title="Copy a link that lets another person view the remote screen.">
+            <i class="fas fa-user-plus"></i>
+            Invite Others
+        </button>
+
+        <button id="metricsButton"
+            title="Toggle display of session metrics.">
+            <i class="fas fa-gauge"></i>
+            Metrics
+        </button>
     </div>
 
     <div class="connection-box-wrapper">
@@ -200,63 +182,60 @@
                         <img class="menu-logo" src="@(Model.LogoUrl)" />
                     }
                 </div>
-                 <div>
-                    <button 
-                        id="changeScreenButton" 
-                        title="Switch monitors on remote multi-monitor setups.">
+                <div>
+                    <button id="changeScreenButton"
+                            title="Switch monitors on remote multi-monitor setups.">
                         <i class="fas fa-desktop"></i>
                         Monitors
                     </button>
 
-                    <button 
-                        id="viewOnlyButton" 
-                        title="If toggled, prevents sending commnads and input to the remote computer.">
+                    <button id="viewOnlyButton"
+                            title="If toggled, prevents sending commnads and input to the remote computer.">
                         <i class="fas fa-eye"></i>
                         View Only
                     </button>
 
-                    <button 
-                        id="clipboardTransferButton"  
-                        title="Type the current clipboard text on the remote computer.">
-                         <i class="fas fa-clipboard"></i>
-                         Clipboard
+                    <button id="clipboardTransferButton"
+                            title="Type the current clipboard text on the remote computer.">
+                        <i class="fas fa-clipboard"></i>
+                        Clipboard
                     </button>
 
-                    <button
-                        id="blockInputButton" 
-                        title="Prevent remote user from using keyboard and mouse.">
+                    <button id="blockInputButton"
+                            title="Prevent remote user from using keyboard and mouse.">
                         <i class="fas fa-mouse"></i>
                         Block Remote Input
                     </button>
 
-                    <button 
-                        id="ctrlAltDelButton" 
-                        title="Simulate the Ctrl+Alt+Del command on the remote computer."
-                        class="d-none">
+                    <button id="ctrlAltDelButton"
+                            title="Simulate the Ctrl+Alt+Del command on the remote computer.  Must be running as SYSTEM."
+                            class="d-none">
                         <i class="fas fa-sign-in-alt"></i>
                         Ctrl+Alt+Del
                     </button>
                 </div>
 
                 <div class="menu-right-column">
-                    <button 
-                        id="disconnectButton"
-                        title="Disconnect from the current session.">
+                    <button id="disconnectButton"
+                            title="Disconnect from the current session.">
                         x
                     </button>
 
-                    <button id="moreMenuButton">
+                    <button id="extrasMenuButton">
                         <i class="fas fa-ellipsis-v"></i>
+                    </button>
+
+                    <button id="windowsSessionMenuButton" class="d-none">
+                        <i class="fas fa-user-cog"></i>
                     </button>
 
                     <button id="fullScreenButton" title="Enter fullscreen mode.">
                         <i class="fas fa-window-maximize"></i>
                     </button>
 
-                    <button 
-                        id="fitToScreenButton" 
-                        class="toggled" 
-                        title="If toggled, will resize image to fit in the window.">
+                    <button id="fitToScreenButton"
+                            class="toggled"
+                            title="If toggled, will resize image to fit in the window.">
                         <i class="fas fa-expand"></i>
                     </button>
                 </div>
@@ -279,13 +258,12 @@
     </div>
 
     <div id="toastsWrapper">
-
     </div>
 
 
     <div id="fileTransferDiv" hidden="hidden">
         <span id="fileTransferNameSpan" class="mr-1 font-weight-bold" style="vertical-align: middle;"></span>
-        <progress id="fileTransferProgress" style="vertical-align: middle; width: 100%"></progress>
+        <progress id="fileTransferProgress"></progress>
     </div>
 
     <footer>
