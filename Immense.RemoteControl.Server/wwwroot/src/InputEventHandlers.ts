@@ -36,7 +36,8 @@ import {
     WindowsSessionMenuButton,
     WindowsSessionMenu,
     MetricsButton,
-    MetricsFrame
+    MetricsFrame,
+    SetStatusMessage
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -157,6 +158,7 @@ export function ApplyInputHandlers() {
     DisconnectButton.addEventListener("click", (ev) => {
         ConnectButton.removeAttribute("disabled");
         ConnectButton.innerText = "Connect";
+        SetStatusMessage("Connection closed.");
         ViewerApp.ViewerHubConnection.Connection.stop();
         if (location.search.includes("fromApi=true")) {
             window.close();

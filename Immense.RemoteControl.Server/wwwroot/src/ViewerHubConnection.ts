@@ -45,6 +45,9 @@ export class ViewerHubConnection {
         });
 
         this.Connection.onclose(() => {
+            if (!UI.StatusMessage.innerText) {
+                UI.SetStatusMessage("Connection closed.");
+            }
             UI.ToggleConnectUI(true);
         });
 
@@ -98,11 +101,17 @@ export class ViewerHubConnection {
                 },
                 complete: () => {
                     streamingState.StreamEnded = true;
+                    if (!UI.StatusMessage.innerText) {
+                        UI.SetStatusMessage("Stream ended.");
+                    }
                     UI.ToggleConnectUI(true);
                 },
                 error: (err) => {
                     console.warn(err);
                     streamingState.StreamEnded = true;
+                    if (!UI.StatusMessage.innerText) {
+                        UI.SetStatusMessage("Stream ended.");
+                    }
                     UI.ToggleConnectUI(true);
                 },
             });

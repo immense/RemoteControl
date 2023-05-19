@@ -113,7 +113,7 @@ export function SetScreenSize(width: number, height: number) {
 }
 
 export function SetStatusMessage(message: string) {
-    StatusMessage.innerHTML = message;
+    StatusMessage.innerText = message;
 }
 
 export function ShowToast(message: string) {
