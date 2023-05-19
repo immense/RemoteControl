@@ -180,6 +180,13 @@ button {
         font-size: 16px;
     }
 
+        #menuFrame #disconnectButton:hover {
+            border: 1px solid #384346;
+        }
+        #menuFrame #disconnectButton:active {
+            border: 1px solid #009888;
+        }
+
 .menu-logo {
     margin-top: 10px;
 }
@@ -224,7 +231,7 @@ button {
 }
 
 .d-none {
-    display: none;
+    display: none !important;
 }
 
 .text-center {
@@ -247,15 +254,24 @@ button {
     font-size: .9em;
 }
 
-.metrics-body {
+#metricsFrame {
+    position: fixed;
     display: grid;
+    right: 0;
+    bottom: 0;
+    padding: 10px;
     grid-template-columns: auto 1fr;
     column-gap: 10px;
     white-space: nowrap;
     text-align: left;
-    margin-left: 5px;
     font-size: 0.8em;
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    user-select: none;
+    z-index: 5;
 }
+
 
 #keyboardButton {
     position: fixed;

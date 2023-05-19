@@ -34,7 +34,9 @@ import {
     ExtrasMenu,
     ExtrasMenuButton,
     WindowsSessionMenuButton,
-    WindowsSessionMenu
+    WindowsSessionMenu,
+    MetricsButton,
+    MetricsFrame
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -91,8 +93,22 @@ export function ApplyInputHandlers() {
         }, { once: true });
     });
     ClipboardTransferButton.addEventListener("click", (ev) => {
-        CloseAllPopupMenus("clipboardTransferMenu");
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(ClipboardTransferMenu.id);
+
+        const x = ClipboardTransferButton.getBoundingClientRect().left;
+        const left = `${x.toFixed(0)}px`;
+        const y = ClipboardTransferButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        ClipboardTransferMenu.style.left = left;
+        ClipboardTransferMenu.style.top = top;
         ClipboardTransferMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     ViewOnlyButton.addEventListener("click", () => {
         ViewOnlyButton.classList.toggle("toggled");
@@ -272,12 +288,10 @@ export function ApplyInputHandlers() {
         MenuButton.classList.toggle("open");
         CloseAllPopupMenus(null);
     });
-    MenuButton.addEventListener("touchmove", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        MenuButton.style.top = `${ev.touches[0].clientY}px`;
-    });
 
+    MetricsButton.addEventListener("click", () => {
+        MetricsFrame.classList.toggle("d-none");
+    });
     ScreenViewer.addEventListener("pointermove", function (e: PointerEvent) {
         currentPointerDevice = e.pointerType;
     });

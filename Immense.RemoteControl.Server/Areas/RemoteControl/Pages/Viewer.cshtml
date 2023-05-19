@@ -25,6 +25,7 @@
     }
 
     <link href="/_content/Immense.RemoteControl.Server/lib/fontawesome/css/all.min.css" rel="stylesheet" />
+    <link href="/_content/Immense.RemoteControl.Server/lib/fontawesome/css/brands.min.css" rel="stylesheet" />
 
     <environment include="Development">
         <script src="/_content/Immense.RemoteControl.Server/lib/microsoft-signalr/signalr.js"></script>
@@ -55,39 +56,6 @@
         <i class="fas fa-keyboard align-middle"></i>
     </button>
 
-    <div style="display: none">
-        <div class="menu-options-header">
-            Windows Session
-        </div>
-        <div>
-        </div>
-
-        <div class="menu-options-header">
-            Metrics
-        </div>
-        <div class="metrics-body">
-            <div>
-                Mbps:
-            </div>
-            <div id="mbpsDiv">
-            </div>
-            <div>
-                FPS:
-            </div>
-            <div id="fpsDiv">
-            </div>
-            <div>
-                Latency:
-            </div>
-            <div id="latencyDiv">
-            </div>
-            <div>
-                GPU:
-            </div>
-            <div id="gpuAcceleratedDiv">
-            </div>
-        </div>
-    </div>
 
     <div id="screenSelectMenu" class="popup-menu">
     </div>
@@ -141,6 +109,29 @@
             <i class="fas fa-gauge"></i>
             Metrics
         </button>
+    </div>
+
+    <div id="metricsFrame" class="d-none">
+        <div>
+            Mbps:
+        </div>
+        <div id="mbpsDiv">
+        </div>
+        <div>
+            FPS:
+        </div>
+        <div id="fpsDiv">
+        </div>
+        <div>
+            Latency:
+        </div>
+        <div id="latencyDiv">
+        </div>
+        <div>
+            GPU:
+        </div>
+        <div id="gpuAcceleratedDiv">
+        </div>
     </div>
 
     <div class="connection-box-wrapper">
@@ -225,8 +216,8 @@
                         <i class="fas fa-ellipsis-v"></i>
                     </button>
 
-                    <button id="windowsSessionMenuButton" class="d-none">
-                        <i class="fas fa-user-cog"></i>
+                    <button id="windowsSessionMenuButton">
+                        <i class="fa-brands fa-windows"></i>
                     </button>
 
                     <button id="fullScreenButton" title="Enter fullscreen mode.">

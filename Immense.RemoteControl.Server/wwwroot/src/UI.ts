@@ -20,8 +20,6 @@ export var ConnectBox = document.getElementById("connectBox") as HTMLDivElement;
 export var ConnectHeader = document.getElementById("connectHeader") as HTMLHeadingElement;
 export var ConnectForm = document.getElementById("connectForm") as HTMLFormElement;
 export var ScreenSelectMenu = document.getElementById("screenSelectMenu") as HTMLDivElement;
-export var ActionsBar = document.getElementById("actionsBar") as HTMLDivElement;
-export var ViewBar = document.getElementById("viewBar") as HTMLDivElement;
 export var ChangeScreenButton = document.getElementById("changeScreenButton") as HTMLButtonElement;
 export var FitToScreenButton = document.getElementById("fitToScreenButton") as HTMLButtonElement;
 export var BlockInputButton = document.getElementById("blockInputButton") as HTMLButtonElement;
@@ -37,7 +35,7 @@ export var FileUploadButtton = document.getElementById("fileUploadButton") as HT
 export var FileDownloadButton = document.getElementById("fileDownloadButton") as HTMLButtonElement;
 export var CtrlAltDelButton = document.getElementById("ctrlAltDelButton") as HTMLButtonElement;
 export var TouchKeyboardTextArea = document.getElementById("touchKeyboardTextArea") as HTMLTextAreaElement;
-export var ClipboardTransferMenu = document.getElementById("clipboardTransferBar") as HTMLDivElement;
+export var ClipboardTransferMenu = document.getElementById("clipboardTransferMenu") as HTMLDivElement;
 export var ClipboardTransferButton = document.getElementById("clipboardTransferButton") as HTMLButtonElement;
 export var TypeClipboardButton = document.getElementById("typeClipboardButton") as HTMLButtonElement;
 export var ConnectionP2PIcon = document.getElementById("connectionP2PIcon") as HTMLElement;
@@ -57,6 +55,8 @@ export var ExtrasMenu = document.getElementById("extrasMenu") as HTMLDivElement;
 export var ExtrasMenuButton = document.getElementById("extrasMenuButton") as HTMLButtonElement;
 export var WindowsSessionMenu = document.getElementById("windowsSessionMenu") as HTMLDivElement;
 export var WindowsSessionMenuButton = document.getElementById("windowsSessionMenuButton") as HTMLButtonElement;
+export var MetricsButton = document.getElementById("metricsButton") as HTMLButtonElement;
+export var MetricsFrame = document.getElementById("metricsFrame") as HTMLDivElement;
 
 export function CloseAllPopupMenus(exceptMenuId: string) {
     PopupMenus.forEach(x => {
