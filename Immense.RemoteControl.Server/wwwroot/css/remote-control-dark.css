@@ -83,6 +83,9 @@ button {
     background-color: #212526;
 }
 
+#connectButton {
+    color: black !important;
+}
 
 footer a {
     color: deepskyblue;
