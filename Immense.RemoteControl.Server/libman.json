@@ -27,6 +27,11 @@
         "dist/browser/signalr-protocol-msgpack.min.js",
         "dist/browser/signalr-protocol-msgpack.min.js.map"
       ]
+    },
+    {
+      "library": "font-awesome@6.4.0",
+      "destination": "wwwroot/lib/fontawesome/",
+      "files": []
     }
   ]
 }
