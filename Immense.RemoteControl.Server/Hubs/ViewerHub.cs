@@ -146,17 +146,16 @@ public class ViewerHub : Hub
 
         return _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
     }
-    public async Task SendScreenCastRequestToDevice(string sessionId, string accessKey, string requesterName)
+    public async Task<Result> SendScreenCastRequestToDevice(string sessionId, string accessKey, string requesterName)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
         {
-            return;
+            return Result.Fail("Session ID cannot be empty.");
         }
 
         if (!_desktopSessionCache.TryGetValue(sessionId, out var session))
         {
-            await Clients.Caller.SendAsync("SessionIDNotFound");
-            return;
+            return Result.Fail("Session ID not found.");
         }
 
         if (session.Mode == RemoteControlMode.Unattended &&
@@ -169,8 +168,7 @@ public class ViewerHub : Hub
                 sessionId,
                 requesterName,
                 Context.ConnectionId);
-            await Clients.Caller.SendAsync("Unauthorized");
-            return;
+            return Result.Fail("Authorization failed.");
         }
 
         SessionInfo = session;
@@ -208,7 +206,6 @@ public class ViewerHub : Hub
         else
         {
             SessionInfo.Mode = RemoteControlMode.Attended;
-            await Clients.Caller.SendAsync("RequestingScreenCast");
             await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
                 "RequestScreenCast", 
                 Context.ConnectionId, 
@@ -216,6 +213,7 @@ public class ViewerHub : Hub
                 SessionInfo.NotifyUserOnStart,
                 SessionInfo.StreamId);
         }
-    }
 
+        return Result.Ok();
+    }
 }

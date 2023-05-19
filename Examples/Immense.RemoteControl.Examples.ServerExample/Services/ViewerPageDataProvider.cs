@@ -7,12 +7,17 @@ namespace Immense.RemoteControl.Examples.ServerExample.Services;
 
 internal class ViewerPageDataProvider : IViewerPageDataProvider
 {
-    public Task<string> GetFaviconUrl(ViewerModel viewerModel)
+    public Task<string> GetFaviconUrl(PageModel pageModel)
     {
         return Task.FromResult("/favicon.ico");
     }
 
-    public Task<string> GetPageDescription(ViewerModel viewerModel)
+    public Task<string> GetLogoUrl(PageModel pageModel)
+    {
+        return Task.FromResult("/viewer-logo.svg");
+    }
+
+    public Task<string> GetPageDescription(PageModel pageModel)
     {
         return Task.FromResult("Open-source remote support tools.");
     }

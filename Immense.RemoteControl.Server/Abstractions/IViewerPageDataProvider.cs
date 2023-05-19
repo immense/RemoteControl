@@ -9,8 +9,7 @@ public interface IViewerPageDataProvider
     Task<ViewerPageTheme> GetTheme(PageModel pageModel);
     Task<string> GetUserDisplayName(PageModel pageModel);
     Task<string> GetPageTitle(PageModel pageModel);
-    Task<string> GetProductName(PageModel pageModel);
-    Task<string> GetProductSubtitle(PageModel pageModel);
-    Task<string> GetPageDescription(ViewerModel viewerModel);
-    Task<string> GetFaviconUrl(ViewerModel viewerModel);
+    Task<string> GetPageDescription(PageModel pageModel);
+    Task<string> GetFaviconUrl(PageModel pageModel);
+    Task<string> GetLogoUrl(PageModel pageModel);
 }

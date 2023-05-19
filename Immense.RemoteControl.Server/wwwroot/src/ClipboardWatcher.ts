@@ -1,5 +1,5 @@
 ﻿import { ViewerApp } from "./App.js";
-import { ShowMessage } from "./UI.js";
+import { ShowToast } from "./UI.js";
 
 export class ClipboardWatcher {
     ClipboardTimer: number;
@@ -32,7 +32,7 @@ export class ClipboardWatcher {
                 navigator.clipboard.writeText(this.NewClipboardText);
                 this.LastClipboardText = this.NewClipboardText;
                 this.NewClipboardText = null;
-                ShowMessage("Clipboard updated.");
+                ShowToast("Clipboard updated.");
                 return;
             }
 

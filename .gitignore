@@ -366,3 +366,4 @@ FodyWeavers.xsd
 /Immense.RemoteControl.Server/wwwroot/lib/microsoft/signalr-protocol-msgpack/dist/browser
 /Immense.RemoteControl.Server/wwwroot/lib/microsoft-signalr
 /Immense.RemoteControl.Server/wwwroot/lib/msgpack/dist.es5+umd
+/Immense.RemoteControl.Server/wwwroot/lib/fontawesome

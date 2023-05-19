@@ -1,6 +1,6 @@
 import { FileTransferProgress, FileTransferInput, FileTransferNameSpan } from "./UI.js";
 import { ViewerApp } from "./App.js";
-import { ShowMessage } from "./UI.js";
+import { ShowToast } from "./UI.js";
 import { FileDto } from "./Interfaces/Dtos.js";
 
 const PartialDownloads: Record<string, Array<Uint8Array>> = {};
@@ -8,10 +8,10 @@ const PartialDownloads: Record<string, Array<Uint8Array>> = {};
 export async function UploadFiles(fileList: FileList) {
     if (!FileTransferProgress.parentElement.hasAttribute("hidden")) {
         FileTransferInput.value = null;
-        ShowMessage("File transfer already in progress.");
+        ShowToast("File transfer already in progress.");
         return;
     }
-    ShowMessage("File upload started");
+    ShowToast("File upload started");
     FileTransferProgress.value = 0;
     FileTransferProgress.parentElement.removeAttribute("hidden");
 
@@ -21,10 +21,10 @@ export async function UploadFiles(fileList: FileList) {
             var buffer = await fileList[i].arrayBuffer();
             await ViewerApp.MessageSender.SendFile(new Uint8Array(buffer), fileList[i].name);
         }
-        ShowMessage("File upload completed.");
+        ShowToast("File upload completed.");
     }
     catch {
-        ShowMessage("File upload failed.");
+        ShowToast("File upload failed.");
     }
     FileTransferInput.value = null;
     FileTransferProgress.parentElement.setAttribute("hidden", "hidden");
@@ -32,7 +32,7 @@ export async function UploadFiles(fileList: FileList) {
 
 export async function ReceiveFile(file: FileDto) {
     if (file.StartOfFile) {
-        ShowMessage(`Downloading file ${file.FileName}`);
+        ShowToast(`Downloading file ${file.FileName}`);
     }
 
     var partial = PartialDownloads[file.MessageId];

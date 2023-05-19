@@ -15,11 +15,11 @@ export var StatusMessage = document.getElementById("statusMessage") as HTMLDivEl
 export var ScreenViewer = document.getElementById("screenViewer") as HTMLCanvasElement;
 export var ScreenViewerWrapper = document.getElementById("screenViewerWrapper") as HTMLDivElement;
 export var Screen2DContext = ScreenViewer ? ScreenViewer.getContext("2d") : null;
-export var HorizontalBars = document.querySelectorAll(".horizontal-button-bar");
+export var PopupMenus = document.querySelectorAll(".popup-menu");
 export var ConnectBox = document.getElementById("connectBox") as HTMLDivElement;
-export var ScreenSelectBar = document.getElementById("screenSelectBar") as HTMLDivElement;
-export var ActionsBar = document.getElementById("actionsBar") as HTMLDivElement;
-export var ViewBar = document.getElementById("viewBar") as HTMLDivElement;
+export var ConnectHeader = document.getElementById("connectHeader") as HTMLHeadingElement;
+export var ConnectForm = document.getElementById("connectForm") as HTMLFormElement;
+export var ScreenSelectMenu = document.getElementById("screenSelectMenu") as HTMLDivElement;
 export var ChangeScreenButton = document.getElementById("changeScreenButton") as HTMLButtonElement;
 export var FitToScreenButton = document.getElementById("fitToScreenButton") as HTMLButtonElement;
 export var BlockInputButton = document.getElementById("blockInputButton") as HTMLButtonElement;
@@ -30,19 +30,18 @@ export var FileTransferNameSpan = document.getElementById("fileTransferNameSpan"
 export var KeyboardButton = document.getElementById("keyboardButton") as HTMLButtonElement;
 export var InviteButton = document.getElementById("inviteButton") as HTMLButtonElement;
 export var FileTransferButton = document.getElementById("fileTransferButton") as HTMLButtonElement;
-export var FileTransferBar = document.getElementById("fileTransferBar") as HTMLDivElement;
+export var FileTransferMenu = document.getElementById("fileTransferMenu") as HTMLDivElement;
 export var FileUploadButtton = document.getElementById("fileUploadButton") as HTMLButtonElement;
 export var FileDownloadButton = document.getElementById("fileDownloadButton") as HTMLButtonElement;
 export var CtrlAltDelButton = document.getElementById("ctrlAltDelButton") as HTMLButtonElement;
 export var TouchKeyboardTextArea = document.getElementById("touchKeyboardTextArea") as HTMLTextAreaElement;
-export var ClipboardTransferBar = document.getElementById("clipboardTransferBar") as HTMLDivElement;
+export var ClipboardTransferMenu = document.getElementById("clipboardTransferMenu") as HTMLDivElement;
 export var ClipboardTransferButton = document.getElementById("clipboardTransferButton") as HTMLButtonElement;
 export var TypeClipboardButton = document.getElementById("typeClipboardButton") as HTMLButtonElement;
 export var ConnectionP2PIcon = document.getElementById("connectionP2PIcon") as HTMLElement;
 export var ConnectionRelayedIcon = document.getElementById("connectionRelayedIcon") as HTMLElement;
 export var WindowsSessionSelect = document.getElementById("windowsSessionSelect") as HTMLSelectElement;
 export var RecordSessionButton = document.getElementById("recordSessionButton") as HTMLButtonElement;
-export var DownloadRecordingButton = document.getElementById("downloadRecordingButton") as HTMLButtonElement;
 export var ViewOnlyButton = document.getElementById("viewOnlyButton") as HTMLButtonElement;
 export var FullScreenButton = document.getElementById("fullScreenButton") as HTMLButtonElement;
 export var ToastsWrapper = document.getElementById("toastsWrapper") as HTMLDivElement;
@@ -50,7 +49,22 @@ export var MbpsDiv = document.getElementById("mbpsDiv") as HTMLDivElement;
 export var FpsDiv = document.getElementById("fpsDiv") as HTMLDivElement;
 export var LatencyDiv = document.getElementById("latencyDiv") as HTMLDivElement;
 export var GpuDiv = document.getElementById("gpuAcceleratedDiv") as HTMLDivElement;
+export var WorkAreaGrid = document.getElementById("workAreaGrid") as HTMLDivElement;
+export var BackgroundLayers = document.getElementById("backgroundLayers") as HTMLDivElement;
+export var ExtrasMenu = document.getElementById("extrasMenu") as HTMLDivElement;
+export var ExtrasMenuButton = document.getElementById("extrasMenuButton") as HTMLButtonElement;
+export var WindowsSessionMenu = document.getElementById("windowsSessionMenu") as HTMLDivElement;
+export var WindowsSessionMenuButton = document.getElementById("windowsSessionMenuButton") as HTMLButtonElement;
+export var MetricsButton = document.getElementById("metricsButton") as HTMLButtonElement;
+export var MetricsFrame = document.getElementById("metricsFrame") as HTMLDivElement;
 
+export function CloseAllPopupMenus(exceptMenuId: string) {
+    PopupMenus.forEach(x => {
+        if (x.id != exceptMenuId) {
+            x.classList.remove("open");
+        }
+    })
+}
 
 export function Prompt(promptMessage: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -99,10 +113,10 @@ export function SetScreenSize(width: number, height: number) {
 }
 
 export function SetStatusMessage(message: string) {
-    StatusMessage.innerHTML = message;
+    StatusMessage.innerText = message;
 }
 
-export function ShowMessage(message: string) {
+export function ShowToast(message: string) {
     var messageDiv = document.createElement("div");
     messageDiv.classList.add("toast-message");
     messageDiv.innerHTML = message;
@@ -114,22 +128,28 @@ export function ShowMessage(message: string) {
 
 
 export function ToggleConnectUI(shown: boolean) {
-    ConnectButton.removeAttribute("disabled");
-
     if (shown) {
         Screen2DContext.clearRect(0, 0, ScreenViewer.width, ScreenViewer.height);
         ScreenViewerWrapper.setAttribute("hidden", "hidden");
         if (ViewerApp.Mode == RemoteControlMode.Attended) {
             ConnectBox.style.removeProperty("display");
+            ConnectHeader.style.removeProperty("display");
         }
         BlockInputButton.classList.remove("toggled");
         AudioButton.classList.remove("toggled");
+        WorkAreaGrid.style.display = "none";
+        BackgroundLayers.classList.remove("d-none");
     }
     else {
         ConnectBox.style.display = "none";
+        ConnectHeader.style.display = "none";
         ScreenViewerWrapper.removeAttribute("hidden");
         StatusMessage.innerHTML = "";
+        WorkAreaGrid.style.removeProperty("display");
+        BackgroundLayers.classList.add("d-none");
     }
+
+    ConnectButton.disabled = !ViewerApp.RequesterName || !ViewerApp.SessionId;
 }
 
 export function UpdateCursor(imageBytes: Uint8Array, hotSpotX: number, hotSpotY: number, cssOverride: string) {
@@ -146,18 +166,18 @@ export function UpdateCursor(imageBytes: Uint8Array, hotSpotX: number, hotSpotY:
 }
 
 export function UpdateDisplays(selectedDisplay: string, displayNames: string[]) {
-    ScreenSelectBar.innerHTML = "";
+    ScreenSelectMenu.innerHTML = "";
     for (let i = 0; i < displayNames.length; i++) {
         var button = document.createElement("button");
         button.innerHTML = `Monitor ${i}`;
-        button.classList.add("horizontal-bar-button");
         if (displayNames[i] == selectedDisplay) {
             button.classList.add("toggled");
         }
-        ScreenSelectBar.appendChild(button);
+        ScreenSelectMenu.appendChild(button);
         button.onclick = (ev: MouseEvent) => {
             ViewerApp.MessageSender.SendSelectScreen(displayNames[i]);
-            document.querySelectorAll("#screenSelectBar .horizontal-bar-button").forEach(button => {
+            ScreenSelectMenu.classList.toggle("open");
+            ScreenSelectMenu.querySelectorAll("button").forEach(button => {
                 button.classList.remove("toggled");
             });
             (ev.currentTarget as HTMLButtonElement).classList.add("toggled");

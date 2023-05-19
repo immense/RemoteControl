@@ -1,10 +1,10 @@
 import {
     AudioButton,
     ChangeScreenButton,
-    HorizontalBars,
-    ScreenSelectBar,
+    PopupMenus,
+    ScreenSelectMenu,
     ClipboardTransferButton,
-    ClipboardTransferBar,
+    ClipboardTransferMenu,
     TypeClipboardButton,
     ConnectButton,
     CtrlAltDelButton,
@@ -22,12 +22,22 @@ import {
     ScreenViewerWrapper,
     WindowsSessionSelect,
     RecordSessionButton,
-    DownloadRecordingButton,
-    FileTransferBar,
+    FileTransferMenu,
     FileUploadButtton,
     FileDownloadButton,
     ViewOnlyButton,
-    FullScreenButton
+    FullScreenButton,
+    RequesterNameInput,
+    SessionIDInput,
+    ConnectForm,
+    CloseAllPopupMenus,
+    ExtrasMenu,
+    ExtrasMenuButton,
+    WindowsSessionMenuButton,
+    WindowsSessionMenu,
+    MetricsButton,
+    MetricsFrame,
+    SetStatusMessage
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -35,7 +45,7 @@ import { Point } from "./Models/Point.js";
 import { UploadFiles } from "./FileTransferService.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 import { GetDistanceBetween } from "./Utilities.js";
-import { ShowMessage } from "./UI.js";
+import { ShowToast } from "./UI.js";
 
 var isDragging: boolean;
 var currentPointerDevice: string;
@@ -45,8 +55,6 @@ var isPinchZooming: boolean;
 var startPinchPoint1: Point;
 var startPinchPoint2: Point;
 var lastPinchDistance: number;
-var isMenuButtonDragging: boolean;
-var startMenuDraggingY: number;
 var startLongPressTimeout: number;
 var lastPinchCenterX: number;
 var lastPinchCenterY: number;
@@ -65,12 +73,43 @@ export function ApplyInputHandlers() {
         ViewerApp.MessageSender.SendToggleAudio(toggleOn);
     });
     ChangeScreenButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars("screenSelectBar");
-        ScreenSelectBar.classList.toggle("open");
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(ScreenSelectMenu.id);
+
+        // This could be put into a re-usable "openPopup" function that takes
+        // "target element" and "placement" as inputs, but all this is
+        // temporary, so I don't think it's worth the time.
+        const x = ChangeScreenButton.getBoundingClientRect().left;
+        const left = `${x.toFixed(0)}px`;
+        const y = ChangeScreenButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        ScreenSelectMenu.style.left = left;
+        ScreenSelectMenu.style.top = top;
+        ScreenSelectMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     ClipboardTransferButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars("clipboardTransferBar");
-        ClipboardTransferBar.classList.toggle("open");
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(ClipboardTransferMenu.id);
+
+        const x = ClipboardTransferButton.getBoundingClientRect().left;
+        const left = `${x.toFixed(0)}px`;
+        const y = ClipboardTransferButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        ClipboardTransferMenu.style.left = left;
+        ClipboardTransferMenu.style.top = top;
+        ClipboardTransferMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     ViewOnlyButton.addEventListener("click", () => {
         ViewOnlyButton.classList.toggle("toggled");
@@ -95,41 +134,92 @@ export function ApplyInputHandlers() {
 
         navigator.clipboard.readText().then(text => {
             ViewerApp.MessageSender.SendClipboardTransfer(text, true);
-            ShowMessage("Clipboard sent!");
+            ShowToast("Clipboard sent!");
         }, reason => {
             alert("Unable to read clipboard.  Please check your permissions.");
             console.log("Unable to read clipboard.  Reason: " + reason);
         });
     });
-    ConnectButton.addEventListener("click", (ev) => {
+    ConnectButton.addEventListener("click", () => {
+        if (!ConnectForm.checkValidity()) {
+            return;
+        }
         ViewerApp.ConnectToClient();
     });
-    CtrlAltDelButton.addEventListener("click", (ev) => {
+    CtrlAltDelButton.addEventListener("click", () => {
         if (ViewerApp.ViewOnlyMode) {
             alert("View-only mode is enabled.");
             return;
         }
 
-        closeAllHorizontalBars(null);
+        CloseAllPopupMenus(null);
         ViewerApp.MessageSender.SendCtrlAltDel();
     });
     DisconnectButton.addEventListener("click", (ev) => {
         ConnectButton.removeAttribute("disabled");
+        ConnectButton.innerText = "Connect";
+        SetStatusMessage("Connection closed.");
         ViewerApp.ViewerHubConnection.Connection.stop();
         if (location.search.includes("fromApi=true")) {
             window.close();
         }
     });
-    document.querySelectorAll("#sessionIDInput, #nameInput").forEach(x => {
+
+    [SessionIDInput, RequesterNameInput].forEach(x => {
         x.addEventListener("keypress", (ev: KeyboardEvent) => {
+            if (!SessionIDInput.value || !RequesterNameInput.value) {
+                return;
+            }
+
             if (ev.key.toLowerCase() == "enter") {
                 ViewerApp.ConnectToClient();
             }
         })
+
+        x.addEventListener("input", () => {
+            if (!SessionIDInput.value || !RequesterNameInput.value) {
+                ConnectButton.setAttribute("disabled", "disabled");
+            }
+            else {
+                ConnectButton.removeAttribute("disabled");
+            }
+        });
+    });
+    ExtrasMenuButton.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(ExtrasMenu.id);
+
+        const x = document.body.clientWidth - ExtrasMenuButton.getBoundingClientRect().right;
+        const right = `${x.toFixed(0)}px`;
+        const y = ExtrasMenuButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        ExtrasMenu.style.right = right;
+        ExtrasMenu.style.top = top;
+        ExtrasMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     FileTransferButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars(FileTransferBar.id);
-        FileTransferBar.classList.toggle("open");
+        ev.stopPropagation();
+
+        const x = document.body.clientWidth - FileTransferButton.getBoundingClientRect().right;
+        const right = `${x.toFixed(0)}px`;
+        const y = FileTransferButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        FileTransferMenu.style.right = right;
+        FileTransferMenu.style.top = top;
+        FileTransferMenu.classList.toggle("open");
+        const buttonZindex = Number.parseInt(getComputedStyle(FileTransferButton.parentElement).zIndex);
+        FileTransferMenu.style.zIndex = `${buttonZindex + 1}`;
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
     });
     FileUploadButtton.addEventListener("click", (ev) => {
         FileTransferInput.click();
@@ -148,16 +238,21 @@ export function ApplyInputHandlers() {
     FitToScreenButton.addEventListener("click", (ev) => {
         FitToScreenButton.classList.toggle("toggled");
         if (FitToScreenButton.classList.contains("toggled")) {
-            ScreenViewer.style.removeProperty("max-width");
-            ScreenViewer.style.removeProperty("max-height");
+            ScreenViewer.classList.add("fit");
         }
         else {
-            ScreenViewer.style.maxWidth = "unset";
-            ScreenViewer.style.maxHeight = "unset";
+            ScreenViewer.classList.remove("fit");
         }
     });
     FullScreenButton.addEventListener("click", () => {
-        document.body.requestFullscreen();
+        FullScreenButton.classList.toggle("toggled");
+
+        if (FullScreenButton.classList.contains("toggled")) {
+            document.body.requestFullscreen();
+        }
+        else {
+            document.exitFullscreen();
+        }
     })
     BlockInputButton.addEventListener("click", (ev) => {
         if (ViewerApp.ViewOnlyMode) {
@@ -181,37 +276,24 @@ export function ApplyInputHandlers() {
             url = `${location.origin}${location.pathname}?mode=Unattended&sessionId=${ViewerApp.SessionId}&accessKey=${ViewerApp.AccessKey}`;
         }
         ViewerApp.ClipboardWatcher.SetClipboardText(url);
-        ShowMessage("Link copied to clipboard.");
+        ShowToast("Link copied to clipboard.");
     });
     KeyboardButton.addEventListener("click", (ev) => {
-        closeAllHorizontalBars(null);
+        CloseAllPopupMenus(null);
         TouchKeyboardTextArea.focus();
         TouchKeyboardTextArea.setSelectionRange(TouchKeyboardTextArea.value.length, TouchKeyboardTextArea.value.length);
         MenuFrame.classList.remove("open");
         MenuButton.classList.remove("open");
     });
     MenuButton.addEventListener("click", (ev) => {
-        if (isMenuButtonDragging) {
-            isMenuButtonDragging = false;
-            return;
-        }
         MenuFrame.classList.toggle("open");
         MenuButton.classList.toggle("open");
-        closeAllHorizontalBars(null);
-    });
-    MenuButton.addEventListener("mousedown", (ev) => {
-        isMenuButtonDragging = false;
-        startMenuDraggingY = ev.clientY;
-        window.addEventListener("mousemove", moveMenuButton);
-        window.addEventListener("mouseup", removeMouseButtonWindowListeners);
-        window.addEventListener("mouseleave", removeMouseButtonWindowListeners);
-    });
-    MenuButton.addEventListener("touchmove", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        MenuButton.style.top = `${ev.touches[0].clientY}px`;
+        CloseAllPopupMenus(null);
     });
 
+    MetricsButton.addEventListener("click", () => {
+        MetricsFrame.classList.toggle("d-none");
+    });
     ScreenViewer.addEventListener("pointermove", function (e: PointerEvent) {
         currentPointerDevice = e.pointerType;
     });
@@ -527,26 +609,45 @@ export function ApplyInputHandlers() {
             TouchKeyboardTextArea.setSelectionRange(TouchKeyboardTextArea.value.length, TouchKeyboardTextArea.value.length);
         });
     });
+    WindowsSessionMenuButton.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+
+        CloseAllPopupMenus(WindowsSessionMenu.id);
+
+        const x = document.body.clientWidth - WindowsSessionMenuButton.getBoundingClientRect().right;
+        const right = `${x.toFixed(0)}px`;
+        const y = WindowsSessionMenuButton.getBoundingClientRect().bottom;
+        const top = `${y.toFixed(0)}px`;
+
+        WindowsSessionMenu.style.right = right;
+        WindowsSessionMenu.style.top = top;
+        WindowsSessionMenu.classList.toggle("open");
+
+        window.addEventListener("click", () => {
+            CloseAllPopupMenus(null);
+        }, { once: true });
+    });
+    WindowsSessionSelect.addEventListener("click", ev => {
+        ev.stopPropagation();
+    });
     WindowsSessionSelect.addEventListener("focus", () => {
         ViewerApp.MessageSender.GetWindowsSessions();
     });
     WindowsSessionSelect.addEventListener("change", () => {
-        ShowMessage("Switching sessions");
+        ShowToast("Switching sessions");
         ViewerApp.MessageSender.ChangeWindowsSession(Number(WindowsSessionSelect.selectedOptions[0].value));
     });
     RecordSessionButton.addEventListener("click", () => {
         RecordSessionButton.classList.toggle("toggled");
         if (RecordSessionButton.classList.contains("toggled")) {
-            RecordSessionButton.innerHTML = `Stop <i class="fas fa-record-vinyl">`;
+            RecordSessionButton.innerHTML = `<i class="fas fa-record-vinyl"> Stop`;
             ViewerApp.SessionRecorder.Start();
         }
         else {
-            RecordSessionButton.innerHTML = `Start <i class="fas fa-record-vinyl">`;
+            RecordSessionButton.innerHTML = `<i class="fas fa-record-vinyl">Record`;
             ViewerApp.SessionRecorder.Stop();
+            ViewerApp.SessionRecorder.DownloadVideo();
         }
-    });
-    DownloadRecordingButton.addEventListener("click", () => {
-        ViewerApp.SessionRecorder.DownloadVideo();
     });
 
     window.addEventListener("keydown", function (e) {
@@ -594,28 +695,4 @@ export function ApplyInputHandlers() {
         }
         UploadFiles(e.dataTransfer.files);
     };
-}
-
-function closeAllHorizontalBars(exceptBarId: string) {
-    HorizontalBars.forEach(x => {
-        if (x.id != exceptBarId) {
-            x.classList.remove('open');
-        }
-    })
-}
-
-function moveMenuButton(ev: MouseEvent) {
-    if (Math.abs(ev.clientY - startMenuDraggingY) > 5) {
-        if (ev.clientY < 0 || ev.clientY > window.innerHeight) {
-            return;
-        }
-        isMenuButtonDragging = true;
-        MenuButton.style.top = `${ev.clientY}px`;
-    }
-}
-
-function removeMouseButtonWindowListeners(ev: MouseEvent) {
-    window.removeEventListener("mousemove", moveMenuButton);
-    window.removeEventListener("mouseup", removeMouseButtonWindowListeners);
-    window.removeEventListener("mouseleave", removeMouseButtonWindowListeners);
 }

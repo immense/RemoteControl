@@ -2,7 +2,7 @@ import * as UI from "./UI.js";
 import { ViewerApp } from "./App.js";
 import { CursorInfo } from "./Models/CursorInfo.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
-import { ShowMessage } from "./UI.js";
+import { ShowToast } from "./UI.js";
 import { WindowsSession } from "./Models/WindowsSession.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { HubConnection } from "./Models/HubConnection.js";
@@ -11,6 +11,7 @@ import { MessagePack } from "./Interfaces/MessagePack.js";
 import { ProcessStream } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
 import { StreamingState } from "./Models/StreamingState.js";
+import { Result } from "./Models/Result.js";
 
 const MsgPack: MessagePack = window["MessagePack"];
 
@@ -20,8 +21,12 @@ export class ViewerHubConnection {
     Connection: HubConnection;
     PartialCaptureFrames: Uint8Array[] = [];
 
- 
+
     Connect() {
+        if (this.Connection) {
+            this.Connection.stop();
+        }
+
         this.Connection = new signalR.HubConnectionBuilder()
             .withUrl("/hubs/viewer")
             .withHubProtocol(new signalR.protocols.msgpack.MessagePackHubProtocol())
@@ -40,6 +45,9 @@ export class ViewerHubConnection {
         });
 
         this.Connection.onclose(() => {
+            if (!UI.StatusMessage.innerText) {
+                UI.SetStatusMessage("Connection closed.");
+            }
             UI.ToggleConnectUI(true);
         });
 
@@ -60,7 +68,7 @@ export class ViewerHubConnection {
         this.Connection.invoke("InvokeCtrlAltDel");
     }
 
-    SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
+    async SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
 
         if (this.Connection?.state != HubConnectionState.Connected) {
             return;
@@ -70,13 +78,19 @@ export class ViewerHubConnection {
 
         for (var i = 0; i < chunks.length; i++) {
             const chunk = MsgPack.encode(chunks[i]);
-            this.Connection.invoke("SendDtoToClient", chunk);
+            await this.Connection.invoke("SendDtoToClient", chunk);
         }
     }
 
 
     async SendScreenCastRequestToDevice() {
-        await this.Connection.invoke("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+        const result = await this.Connection.invoke<Result>("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+        if (!result.IsSuccess) {
+            this.Connection.stop();
+            UI.SetStatusMessage(result.Reason);
+            return;
+        }
+
         const streamingState = new StreamingState();
         ProcessStream(streamingState);
 
@@ -87,15 +101,17 @@ export class ViewerHubConnection {
                 },
                 complete: () => {
                     streamingState.StreamEnded = true;
-                    ShowMessage("Desktop stream ended");
-                    UI.SetStatusMessage("Desktop stream ended");
+                    if (!UI.StatusMessage.innerText) {
+                        UI.SetStatusMessage("Stream ended.");
+                    }
                     UI.ToggleConnectUI(true);
                 },
                 error: (err) => {
                     console.warn(err);
                     streamingState.StreamEnded = true;
-                    ShowMessage("Desktop stream ended");
-                    UI.SetStatusMessage("Desktop stream ended");
+                    if (!UI.StatusMessage.innerText) {
+                        UI.SetStatusMessage("Stream ended.");
+                    }
                     UI.ToggleConnectUI(true);
                 },
             });
@@ -110,36 +126,29 @@ export class ViewerHubConnection {
 
         hubConnection.on("ConnectionFailed", () => {
             UI.ConnectButton.removeAttribute("disabled");
+            UI.ConnectButton.innerText = "Connect";
             UI.SetStatusMessage("Connection failed or was denied.");
-            ShowMessage("Connection failed.  Please reconnect.");
+            ShowToast("Connection failed.  Please reconnect.");
             this.Connection.stop();
         });
         hubConnection.on("ReconnectFailed", () => {
-          UI.ConnectButton.removeAttribute("disabled");
-          UI.SetStatusMessage("Unable to reconnect.");
-          ShowMessage("Unable to reconnect.");
-          this.Connection.stop();
+            UI.ConnectButton.removeAttribute("disabled");
+            UI.ConnectButton.innerText = "Connect";
+            UI.SetStatusMessage("Unable to reconnect.");
+            ShowToast("Unable to reconnect.");
+            this.Connection.stop();
         });
         hubConnection.on("ConnectionRequestDenied", () => {
+            UI.ConnectButton.innerText = "Connect";
             this.Connection.stop();
             UI.SetStatusMessage("Connection request denied.");
-            ShowMessage("Connection request denied.");
-        });
-        hubConnection.on("Unauthorized", () => {
-            UI.ConnectButton.removeAttribute("disabled");
-            UI.SetStatusMessage("Authorization failed.");
-            ShowMessage("Authorization failed.");
-            this.Connection.stop();
+            ShowToast("Connection request denied.");
         });
         hubConnection.on("ViewerRemoved", () => {
             UI.ConnectButton.removeAttribute("disabled");
+            UI.ConnectButton.innerText = "Connect";
             UI.SetStatusMessage("The session was stopped by your partner.");
-            ShowMessage("Session ended.");
-            this.Connection.stop();
-        });
-        hubConnection.on("SessionIDNotFound", () => {
-            UI.ConnectButton.removeAttribute("disabled");
-            UI.SetStatusMessage("Session ID not found.");
+            ShowToast("Session ended");
             this.Connection.stop();
         });
         hubConnection.on("ScreenCasterDisconnected", () => {
@@ -152,22 +161,18 @@ export class ViewerHubConnection {
                 `?mode=Unattended&sessionId=${newSessionId}&accessKey=${newAccessKey}&viewOnly=${ViewerApp.ViewOnlyMode}`;
             location.assign(newUrl);
         });
-      
+
         hubConnection.on("Reconnecting", () => {
-            ShowMessage("Reconnecting");
+            UI.SetStatusMessage("Reconnecting");
+            ShowToast("Reconnecting");
         });
 
         hubConnection.on("CursorChange", (cursor: CursorInfo) => {
             UI.UpdateCursor(cursor.ImageBytes, cursor.HotSpot.X, cursor.HotSpot.Y, cursor.CssOverride);
         });
 
-        hubConnection.on("RequestingScreenCast", () => {
-            UI.SetStatusMessage("Requesting remote control");
-            ShowMessage("Requesting remote control");
-        });
-
         hubConnection.on("ShowMessage", (message: string) => {
-            ShowMessage(message);
+            ShowToast(message);
             UI.SetStatusMessage(message);
         });
         hubConnection.on("WindowsSessions", (windowsSessions: Array<WindowsSession>) => {

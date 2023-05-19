@@ -5,7 +5,7 @@ export type HubConnection = {
     start: () => Promise<any>;
     onclose: (callback: () => any) => any;
     state: HubConnectionState;
-    invoke: (...rest) => any;
-    stop: () => any;
+    invoke<T = void>(...rest): Promise<T>;
+    stop(): Promise<void>;
     stream<T = any>(methodName: string, ...args: any[]): IStreamResult<T>;
 }

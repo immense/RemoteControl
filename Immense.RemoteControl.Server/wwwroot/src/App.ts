@@ -46,29 +46,33 @@ export const ViewerApp = {
         }
 
         if (ViewerApp.Mode == RemoteControlMode.Unattended) {
+            // Ctrl+Alt+Del only works when screen caster is launched from
+            // a service (i.e. unattended mode).
+            UI.CtrlAltDelButton.classList.remove("d-none");
+            UI.WindowsSessionMenuButton.classList.remove("d-none");
             ViewerApp.ViewerHubConnection.Connect();
             UI.StatusMessage.innerHTML = "Connecting to remote device";
         }
         else {
-            UI.ConnectBox.style.removeProperty("display");
             UI.SessionIDInput.value = ViewerApp.SessionId;
             UI.RequesterNameInput.value = ViewerApp.RequesterName;
+            UI.ToggleConnectUI(true);
         }
     },
     ConnectToClient: () => {
         ViewerApp.SessionId = UI.SessionIDInput.value.split(" ").join("").trim();
 
         if (!ViewerApp.SessionId) {
-            UI.ShowMessage("Session ID is required");
+            UI.ShowToast("Session ID is required");
             UI.SetStatusMessage("Session ID is required.");
             return;
         }
 
         UI.ConnectButton.disabled = true;
+        UI.ConnectButton.innerText = "Requesting remote control";
         ViewerApp.RequesterName = UI.RequesterNameInput.value;
         ViewerApp.Mode = RemoteControlMode.Attended;
         ViewerApp.ViewerHubConnection.Connect();
-        UI.StatusMessage.innerHTML = "Requesting access on remote device";
 
         ViewerApp.Settings.displayName = ViewerApp.RequesterName;
         SetSettings(ViewerApp.Settings);

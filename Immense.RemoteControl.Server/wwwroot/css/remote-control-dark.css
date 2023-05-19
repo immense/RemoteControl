@@ -1,79 +1,86 @@
 ﻿body {
-    background-color: #222;
-    color: #888888;
-}
-
-button {
-    background-color: rgb(40,40,40);
+    background-color: #151718;
+    background-image: radial-gradient(#fafafa 1%, transparent 2.6%);
     color: white;
 }
 
-
-button:hover {
-    background-color: rgb(100,100,100);
+.background-layer-1 {
+    background-image: radial-gradient(#fafafa 1%, transparent 2.8%);
+    background-color: black;
 }
 
-button:active {
-    background-color: rgb(80,80,80);
+.background-layer-2 {
+    background-image: url("../images/viewer-background-gradient-dark.svg");
 }
 
-button.toggled {
-    background-color: rgb(220, 220, 220);
-    color: black;
+.center-connection-box {
+    background-color: #151718;
 }
 
-button[disabled] {
-    background-color: rgb(90,90,90);
-    color: gray;
+input, select {
+    background-color: #0D0D0D;
+    border-color: #323334;
+    color: white;
 }
 
+    input:focus, select:focus {
+        border-color: white;
+    }
+
+button {
+    background-color: #212526;
+    border: 1px solid #212526;
+    color: #FFFFFF;
+}
+
+    button.toggled {
+        background-color: #16191a;
+        border: 1px solid #16191a;
+        color: #07b5a4;
+    }
+
+    button:hover {
+        border: 1px solid #384346;
+    }
+
+    button:active {
+        border: 1px solid #009888;
+    }
+    button:disabled {
+        /* background-color: #555555;
+        color: #dedede;*/
+        background-color: #152826;
+        color: #01EAD1;
+        cursor: no-drop;
+        border: none;
+    }
+
+.bg-primary {
+    background-color: #01EAD1;
+}
 
 .menu-options-header {
     color: lightgray;
 }
 
 #menuButton {
-    color: gray;
-    background-color: rgb(50,50,50);
+    color: #01EAD1;
+    background-color: #212526;
 }
-#menuButton:hover {
-    color: white;
-}
+
+    #menuButton:hover {
+        color: #33ffe9;
+    }
 
 
 #menuFrame {
-    position: absolute;
     color: white;
-    left: 0;
-    top: 0;
-    height: 100%;
-    background-color: rgb(50,50,50);
-    width: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    text-align: center;
-    opacity: 0;
-    z-index: 3;
-    transition: .5s ease all;
+    background-color: #212526;
 }
 
-.horizontal-button-bar {
-    background-color: rgb(90, 90, 90);
-}
-
-
-.center-connection-box {
-    background-color: rgb(60, 60, 60);
+.popup-menu {
     color: white;
-}
-
-
-.logo-subtitle {
-    color: deepskyblue;
-}
-
-.logo-title {
-    color: white;
+    background-color: #212526;
 }
 
 
@@ -88,19 +95,11 @@ footer a {
 }
 
 .toast-message {
-    background-color: rgb(50, 50, 50);
+    background-color: #151718;
     color: white;
 }
 
 .modal-prompt {
     background-color: rgb(60, 60, 60);
     color: white;
-}
-
-#connectionRelayedIcon {
-    background-color: orange;
-}
-
-#connectionP2PIcon {
-    background-color: green;
 }
