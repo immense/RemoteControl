@@ -164,13 +164,11 @@ button {
     text-align: center;
     height: 0;
     z-index: 3;
-    transition: .3s ease all;
 }
 
     #menuFrame.open {
         padding-left: 10px;
         height: auto;
-        transition: .3s ease all;
     }
 
     #menuFrame #disconnectButton {
@@ -274,13 +272,7 @@ button {
 
 
 #keyboardButton {
-    position: fixed;
-    top: 5px;
-    left: 50%;
-    transform: translateX(40px);
-    z-index: 6;
-    font-size: 1.2em;
-    padding: 4px 7px;
+    height: 30px;
 }
 
 

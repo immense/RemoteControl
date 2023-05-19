@@ -282,8 +282,6 @@ export function ApplyInputHandlers() {
         CloseAllPopupMenus(null);
         TouchKeyboardTextArea.focus();
         TouchKeyboardTextArea.setSelectionRange(TouchKeyboardTextArea.value.length, TouchKeyboardTextArea.value.length);
-        MenuFrame.classList.remove("open");
-        MenuButton.classList.remove("open");
     });
     MenuButton.addEventListener("click", (ev) => {
         MenuFrame.classList.toggle("open");
@@ -403,7 +401,6 @@ export function ApplyInputHandlers() {
             lastPinchCenterY = (startPinchPoint1.Y + startPinchPoint2.Y) / 2;
         }
         isDragging = false;
-        KeyboardButton.removeAttribute("hidden");
         var focusedInput = document.querySelector("input:focus") as HTMLInputElement;
         if (focusedInput) {
             focusedInput.blur();
@@ -681,7 +678,7 @@ export function ApplyInputHandlers() {
     });
 
     window.addEventListener("touchstart", () => {
-        KeyboardButton.removeAttribute("hidden");
+        KeyboardButton.classList.remove("d-none");
     });
 
     window.ondragover = function (e) {
