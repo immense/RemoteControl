@@ -46,18 +46,6 @@ button {
     button:active {
         border: 1px solid #009888;
     }
-    button:disabled {
-        /* background-color: #555555;
-        color: #dedede;*/
-        background-color: #152826;
-        color: #01EAD1;
-        cursor: no-drop;
-        border: none;
-    }
-
-.bg-primary {
-    background-color: #01EAD1;
-}
 
 .menu-options-header {
     color: lightgray;
@@ -84,8 +72,21 @@ button {
 }
 
 #connectButton {
-    color: black !important;
+    color: black;
+    background-color: #01EAD1;
 }
+
+    #connectButton:disabled {
+        background-color: #152826;
+        color: #01EAD1;
+        cursor: no-drop;
+        border: none;
+    }
+
+    #connectButton:active {
+        border: 1px solid #009888;
+        background-color: #01ad9b;
+    }
 
 footer a {
     color: deepskyblue;
