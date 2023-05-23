@@ -1,6 +1,7 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Shared.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
@@ -11,6 +12,7 @@ public class ShutdownServiceWin : IShutdownService
     private readonly IWindowsUiDispatcher _dispatcher;
     private readonly IAppState _appState;
     private readonly ILogger<ShutdownServiceWin> _logger;
+    private readonly SemaphoreSlim _shutdownLock = new(1, 1);
 
     public ShutdownServiceWin(
         IDesktopHubConnection hubConnection,
@@ -26,25 +28,38 @@ public class ShutdownServiceWin : IShutdownService
 
     public async Task Shutdown()
     {
+        using var _ = _logger.Enter(LogLevel.Information);
+
         try
         {
-            _logger.LogInformation("Exiting process ID {procId}.", Environment.ProcessId);
+            if (!await _shutdownLock.WaitAsync(0))
+            {
+                // We've made our best effort to shutdown gracefully, but WPF will
+                // sometimes hang indefinitely.  In that case, we'll forcefully close.
+                _logger.LogInformation(
+                    "Shutdown was called more than once. Forcing process exit.");
+                Environment.FailFast("Process hung during shutdown. Forcefully quitting on second call.");
+                return;
+            }
+
+            _logger.LogInformation("Starting process shutdown.");
+
+            _logger.LogInformation("Disconnecting viewers.");
             await TryDisconnectViewers();
-            Application.Exit();
-            try
-            {
-                _dispatcher.InvokeWpf(_dispatcher.CurrentApp.Shutdown);
-            }
-            // This is expected to happen sometimes.
-            catch (TaskCanceledException)
-            {
-                Environment.Exit(0);
-            }
+
+            _logger.LogInformation("Shutting down UI dispatchers.");
+            await _dispatcher.Shutdown();
+
+            Environment.Exit(0);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while shutting down.");
             Environment.Exit(1);
+        }
+        finally
+        {
+            _shutdownLock.Release();
         }
     }
 

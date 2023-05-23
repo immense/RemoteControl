@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using System.Diagnostics;
 using Application = System.Windows.Application;
 using Nihs.SimpleMessenger;
+using System.Windows.Threading;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.Services;
 
@@ -17,8 +18,12 @@ public interface IWindowsUiDispatcher
 
     void InvokeWpf(Action action);
     T? InvokeWpf<T>(Func<T> func);
+    void InvokeWpf(Action action, TimeSpan timeout);
+
     Task InvokeWpfAsync(Action action);
     Task<Result<T>> InvokeWpfAsync<T>(Func<T> func);
+    Task InvokeWpfAsync(Action action, TimeSpan timeout);
+    Task Shutdown();
     void StartWinFormsThread();
     Task<bool> StartWpfThread();
 }
@@ -27,8 +32,8 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
 {
     private readonly CancellationTokenSource _appExitCts = new();
     private readonly ManualResetEvent _initSignal = new(false);
-    private readonly IMessenger _messenger;
     private readonly ILogger<WindowsUiDispatcher> _logger;
+    private readonly IMessenger _messenger;
     private Form? _backgroundForm;
     private Thread? _winformsThread;
     private Application? _wpfApp;
@@ -67,6 +72,12 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
         _wpfApp?.Dispatcher.Invoke(action);
     }
 
+    public void InvokeWpf(Action action, TimeSpan timeout)
+    {
+        _initSignal.WaitOne();
+        _wpfApp?.Dispatcher.Invoke(action, timeout);
+    }
+
     public T? InvokeWpf<T>(Func<T> func)
     {
         _initSignal.WaitOne();
@@ -88,6 +99,19 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
         await _wpfApp.Dispatcher.InvokeAsync(action);
     }
 
+    public async Task InvokeWpfAsync(Action action, TimeSpan timeout)
+    {
+        _initSignal.WaitOne();
+        if (_wpfApp is null)
+        {
+            return;
+        }
+
+        using var cts = new CancellationTokenSource(timeout);
+
+        await _wpfApp.Dispatcher.InvokeAsync(action, DispatcherPriority.Normal, cts.Token);
+    }
+
     public async Task<Result<T>> InvokeWpfAsync<T>(Func<T> func)
     {
         _initSignal.WaitOne();
@@ -98,6 +122,33 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
 
         var result = await _wpfApp.Dispatcher.InvokeAsync(func);
         return Result.Ok(result);
+    }
+
+    public async Task Shutdown()
+    {
+        try
+        {
+            _appExitCts.Cancel();
+
+            _logger.LogInformation("Shutting down WinForms thread.");
+            System.Windows.Forms.Application.Exit();
+
+            _logger.LogInformation("Shutting down WPF thread.");
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            // This will still sometimes hang indefinitely, hence the above
+            // Environment.Exit call if the lock is already taken.
+            await CurrentApp.Dispatcher.InvokeAsync(CurrentApp.Shutdown);
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogInformation("Task cancelled. Calling Environment.Exit.");
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogInformation("Timed out while waiting for WPF thread to close. Calling Environment.Exit.");
+        }
     }
 
     public void StartWinFormsThread()
@@ -129,6 +180,7 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
     {
         try
         {
+            // In case this is called from an already-running WPF app.
             if (Application.Current is not null)
             {
                 _wpfApp = Application.Current;
@@ -160,7 +212,7 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
                 };
                 _wpfApp.Run();
             });
-
+            
             _wpfThread.SetApartmentState(ApartmentState.STA);
             _wpfThread.Start();
 
@@ -186,6 +238,8 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
 
     private void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
     {
+        _logger.LogInformation("Session ending.  Reason: {reason}", e.Reason);
+
         var reason = (SessionEndReasonsEx)e.Reason;
         _messenger.Send(new WindowsSessionEndingMessage(reason));
     }

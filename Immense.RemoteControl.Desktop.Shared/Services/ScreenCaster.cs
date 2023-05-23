@@ -10,6 +10,8 @@ using MessagePack;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.IO;
 using System.Diagnostics;
+using Nihs.SimpleMessenger;
+using Immense.RemoteControl.Desktop.Shared.Messages;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -20,17 +22,18 @@ public interface IScreenCaster : IDisposable
 
 internal class ScreenCaster : IScreenCaster
 {
-    private readonly RecyclableMemoryStreamManager _recycleStreams = new();
     private readonly IAppState _appState;
     private readonly ICursorIconWatcher _cursorIconWatcher;
     private readonly IImageHelper _imageHelper;
     private readonly ILogger<ScreenCaster> _logger;
     private readonly CancellationTokenSource _metricsCts = new();
+    private readonly RecyclableMemoryStreamManager _recycleStreams = new();
     private readonly ISessionIndicator _sessionIndicator;
     private readonly IShutdownService _shutdownService;
     private readonly ISystemTime _systemTime;
     private readonly IViewerFactory _viewerFactory;
     private bool _disposedValue;
+    private bool _isWindowsSessionEnding;
 
     public ScreenCaster(
         IAppState appState,
@@ -40,6 +43,7 @@ internal class ScreenCaster : IScreenCaster
         IShutdownService shutdownService,
         IImageHelper imageHelper,
         ISystemTime systemTime,
+        IMessenger messenger,
         ILogger<ScreenCaster> logger)
     {
         _appState = appState;
@@ -50,6 +54,9 @@ internal class ScreenCaster : IScreenCaster
         _systemTime = systemTime;
         _viewerFactory = viewerFactory;
         _logger = logger;
+
+        messenger.Register<WindowsSessionSwitched>(this, HandleWindowsSessionSwitchedMessage);
+        messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEndingMessage);
     }
 
     public async Task BeginScreenCasting(ScreenCastRequest screenCastRequest)
@@ -108,8 +115,6 @@ internal class ScreenCaster : IScreenCaster
                 _sessionIndicator.Show();
             }
 
-            await viewer.SendViewerConnected();
-
             await viewer.SendScreenData(
                 viewer.Capturer.SelectedScreen,
                 viewer.Capturer.GetDisplayNames(),
@@ -144,11 +149,13 @@ internal class ScreenCaster : IScreenCaster
                 "Requester: {viewerName}. " +
                 "Viewer ID: {viewerConnectionID}. " +
                 "Viewer Responsive: {isResponsive}.  " +
-                "Viewer Disconnected Requested: {viewerDisconnectRequested}",
+                "Viewer Disconnected Requested: {viewerDisconnectRequested}. " +
+                "Windows Session Ending: {windowsSessionEnding}",
                 viewer.Name,
                 viewer.ViewerConnectionId,
                 viewer.IsResponsive,
-                viewer.DisconnectRequested);
+                viewer.DisconnectRequested,
+                _isWindowsSessionEnding);
 
             _appState.Viewers.TryRemove(viewer.ViewerConnectionId, out _);
             Disposer.TryDisposeAll(viewer);
@@ -168,7 +175,7 @@ internal class ScreenCaster : IScreenCaster
 
         try
         {
-            while (!viewer.DisconnectRequested && viewer.IsResponsive)
+            while (!viewer.DisconnectRequested && viewer.IsResponsive && !_isWindowsSessionEnding)
             {
                 viewer.IncrementFpsCount();
 
@@ -220,7 +227,7 @@ internal class ScreenCaster : IScreenCaster
                 writer.Write(encodedImageBytes);
 
                 frameStream.Seek(0, SeekOrigin.Begin);
-                
+
                 foreach (var chunk in frameStream.ToArray().Chunk(50_000))
                 {
                     yield return chunk;
@@ -232,6 +239,20 @@ internal class ScreenCaster : IScreenCaster
             sessionEndedSignal.Release();
         }
 
+    }
+
+    private Task HandleWindowsSessionEndingMessage(WindowsSessionEndingMessage arg)
+    {
+        _logger.LogInformation("Windows session ending.  Stopping screen cast.");
+        _isWindowsSessionEnding = true;
+        return Task.CompletedTask;
+    }
+
+    private Task HandleWindowsSessionSwitchedMessage(WindowsSessionSwitched arg)
+    {
+        _logger.LogInformation("Windows session switched.  Stopping screen cast.");
+        _isWindowsSessionEnding = true;
+        return Task.CompletedTask;
     }
 
     private async Task LogMetrics(IViewer viewer, CancellationToken cancellationToken)

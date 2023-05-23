@@ -14,7 +14,6 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
     private readonly ConcurrentQueue<Action> _inputActions = new();
     private readonly IWindowsUiDispatcher _dispatcher;
     private readonly ILogger<KeyboardMouseInputWin> _logger;
-    private CancellationTokenSource? _cancelTokenSource;
     private volatile bool _inputBlocked;
     private Thread? _inputProcessingThread;
 
@@ -42,12 +41,6 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
 
     public void Init()
     {
-        _dispatcher.InvokeWpf(() =>
-        {
-            _dispatcher.CurrentApp.Exit -= App_Exit;
-            _dispatcher.CurrentApp.Exit += App_Exit;
-        });
-
         StartInputProcessingThread();
     }
 
@@ -289,10 +282,6 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         });
     }
 
-    private void App_Exit(object sender, System.Windows.ExitEventArgs e)
-    {
-        _cancelTokenSource?.Cancel();
-    }
     private void CheckQueue(CancellationToken cancelToken)
     {
         while (!cancelToken.IsCancellationRequested)
@@ -310,7 +299,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             }
         }
 
-        _logger.LogInformation("Stopping input processing on thread {threadId}.", Thread.CurrentThread.ManagedThreadId);
+        _logger.LogInformation("Stopping input processing on thread {threadId}.", Environment.CurrentManagedThreadId);
     }
 
     private bool ConvertJavaScriptKeyToVirtualKey(string key, out VirtualKey? result)
@@ -367,23 +356,18 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
     }
     private void StartInputProcessingThread()
     {
-        _cancelTokenSource?.Cancel();
-        _cancelTokenSource?.Dispose();
-
-
         // After BlockInput is enabled, only simulated input coming from the same thread
         // will work.  So we have to start a new thread that runs continuously and
         // processes a queue of input events.
         _inputProcessingThread = new Thread(() =>
         {
             _logger.LogInformation("New input processing thread started on thread {threadId}.", Thread.CurrentThread.ManagedThreadId);
-            _cancelTokenSource = new CancellationTokenSource();
 
             if (_inputBlocked)
             {
                 ToggleBlockInput(true);
             }
-            CheckQueue(_cancelTokenSource.Token);
+            CheckQueue(_dispatcher.ApplicationExitingToken);
         });
 
         _inputProcessingThread.SetApartmentState(ApartmentState.STA);

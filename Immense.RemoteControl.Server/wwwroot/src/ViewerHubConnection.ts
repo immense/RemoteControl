@@ -159,7 +159,10 @@ export class ViewerHubConnection {
             const newUrl =
                 `${location.origin}${location.pathname}` +
                 `?mode=Unattended&sessionId=${newSessionId}&accessKey=${newAccessKey}&viewOnly=${ViewerApp.ViewOnlyMode}`;
-            location.assign(newUrl);
+            window.history.pushState(null, "", newUrl);
+            ViewerApp.SessionId = newSessionId;
+            ViewerApp.AccessKey = newAccessKey;
+            this.SendScreenCastRequestToDevice();
         });
 
         hubConnection.on("Reconnecting", () => {

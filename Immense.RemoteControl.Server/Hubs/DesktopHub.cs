@@ -51,6 +51,21 @@ public class DesktopHub : Hub
         }
     }
 
+    /// <summary>
+    /// Used to signal that the desktop process is expected to shut down
+    /// and viewers should not be notified.
+    /// </summary>
+    private bool ShutdownExpected
+    {
+        get
+        {
+            return Context.Items.TryGetValue(nameof(ShutdownExpected), out var result) &&
+                result is bool typedResult &&
+                typedResult;
+        }
+        set => Context.Items[nameof(ShutdownExpected)] = value;
+    }
+
 
     private HashSet<string> ViewerList => SessionInfo.ViewerList;
 
@@ -64,7 +79,7 @@ public class DesktopHub : Hub
         }
     }
 
-    public string GetSessionID()
+    public async Task<string> GetSessionID()
     {
         using var scope = _logger.BeginScope(nameof(GetSessionID));
 
@@ -86,7 +101,7 @@ public class DesktopHub : Hub
             {
                 break;
             }
-
+            await Task.Yield();
         }
 
         SessionInfo.SetSessionReadyState(true);
@@ -107,13 +122,16 @@ public class DesktopHub : Hub
         return Task.CompletedTask;
     }
 
-    public Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
+    public async Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
     {
-        return _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
+        await _viewerHub.Clients.Clients(ViewerList).SendAsync("ShowMessage", "Changing sessions");
+        ShutdownExpected = true;
+        await _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
     }
 
     public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
     {
+        SessionInfo.DesktopConnectionId = Context.ConnectionId;
         return _viewerHub.Clients.Clients(viewerIDs).SendAsync("RelaunchedScreenCasterReady", SessionInfo.UnattendedSessionId, SessionInfo.AccessKey);
     }
 
@@ -125,24 +143,30 @@ public class DesktopHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        _logger.LogDebug("Desktop app disconnected. Shutdown Expected: {expected}.  Viewer Count: {count}", 
+            ShutdownExpected, 
+            ViewerList.Count);
+
         if (SessionInfo.Mode == RemoteControlMode.Attended)
         {
             _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
             await _viewerHub.Clients.Clients(ViewerList).SendAsync("ScreenCasterDisconnected");
         }
-        else if (SessionInfo.Mode == RemoteControlMode.Unattended)
+        else if (SessionInfo.Mode == RemoteControlMode.Unattended && !ShutdownExpected)
         {
             if (ViewerList.Count > 0)
             {
+                _logger.LogWarning("Screen caster disconnected and shutdown unexpected.  Reconnecting.");
                 await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
                 await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
             }
             else
             {
+                _logger.LogWarning("Screen caster disconnected and shutdown expected.  Removing session.");
                 _sessionCache.Remove($"{SessionInfo.UnattendedSessionId}");
             }
         }
-
+        
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -237,10 +261,5 @@ public class DesktopHub : Hub
                 signaler.Dispose();
             }
         }
-    }
-    public Task ViewerConnected(string viewerConnectionId)
-    {
-        ViewerList.Add(viewerConnectionId);
-        return Task.CompletedTask;
     }
 }

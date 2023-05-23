@@ -34,7 +34,6 @@ public interface IDesktopHubConnection
 
     Task SendMessageToViewer(string viewerID, string message);
     Task<Result> SendUnattendedSessionInfo(string sessionId, string accessKey, string machineName, string requesterName, string organizationName);
-    Task SendViewerConnected(string viewerConnectionId);
 }
 
 public class DesktopHubConnection : IDesktopHubConnection
@@ -282,15 +281,6 @@ public class DesktopHubConnection : IDesktopHubConnection
         return await Connection.InvokeAsync<Result>("ReceiveUnattendedSessionInfo", unattendedSessionId, accessKey, machineName, requesterName, organizationName);
     }
 
-    public Task SendViewerConnected(string viewerConnectionId)
-    {
-        if (Connection is null)
-        {
-            return Task.CompletedTask;
-        }
-
-        return Connection.SendAsync("ViewerConnected", viewerConnectionId);
-    }
 
     private void ApplyConnectionHandlers(HubConnection connection)
     {

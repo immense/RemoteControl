@@ -8,8 +8,6 @@ using Immense.RemoteControl.Desktop.Shared.ViewModels;
 using Microsoft.AspNetCore.SignalR.Client;
 using Immense.RemoteControl.Shared.Services;
 using Immense.RemoteControl.Desktop.Native.Windows;
-using System.Diagnostics;
-using System.Threading.Channels;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -38,7 +36,6 @@ public interface IViewer : IDisposable
     Task SendScreenData(string selectedDisplay, IEnumerable<string> displayNames, int screenWidth, int screenHeight);
     Task SendScreenSize(int width, int height);
     Task SendSessionMetrics(SessionMetricsDto metrics);
-    Task SendViewerConnected();
     Task SendWindowsSessions();
     void SetLastFrameReceived(DateTimeOffset timestamp);
     Task<bool> WaitForViewer();
@@ -256,11 +253,6 @@ public class Viewer : IViewer
     public async Task SendSessionMetrics(SessionMetricsDto metrics)
     {
         await TrySendToViewer(metrics, DtoType.SessionMetrics, ViewerConnectionId);
-    }
-
-    public async Task SendViewerConnected()
-    {
-        await _desktopHubConnection.SendViewerConnected(ViewerConnectionId);
     }
 
     public async Task SendWindowsSessions()
