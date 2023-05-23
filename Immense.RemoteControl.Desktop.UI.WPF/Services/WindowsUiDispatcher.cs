@@ -249,6 +249,6 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
         _logger.LogInformation("Session changing.  Reason: {reason}", e.Reason);
 
         var reason = (SessionSwitchReasonEx)(int)e.Reason;
-        _messenger.Send(new WindowsSessionSwitched(reason, Process.GetCurrentProcess().SessionId));
+        _messenger.Send(new WindowsSessionSwitchedMessage(reason, Process.GetCurrentProcess().SessionId));
     }
 }

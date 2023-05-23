@@ -2,9 +2,9 @@
 
 namespace Immense.RemoteControl.Desktop.Shared.Messages;
 
-public class WindowsSessionSwitched
+public class WindowsSessionSwitchedMessage
 {
-    public WindowsSessionSwitched(SessionSwitchReasonEx reason, int sessionId)
+    public WindowsSessionSwitchedMessage(SessionSwitchReasonEx reason, int sessionId)
     {
         Reason = reason;
         SessionId = sessionId;

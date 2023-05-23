@@ -60,7 +60,7 @@ public class DesktopHubConnection : IDesktopHubConnection
         _logger = logger;
 
         messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEnding);
-        messenger.Register<WindowsSessionSwitched>(this, HandleWindowsSessionChanged);
+        messenger.Register<WindowsSessionSwitchedMessage>(this, HandleWindowsSessionChanged);
     }
 
     public HubConnection? Connection { get; private set; }
@@ -397,7 +397,7 @@ public class DesktopHubConnection : IDesktopHubConnection
         }
     }
 
-    private async Task HandleWindowsSessionChanged(WindowsSessionSwitched message)
+    private async Task HandleWindowsSessionChanged(WindowsSessionSwitchedMessage message)
     {
         await NotifySessionChanged(message.Reason, message.SessionId);
     }

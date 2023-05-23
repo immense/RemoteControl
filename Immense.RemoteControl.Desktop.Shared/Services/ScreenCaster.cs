@@ -55,7 +55,7 @@ internal class ScreenCaster : IScreenCaster
         _viewerFactory = viewerFactory;
         _logger = logger;
 
-        messenger.Register<WindowsSessionSwitched>(this, HandleWindowsSessionSwitchedMessage);
+        messenger.Register<WindowsSessionSwitchedMessage>(this, HandleWindowsSessionSwitchedMessage);
         messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEndingMessage);
     }
 
@@ -248,7 +248,7 @@ internal class ScreenCaster : IScreenCaster
         return Task.CompletedTask;
     }
 
-    private Task HandleWindowsSessionSwitchedMessage(WindowsSessionSwitched arg)
+    private Task HandleWindowsSessionSwitchedMessage(WindowsSessionSwitchedMessage arg)
     {
         _logger.LogInformation("Windows session switched.  Stopping screen cast.");
         _isWindowsSessionEnding = true;
