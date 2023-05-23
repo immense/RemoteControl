@@ -178,10 +178,18 @@ public class DesktopHub : Hub
 
     public Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
     {
-        if (_sessionCache.TryGetValue($"{unattendedSessionId}", out var sessionInfo))
+        if (_sessionCache.TryGetValue($"{unattendedSessionId}", out var existingSession) &&
+            !string.IsNullOrWhiteSpace(existingSession.AccessKey) &&
+            accessKey != existingSession.AccessKey)
         {
-            SessionInfo = sessionInfo;
+            _logger.LogWarning(
+                "A desktop session tried to take over an existing session, " +
+                "but the access key didn't match.");
+            var result = Result.Fail("SessionId already exists on the server.");
+            return Task.FromResult(result);
         }
+
+        SessionInfo = _sessionCache.GetOrAdd($"{unattendedSessionId}", (key) => SessionInfo);
 
         SessionInfo.Mode = RemoteControlMode.Unattended;
         SessionInfo.DesktopConnectionId = Context.ConnectionId;
@@ -191,24 +199,6 @@ public class DesktopHub : Hub
         SessionInfo.MachineName = machineName;
         SessionInfo.RequesterName = requesterName;
         SessionInfo.OrganizationName = organizationName;
-
-        if (_sessionCache.TryGetValue($"{unattendedSessionId}", out var existingSession) &&
-            accessKey != SessionInfo.AccessKey)
-        {
-            _logger.LogWarning("A desktop session tried to connect, but the access key didn't match.");
-            var result = Result.Fail("SessionId already exists on the server.");
-            return Task.FromResult(result);
-        }
-
-        SessionInfo = _sessionCache.AddOrUpdate($"{unattendedSessionId}", SessionInfo, (k, v) =>
-        {
-            v.DesktopConnectionId = Context.ConnectionId;
-            v.StartTime = DateTimeOffset.Now;
-            v.MachineName = machineName;
-            v.RequesterName = requesterName;
-            v.OrganizationName = organizationName;
-            return v;
-        });
 
         return Task.FromResult(Result.Ok());
     }

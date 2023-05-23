@@ -15,6 +15,7 @@ public interface IDesktopHubSessionCache
         string sessionId,
         RemoteControlSession session,
         Func<string, RemoteControlSession, RemoteControlSession> updateFactory);
+    RemoteControlSession GetOrAdd(string sessionId, Func<string, RemoteControlSession> valueFactory);
     void Remove(string sessionId);
     Task RemoveExpiredSessions();
     bool TryAdd(string sessionId, RemoteControlSession session);
@@ -53,6 +54,11 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
         Func<string, RemoteControlSession, RemoteControlSession> updateFactory)
     {
         return _sessions.AddOrUpdate(sessionId, session, updateFactory);
+    }
+
+    public RemoteControlSession GetOrAdd(string sessionId, Func<string, RemoteControlSession> valueFactory)
+    {
+        return _sessions.GetOrAdd(sessionId, valueFactory);
     }
 
     public void Remove(string sessionId)
