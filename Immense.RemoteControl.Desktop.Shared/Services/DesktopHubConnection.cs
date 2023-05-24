@@ -76,8 +76,12 @@ public class DesktopHubConnection : IDesktopHubConnection
                 return Result.Fail<TimeSpan>("Connection is not yet established.");
             }
             var sw = Stopwatch.StartNew();
-            _ = await Connection.InvokeAsync<string>("PingViewer", viewerConnectionId);
-            return Result.Ok(sw.Elapsed);
+            var result = await Connection.InvokeAsync<Result<string>>("PingViewer", viewerConnectionId);
+            if (result.IsSuccess)
+            {
+                return Result.Ok(sw.Elapsed);
+            }
+            return Result.Fail<TimeSpan>("Latency check failed.");
         }
         catch (Exception ex)
         {

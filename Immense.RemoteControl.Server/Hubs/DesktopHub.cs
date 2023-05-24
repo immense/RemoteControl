@@ -156,13 +156,11 @@ public class DesktopHub : Hub
         {
             if (ViewerList.Count > 0)
             {
-                _logger.LogWarning("Screen caster disconnected and shutdown unexpected.  Reconnecting.");
                 await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
                 await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
             }
             else
             {
-                _logger.LogWarning("Screen caster disconnected and shutdown expected.  Removing session.");
                 _sessionCache.Remove($"{SessionInfo.UnattendedSessionId}");
             }
         }
@@ -170,10 +168,19 @@ public class DesktopHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task<string> PingViewer(string viewerConnectionId)
+    public async Task<Result<string>> PingViewer(string viewerConnectionId)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        return await _viewerHub.Clients.Client(viewerConnectionId).InvokeAsync<string>("PingViewer", cts.Token);
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var response = await _viewerHub.Clients.Client(viewerConnectionId).InvokeAsync<string>("PingViewer", cts.Token);
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to ping viewer with connection ID {connectionId}.", viewerConnectionId);
+            return Result.Fail<string>("Failed to ping viewer.");
+        }
     }
 
     public Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
