@@ -55,7 +55,9 @@ var isPinchZooming: boolean;
 var startPinchPoint1: Point;
 var startPinchPoint2: Point;
 var lastPinchDistance: number;
-var startLongPressTimeout: number;
+var longPressStarted: boolean;
+var longPressStartOffsetX: number;
+var longPressStartOffsetY: number;
 var lastPinchCenterX: number;
 var lastPinchCenterY: number;
 var isScrolling: boolean;
@@ -372,19 +374,6 @@ export function ApplyInputHandlers() {
     ScreenViewer.addEventListener("touchstart", function (e: TouchEvent) {
         currentTouchCount = e.touches.length;
 
-        if (currentTouchCount == 1) {
-            startLongPressTimeout = window.setTimeout(() => {
-                if (ViewerApp.ViewOnlyMode) {
-                    return;
-                }
-
-                var percentX = e.touches[0].pageX / ScreenViewer.clientWidth;
-                var percentY = e.touches[0].pageY / ScreenViewer.clientHeight;
-                ViewerApp.MessageSender.SendMouseDown(2, percentX, percentY);
-                ViewerApp.MessageSender.SendMouseUp(2, percentX, percentY);
-            }, 1000);
-        }
-
         if (currentTouchCount > 1) {
             cancelNextViewerClick = true;
         }
@@ -411,7 +400,29 @@ export function ApplyInputHandlers() {
     ScreenViewer.addEventListener("touchmove", function (e: TouchEvent) {
         currentTouchCount = e.touches.length;
 
-        clearTimeout(startLongPressTimeout);
+        if (e.touches.length == 1 && longPressStarted && !isDragging) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const rect = ScreenViewer.getBoundingClientRect();
+            const offsetX = e.touches[0].pageX - rect.left;
+            const offsetY = e.touches[0].pageY - rect.top;
+
+            const moveDistance = GetDistanceBetween(
+                longPressStartOffsetX,
+                longPressStartOffsetY,
+                offsetX,
+                offsetY);
+
+            if (moveDistance > 5) {
+                isDragging = true;
+                const percentX = (e.touches[0].pageX - ScreenViewer.getBoundingClientRect().left) / ScreenViewer.clientWidth;
+                const percentY = (e.touches[0].pageY - ScreenViewer.getBoundingClientRect().top) / ScreenViewer.clientHeight;
+                ViewerApp.MessageSender.SendMouseMove(percentX, percentY);
+                ViewerApp.MessageSender.SendMouseDown(0, percentX, percentY);
+                return;
+            }
+        }
 
         if (e.touches.length == 2) {
             let touchMove1 = lastScrollTouchY1 - e.touches[0].pageY;
@@ -518,21 +529,6 @@ export function ApplyInputHandlers() {
     ScreenViewer.addEventListener("touchend", function (e: TouchEvent) {
         currentTouchCount = e.touches.length;
 
-        clearTimeout(startLongPressTimeout);
-
-        if (e.touches.length == 1 && !isPinchZooming && !isScrolling) {
-            if (ViewerApp.ViewOnlyMode) {
-                return;
-            }
-
-            isDragging = true;
-            var percentX = (e.touches[0].pageX - ScreenViewer.getBoundingClientRect().left) / ScreenViewer.clientWidth;
-            var percentY = (e.touches[0].pageY - ScreenViewer.getBoundingClientRect().top) / ScreenViewer.clientHeight;
-            ViewerApp.MessageSender.SendMouseMove(percentX, percentY);
-            ViewerApp.MessageSender.SendMouseDown(0, percentX, percentY);
-            return;
-        }
-
         if (currentTouchCount == 0) {
             cancelNextViewerClick = false;
             isPinchZooming = false;
@@ -543,22 +539,32 @@ export function ApplyInputHandlers() {
             startPinchPoint2 = null;
         }
 
-        if (isDragging) {
-            if (ViewerApp.ViewOnlyMode) {
-                return;
-            }
+        var percentX = (e.changedTouches[0].pageX - ScreenViewer.getBoundingClientRect().left) / ScreenViewer.clientWidth;
+        var percentY = (e.changedTouches[0].pageY - ScreenViewer.getBoundingClientRect().top) / ScreenViewer.clientHeight;
 
-            var percentX = (e.changedTouches[0].pageX - ScreenViewer.getBoundingClientRect().left) / ScreenViewer.clientWidth;
-            var percentY = (e.changedTouches[0].pageY - ScreenViewer.getBoundingClientRect().top) / ScreenViewer.clientHeight;
+        if (longPressStarted && !isDragging && !ViewerApp.ViewOnlyMode) {
+            ViewerApp.MessageSender.SendMouseDown(2, percentX, percentY);
+            ViewerApp.MessageSender.SendMouseUp(2, percentX, percentY);
+        }
+
+
+        if (isDragging && !ViewerApp.ViewOnlyMode) {
             ViewerApp.MessageSender.SendMouseUp(0, percentX, percentY);
         }
 
+        longPressStarted = false;
         isDragging = false;
     });
 
 
     ScreenViewer.addEventListener("contextmenu", (ev) => {
         ev.preventDefault();
+        
+        if (currentPointerDevice == "touch") {
+            longPressStarted = true;
+            longPressStartOffsetX = ev.offsetX;
+            longPressStartOffsetY = ev.offsetY;
+        }
     });
 
     ScreenViewer.addEventListener("wheel", function (e: WheelEvent) {
