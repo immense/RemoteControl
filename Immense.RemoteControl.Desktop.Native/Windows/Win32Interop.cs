@@ -22,7 +22,7 @@ public class Win32Interop
         sessions.Add(new WindowsSession()
         {
             Id = consoleSessionId,
-            Type = SessionType.Console,
+            Type = WindowsSessionType.Console,
             Name = "Console",
             Username = GetUsernameFromSessionId(consoleSessionId)
         });
@@ -51,7 +51,7 @@ public class Win32Interop
                     {
                         Id = sessionInfo.SessionID,
                         Name = sessionInfo.pWinStationName,
-                        Type = SessionType.RDP,
+                        Type = WindowsSessionType.RDP,
                         Username = GetUsernameFromSessionId(sessionInfo.SessionID)
                     });
                 }
