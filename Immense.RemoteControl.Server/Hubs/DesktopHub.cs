@@ -242,21 +242,21 @@ public class DesktopHub : Hub
 
     public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
     {
-        var session = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));
-        session.DesktopConnectionId = Context.ConnectionId;
+        using var signaler = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));
+        signaler.DesktopConnectionId = Context.ConnectionId;
 
         try
         {
-            session.Stream = stream;
-            session.ReadySignal.Release();
-            await session.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+            signaler.Stream = stream;
+            signaler.ReadySignal.Release();
+
+            await _hubEvents.NotifyRemoteControlStarted(SessionInfo);
+            await signaler.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+            await _hubEvents.NotifyRemoteControlEnded(SessionInfo);
         }
         finally
         {
-            if (_streamCache.TryRemove(session.StreamId, out var signaler))
-            {
-                signaler.Dispose();
-            }
+            _ = _streamCache.TryRemove(signaler.StreamId, out _);
         }
     }
 }

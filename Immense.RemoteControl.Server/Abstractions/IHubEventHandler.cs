@@ -38,6 +38,20 @@ public interface IHubEventHandler
     Task InvokeCtrlAltDel(RemoteControlSession session, string viewerConnectionId);
 
     /// <summary>
+    /// This is called when a remote control session ends.
+    /// </summary>
+    /// <param name="sessionInfo"></param>
+    /// <returns></returns>
+    Task NotifyRemoteControlEnded(RemoteControlSession sessionInfo);
+
+    /// <summary>
+    /// This is called when a remote control session starts.
+    /// </summary>
+    /// <param name="sessionInfo"></param>
+    /// <returns></returns>
+    Task NotifyRemoteControlStarted(RemoteControlSession sessionInfo);
+
+    /// <summary>
     /// This is called when the Windows session has changed for an active remote control session.
     /// </summary>
     /// <param name="sessionInfo"></param>
