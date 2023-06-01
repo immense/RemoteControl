@@ -139,6 +139,7 @@ export function ToggleConnectUI(shown: boolean) {
         AudioButton.classList.remove("toggled");
         WorkAreaGrid.style.display = "none";
         BackgroundLayers.classList.remove("d-none");
+        CloseAllPopupMenus(null);
     }
     else {
         ConnectBox.style.display = "none";
