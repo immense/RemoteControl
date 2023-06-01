@@ -5,8 +5,8 @@ namespace Immense.RemoteControl.Desktop.Native.DataStructures;
 [DataContract]
 public enum WindowsSessionType
 {
-    Console = 0,
-    RDP = 1
+    Console = 1,
+    RDP = 2
 }
 
 [DataContract]
