@@ -107,6 +107,11 @@ public class ViewerHub : Hub
             yield break;
         }
 
+        // At this point, if RequireConsent is enabled, the user has accepted the request.
+        // We can turn it off for the remainder of the session so that reconnects and session
+        // switches can happen without re-prompting.
+        SessionInfo.RequireConsent = false;
+
         try
         {
             await foreach (var chunk in signaler.Stream)
