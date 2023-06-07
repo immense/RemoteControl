@@ -27,7 +27,7 @@ internal class RemoteControlServerBuilder : IRemoteControlServerBuilder
     public void AddHubEventHandler<T>() 
         where T : class, IHubEventHandler
     {
-        _services.AddScoped<IHubEventHandler, T>();
+        _services.AddSingleton<IHubEventHandler, T>();
     }
 
     public void AddViewerAuthorizer<T>() 

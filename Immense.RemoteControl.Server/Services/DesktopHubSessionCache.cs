@@ -1,3 +1,4 @@
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,8 @@ public interface IDesktopHubSessionCache
         string sessionId,
         RemoteControlSession session,
         Func<string, RemoteControlSession, RemoteControlSession> updateFactory);
+
     RemoteControlSession GetOrAdd(string sessionId, Func<string, RemoteControlSession> valueFactory);
-    void Remove(string sessionId);
     Task RemoveExpiredSessions();
     bool TryAdd(string sessionId, RemoteControlSession session);
 
@@ -27,14 +28,16 @@ public interface IDesktopHubSessionCache
 internal class DesktopHubSessionCache : IDesktopHubSessionCache
 {
     private static readonly ConcurrentDictionary<string, RemoteControlSession> _sessions = new();
+    private readonly IHubEventHandler _hubEventHandler;
     private readonly ILogger<DesktopHubSessionCache> _logger;
     private readonly ISystemTime _systemTime;
-
     public DesktopHubSessionCache(
         ISystemTime systemTime,
+        IHubEventHandler hubEventHandler,
         ILogger<DesktopHubSessionCache> logger)
     {
         _systemTime = systemTime;
+        _hubEventHandler = hubEventHandler;
         _logger = logger;
     }
 
@@ -53,20 +56,31 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
         RemoteControlSession session, 
         Func<string, RemoteControlSession, RemoteControlSession> updateFactory)
     {
-        return _sessions.AddOrUpdate(sessionId, session, updateFactory);
+        var added = true;
+
+        var resultSession = _sessions.AddOrUpdate(sessionId, session, (k,v) =>
+        {
+            // If we get into the update factory, then we're not adding a new one.
+            added = false;
+            return updateFactory(k, v);
+        });
+
+        if (added)
+        {
+            NotifySessionAdded(resultSession);
+        }
+
+        return resultSession;
     }
 
     public RemoteControlSession GetOrAdd(string sessionId, Func<string, RemoteControlSession> valueFactory)
     {
-        return _sessions.GetOrAdd(sessionId, valueFactory);
-    }
-
-    public void Remove(string sessionId)
-    {
-        if (_sessions.TryRemove(sessionId, out var session))
+        return _sessions.GetOrAdd(sessionId, (key) =>
         {
-            session.Dispose();
-        }
+            var session = valueFactory(key);
+            NotifySessionAdded(session);
+            return session;
+        });
     }
 
     public Task RemoveExpiredSessions()
@@ -80,6 +94,7 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
                 _logger.LogWarning("Removing expired session: {session}", JsonSerializer.Serialize(session.Value));
                 if (_sessions.TryRemove(session.Key, out var expiredSession))
                 {
+                    NotifySessionRemoved(expiredSession);
                     expiredSession.Dispose();
                 }
             }
@@ -89,7 +104,13 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
 
     public bool TryAdd(string sessionId, RemoteControlSession session)
     {
-        return _sessions.TryAdd(sessionId, session);
+        if (_sessions.TryAdd(sessionId, session))
+        {
+            NotifySessionAdded(session);
+            return true;
+        }
+
+        return false;
     }
 
     public bool TryGetValue(string sessionId, [NotNullWhen(true)] out RemoteControlSession? session)
@@ -101,9 +122,35 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
     {
         if (_sessions.TryRemove(sessionId, out session))
         {
-            session.Dispose();
+            try
+            {
+                NotifySessionRemoved(session);
+                session.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing RemoteControlSession ID {id}.", sessionId);
+            }
+
             return true;
         }
         return false;
+    }
+
+    private void NotifySessionAdded(RemoteControlSession session)
+    {
+        try
+        {
+            _ = _hubEventHandler.NotifyDesktopSessionAdded(session);
+        }
+        catch { } // Ignore errors thrown by consumer.
+    }
+    private void NotifySessionRemoved(RemoteControlSession session)
+    {
+        try
+        {
+            _ = _hubEventHandler.NotifyDesktopSessionRemoved(session);
+        }
+        catch { } // Ignore errors thrown by consumer.
     }
 }
