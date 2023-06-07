@@ -37,7 +37,6 @@ using Result = Immense.RemoteControl.Shared.Result;
 using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Native.Windows;
 using System.Diagnostics.CodeAnalysis;
-using SharpDX.Mathematics.Interop;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
@@ -263,14 +262,6 @@ public class ScreenCapturerWin : IScreenCapturer
                 catch { }
                 return DxCaptureResult.NoAccumulatedFrames(result);
             }
-
-            outputDuplication.GetFrameDirtyRects(0, Array.Empty<RawRectangle>(), out var dirtySize);
-            var dirtyRects = new RawRectangle[dirtySize];
-            outputDuplication.GetFrameDirtyRects(dirtySize, dirtyRects, out _);
-
-            outputDuplication.GetFrameMoveRects(0, Array.Empty<OutputDuplicateMoveRectangle>(), out var movedSize);
-            var movedRects = new OutputDuplicateMoveRectangle[movedSize];
-            outputDuplication.GetFrameMoveRects(movedSize, movedRects, out _);
 
             using Texture2D screenTexture2D = screenResource.QueryInterface<Texture2D>();
             device.ImmediateContext.CopyResource(screenTexture2D, texture2D);
