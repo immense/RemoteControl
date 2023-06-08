@@ -2,11 +2,13 @@ using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Server.Extensions;
 
 namespace Immense.RemoteControl.Server.Abstractions;
 
 /// <summary>
 /// Contains functionality that needs to be implemented outside of the remote control process.
+/// This service will be registered as a singleton within <see cref="RemoteControlServerBuilder"/>.
 /// </summary>
 public interface IHubEventHandler
 {

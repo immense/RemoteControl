@@ -5,12 +5,27 @@ namespace Immense.RemoteControl.Server.Extensions;
 
 public interface IRemoteControlServerBuilder
 {
+    /// <summary>
+    /// Adds your implementation of <see cref="IHubEventHandler"/> to the
+    /// DI container as a singleton.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     void AddHubEventHandler<T>()
         where T : class, IHubEventHandler;
 
+    /// <summary>
+    /// Adds your implementation of <see cref="IViewerAuthorizer"/> to the
+    /// DI container as a scoped service.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     void AddViewerAuthorizer<T>()
         where T : class, IViewerAuthorizer;
 
+    /// <summary>
+    /// Adds your implementation of <see cref="IViewerPageDataProvider"/> to the
+    /// DI container as a scoped service.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     void AddViewerPageDataProvider<T>()
         where T : class, IViewerPageDataProvider;
 }
