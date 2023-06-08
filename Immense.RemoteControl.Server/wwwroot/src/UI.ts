@@ -57,6 +57,7 @@ export var WindowsSessionMenu = document.getElementById("windowsSessionMenu") as
 export var WindowsSessionMenuButton = document.getElementById("windowsSessionMenuButton") as HTMLButtonElement;
 export var MetricsButton = document.getElementById("metricsButton") as HTMLButtonElement;
 export var MetricsFrame = document.getElementById("metricsFrame") as HTMLDivElement;
+export var BetaPillPullDown = document.getElementById("betaPillPullDown") as HTMLDivElement;
 
 export function CloseAllPopupMenus(exceptMenuId: string) {
     PopupMenus.forEach(x => {

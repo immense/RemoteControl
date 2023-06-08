@@ -37,7 +37,8 @@ import {
     WindowsSessionMenu,
     MetricsButton,
     MetricsFrame,
-    SetStatusMessage
+    SetStatusMessage,
+    BetaPillPullDown
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -286,6 +287,13 @@ export function ApplyInputHandlers() {
     MenuButton.addEventListener("click", (ev) => {
         MenuFrame.classList.toggle("open");
         MenuButton.classList.toggle("open");
+
+        if (MenuFrame.classList.contains("open")) {
+            BetaPillPullDown.classList.add("d-none");
+        }
+        else {
+            BetaPillPullDown.classList.remove("d-none");
+        }
         CloseAllPopupMenus(null);
     });
 
