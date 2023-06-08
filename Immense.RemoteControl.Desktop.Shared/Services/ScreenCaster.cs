@@ -195,9 +195,14 @@ internal class ScreenCaster : IScreenCaster
                     continue;
                 }
 
-                var diffArea = viewer.Capturer.GetFrameDiffArea();
+                var changedRegions = result.Value.ChangedRegions;
 
-                if (diffArea.IsEmpty)
+                if (!changedRegions.Any())
+                {
+                    changedRegions = new[] { viewer.Capturer.GetFrameDiffArea() };
+                }
+
+                if (!changedRegions.Any(x => !x.IsEmpty))
                 {
                     await Task.Yield();
                     continue;
@@ -205,32 +210,36 @@ internal class ScreenCaster : IScreenCaster
 
                 viewer.Capturer.CaptureFullscreen = false;
 
-                using var croppedFrame = _imageHelper.CropBitmap(result.Value, diffArea);
-
-                var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
-
-                if (encodedImageBytes.Length == 0)
+                foreach (var region in changedRegions)
                 {
-                    continue;
-                }
+                    var screenCapture = result.Value.ScreenCapture;
+                    using var croppedFrame = _imageHelper.CropBitmap(screenCapture, region);
 
-                viewer.AppendSentFrame(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
+                    var encodedImageBytes = _imageHelper.EncodeBitmap(croppedFrame, SKEncodedImageFormat.Jpeg, viewer.ImageQuality);
 
-                using var frameStream = _recycleStreams.GetStream();
-                using var writer = new BinaryWriter(frameStream);
-                writer.Write(encodedImageBytes.Length);
-                writer.Write(diffArea.Left);
-                writer.Write(diffArea.Top);
-                writer.Write(diffArea.Width);
-                writer.Write(diffArea.Height);
-                writer.Write(DateTimeOffset.Now.ToUnixTimeMilliseconds());
-                writer.Write(encodedImageBytes);
+                    if (encodedImageBytes.Length == 0)
+                    {
+                        continue;
+                    }
 
-                frameStream.Seek(0, SeekOrigin.Begin);
+                    viewer.AppendSentFrame(new SentFrame(encodedImageBytes.Length, _systemTime.Now));
 
-                foreach (var chunk in frameStream.ToArray().Chunk(50_000))
-                {
-                    yield return chunk;
+                    using var frameStream = _recycleStreams.GetStream();
+                    using var writer = new BinaryWriter(frameStream);
+                    writer.Write(encodedImageBytes.Length);
+                    writer.Write(region.Left);
+                    writer.Write(region.Top);
+                    writer.Write(region.Width);
+                    writer.Write(region.Height);
+                    writer.Write(DateTimeOffset.Now.ToUnixTimeMilliseconds());
+                    writer.Write(encodedImageBytes);
+
+                    frameStream.Seek(0, SeekOrigin.Begin);
+
+                    foreach (var chunk in frameStream.ToArray().Chunk(50_000))
+                    {
+                        yield return chunk;
+                    }
                 }
             }
         }

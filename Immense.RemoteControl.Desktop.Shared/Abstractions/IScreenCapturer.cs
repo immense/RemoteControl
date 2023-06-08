@@ -1,4 +1,5 @@
 ﻿using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Models;
 using SkiaSharp;
 using System.Drawing;
 
@@ -17,7 +18,7 @@ public interface IScreenCapturer : IDisposable
 
     Result<SKBitmap> GetImageDiff();
 
-    Result<SKBitmap> GetNextFrame();
+    Result<CapturedFrame> GetNextFrame();
 
     int GetScreenCount();
 

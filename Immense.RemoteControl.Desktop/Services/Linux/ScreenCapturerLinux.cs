@@ -2,6 +2,7 @@ using Immense.RemoteControl.Desktop.Native.Linux;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using System;
@@ -69,7 +70,7 @@ public class ScreenCapturerLinux : IScreenCapturer
         return _imageHelper.GetImageDiff(_currentFrame, _previousFrame);
     }
 
-    public Result<SKBitmap> GetNextFrame()
+    public Result<CapturedFrame> GetNextFrame()
     {
         lock (_screenBoundsLock)
         {
@@ -82,13 +83,13 @@ public class ScreenCapturerLinux : IScreenCapturer
                 }
 
                 _currentFrame = GetX11Capture();
-                return Result.Ok(_currentFrame);
+                return Result.Ok(new CapturedFrame(_currentFrame, Array.Empty<SKRect>()));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while getting next frame.");
                 Init();
-                return Result.Fail<SKBitmap>(ex);
+                return Result.Fail<CapturedFrame>(ex);
             }
         }
     }

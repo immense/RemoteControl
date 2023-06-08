@@ -37,6 +37,10 @@ using Result = Immense.RemoteControl.Shared.Result;
 using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Native.Windows;
 using System.Diagnostics.CodeAnalysis;
+using SharpDX.Mathematics.Interop;
+using Immense.RemoteControl.Shared.Models;
+using System.Reflection.Metadata;
+using System.Diagnostics;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
@@ -47,6 +51,8 @@ public class ScreenCapturerWin : IScreenCapturer
     private readonly IImageHelper _imageHelper;
     private readonly ILogger<ScreenCapturerWin> _logger;
     private readonly object _screenBoundsLock = new();
+    private readonly int _rawRectangleSize = Marshal.SizeOf<RawRectangle>();
+
     private SKBitmap? _currentFrame;
     private bool _needsInit;
     private SKBitmap? _previousFrame;
@@ -103,7 +109,7 @@ public class ScreenCapturerWin : IScreenCapturer
         return _imageHelper.GetImageDiff(CurrentFrame, _previousFrame);
     }
 
-    public Result<SKBitmap> GetNextFrame()
+    public Result<CapturedFrame> GetNextFrame()
     {
         lock (_screenBoundsLock)
         {
@@ -117,7 +123,7 @@ public class ScreenCapturerWin : IScreenCapturer
                     // The caller can start a new thread, which seems to resolve it.
                     var errCode = Marshal.GetLastWin32Error();
                     _logger.LogError("Failed to switch to input desktop. Last Win32 error code: {errCode}", errCode);
-                    return Result.Fail<SKBitmap>($"Failed to switch to input desktop. Last Win32 error code: {errCode}");
+                    return Result.Fail<CapturedFrame>($"Failed to switch to input desktop. Last Win32 error code: {errCode}");
                 }
 
                 if (_needsInit)
@@ -130,7 +136,7 @@ public class ScreenCapturerWin : IScreenCapturer
 
                 if (result.IsSuccess && !result.HadChanges)
                 {
-                    return Result.Fail<SKBitmap>("No screen changes occurred.");
+                    return Result.Fail<CapturedFrame>("No screen changes occurred.");
                 }
 
                 if (result.HadChanges && !IsEmpty(result.Bitmap))
@@ -144,18 +150,18 @@ public class ScreenCapturerWin : IScreenCapturer
                     {
                         var ex = bitBltResult.Exception ?? new("Unknown error.");
                         _logger.LogError(ex, "Error while getting next frame.");
-                        return Result.Fail<SKBitmap>(ex);
+                        return Result.Fail<CapturedFrame>(ex);
                     }
                     CurrentFrame = bitBltResult.Value;
                 }
 
-                return Result.Ok(CurrentFrame);
+                return Result.Ok(new CapturedFrame(CurrentFrame, result.ChangedRegions));
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error while getting next frame.");
                 _needsInit = true;
-                return Result.Fail<SKBitmap>(e);
+                return Result.Fail<CapturedFrame>(e);
             }
         }
     }
@@ -297,8 +303,36 @@ public class ScreenCapturerWin : IScreenCapturer
                 default:
                     break;
             }
+
             IsGpuAccelerated = true;
-            return DxCaptureResult.Ok(bitmap.ToSKBitmap(), result);
+
+            var changedRegions = Array.Empty<SKRect>();
+
+            try
+            {
+                if (duplicateFrameInfo.TotalMetadataBufferSize > 0)
+                {
+                    var metadataBuffer = new RawRectangle[duplicateFrameInfo.TotalMetadataBufferSize];
+                    outputDuplication.GetFrameDirtyRects(duplicateFrameInfo.TotalMetadataBufferSize, metadataBuffer, out var dirtySize);
+
+                    var dirtyArraySize = dirtySize / _rawRectangleSize;
+
+                    if (dirtyArraySize < 10)
+                    {
+                        changedRegions = new SKRect[dirtyArraySize];
+                        for (var i = 0; i < dirtyArraySize; i++)
+                        {
+                            var rect = metadataBuffer[i];
+                            changedRegions[i] = new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
+                        }
+                    }
+                }
+
+                Debug.WriteLine($"Changed regions: {changedRegions.Length}");
+            }
+            catch { }
+
+            return DxCaptureResult.Ok(bitmap.ToSKBitmap(), result, changedRegions);
         }
         catch (Exception ex)
         {
@@ -354,7 +388,7 @@ public class ScreenCapturerWin : IScreenCapturer
                     {
                         var device = new SharpDX.Direct3D11.Device(adapter);
                         var output1 = output.QueryInterface<Output1>();
-
+      
                         var bounds = output1.Description.DesktopBounds;
                         var width = bounds.Right - bounds.Left;
                         var height = bounds.Bottom - bounds.Top;
@@ -373,7 +407,7 @@ public class ScreenCapturerWin : IScreenCapturer
                             SampleDescription = { Count = 1, Quality = 0 },
                             Usage = ResourceUsage.Staging
                         };
-
+                        
                         var texture2D = new Texture2D(device, textureDesc);
 
                         _directxScreens.Add(
@@ -478,6 +512,7 @@ public class ScreenCapturerWin : IScreenCapturer
         public bool HadChanges { get; init; }
 
         public bool IsSuccess { get; init; }
+        public SKRect[] ChangedRegions { get; init; } = Array.Empty<SKRect>();
 
         internal static DxCaptureResult Fail(string failureReason)
         {
@@ -506,7 +541,10 @@ public class ScreenCapturerWin : IScreenCapturer
             };
         }
 
-        internal static DxCaptureResult Ok(SKBitmap sKBitmap, SharpDX.Result result)
+        internal static DxCaptureResult Ok(
+            SKBitmap sKBitmap, 
+            SharpDX.Result result,
+            SKRect[] changedRegions)
         {
             return new DxCaptureResult()
             {
@@ -514,6 +552,7 @@ public class ScreenCapturerWin : IScreenCapturer
                 DxResult = result,
                 HadChanges = true,
                 IsSuccess = true,
+                ChangedRegions = changedRegions,
             };
         }
 
