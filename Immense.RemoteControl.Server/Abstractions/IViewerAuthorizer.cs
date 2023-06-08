@@ -1,7 +1,13 @@
 using Microsoft.AspNetCore.Mvc.Filters;
+using Immense.RemoteControl.Server.Extensions;
 
 namespace Immense.RemoteControl.Server.Abstractions;
 
+/// <summary>
+/// This service is used to determine if the current user is authorized 
+/// to view the remote control page.  It gets registered as a scoped service
+/// within <see cref="RemoteControlServerBuilder"/>.
+/// </summary>
 public interface IViewerAuthorizer
 {
     /// <summary>

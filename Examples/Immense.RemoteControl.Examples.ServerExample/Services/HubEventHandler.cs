@@ -23,6 +23,25 @@ internal class HubEventHandler : IHubEventHandler
     {
         return Task.CompletedTask;
     }
+    public Task NotifyDesktopSessionAdded(RemoteControlSession sessionInfo)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task NotifyDesktopSessionRemoved(RemoteControlSession sessionInfo)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task NotifyRemoteControlEnded(RemoteControlSession sessionInfo)
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task NotifyRemoteControlStarted(RemoteControlSession sessionInfo)
+    {
+        return Task.CompletedTask;
+    }
 
     public Task NotifySessionChanged(RemoteControlSession sessionInfo, SessionSwitchReasonEx reason, int currentSessionId)
     {

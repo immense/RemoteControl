@@ -1,11 +1,14 @@
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
+using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Server.Extensions;
 
 namespace Immense.RemoteControl.Server.Abstractions;
 
 /// <summary>
 /// Contains functionality that needs to be implemented outside of the remote control process.
+/// This service will be registered as a singleton within <see cref="RemoteControlServerBuilder"/>.
 /// </summary>
 public interface IHubEventHandler
 {
@@ -38,14 +41,31 @@ public interface IHubEventHandler
     Task InvokeCtrlAltDel(RemoteControlSession session, string viewerConnectionId);
 
     /// <summary>
-    /// This is called when a remote control session ends.
+    /// This is called when a new session is added to the <see cref="IDesktopHubSessionCache"/>.
+    /// </summary>
+    /// <param name="sessionInfo"></param>
+    /// <returns></returns>
+    Task NotifyDesktopSessionAdded(RemoteControlSession sessionInfo);
+
+    /// <summary>
+    /// This is called when all viewers have left a remote control session
+    /// and the session is removed from the <see cref="IDesktopHubSessionCache"/>.
+    /// </summary>
+    /// <param name="sessionInfo"></param>
+    /// <returns></returns>
+    Task NotifyDesktopSessionRemoved(RemoteControlSession sessionInfo);
+
+    /// <summary>
+    /// This is called when a remote control session ends.  This event may occur
+    /// multiple times per session if additional viewers are invited to the same session.
     /// </summary>
     /// <param name="sessionInfo"></param>
     /// <returns></returns>
     Task NotifyRemoteControlEnded(RemoteControlSession sessionInfo);
 
     /// <summary>
-    /// This is called when a remote control session starts.
+    /// This is called when a remote control session starts.  This event may occur
+    /// multiple times per session if additional viewers are invited to the same session.
     /// </summary>
     /// <param name="sessionInfo"></param>
     /// <returns></returns>
