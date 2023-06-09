@@ -185,15 +185,23 @@ button {
             border: 1px solid #009888;
         }
 
-.menu-logo {
-    margin-top: 10px;
+.menu-column {
+    display: flex;
 }
 
-.menu-right-column {
-    display: flex;
+.menu-column-left {
+    align-items: center;
+    align-content: center;
+}
+
+.menu-column-right {
     flex-direction: row-reverse;
     flex-wrap: wrap;
     align-items: flex-start;
+}
+
+.menu-column-middle {
+    justify-content: center;
 }
 
 .popup-menu {
@@ -326,33 +334,31 @@ button {
     touch-action: pan-x pan-y;
 }
 #screenViewer.fit {
-    max-width: 99%;
+    width: 100%;
     max-height: 99%;
     left: 50%;
     transform: translateX(-50%);
     object-fit: contain;
 }
 
-
-@keyframes fadeout {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: .1;
-    }
+.beta-pill {
+    display: inline-block;
+    font-size: .9em;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: rgb(40, 35, 21);
+    color: rgb(245, 222, 137);
 }
 
-.logo-subtitle {
-    font-size: .6em;
+#betaPillPullDown {
+    position: absolute;
+    left: 10px;
+    margin-top: 5px;
 }
 
-.logo-title {
-    font-size: 18px;
+.beta-pill-logo {
+    margin-left: 5px;
 }
-
-
 
 .right-aligned {
     text-align: right;
