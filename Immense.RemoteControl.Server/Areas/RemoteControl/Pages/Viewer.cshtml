@@ -48,7 +48,7 @@
         {
             <div class="logo-frame">
                 <img src="@(Model.LogoUrl)" />
-                <div class="beta-pill beta-pill-logo" style="position: absolute;">
+                <div class="beta-pill beta-pill-logo absolute-right-middle">
                     BETA
                 </div>
             </div>
@@ -169,7 +169,7 @@
                     @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
                     {
                         <img class="menu-logo" src="@(Model.LogoUrl)" />
-                        <div id="betaPillLogo" class="beta-pill beta-pill-logo">
+                        <div id="betaPillLogo" class="beta-pill beta-pill-logo ms-1">
                             BETA
                         </div>
                     }
@@ -234,7 +234,7 @@
             </div>
 
             <div class="text-center">
-                <div id="betaPillPullDown" class="beta-pill">
+                <div id="betaPillPullDown" class="beta-pill ms-1">
                     BETA
                 </div>
                 <button id="menuButton">
