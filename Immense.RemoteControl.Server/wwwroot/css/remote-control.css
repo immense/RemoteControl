@@ -37,7 +37,8 @@ body {
 
 .logo-frame {
     position: absolute;
-    display: inline-block;
+    display: flex;
+    align-items: center;
     top: 32px;
     left: 50%;
     transform: translateX(-50%);
@@ -240,6 +241,10 @@ button {
     display: none !important;
 }
 
+.ms-1 {
+    margin-left: .25em;
+}
+
 .text-center {
     text-align: center;
 }
@@ -252,12 +257,22 @@ button {
     text-align: right;
 }
 
+.right-aligned {
+  text-align: right;
+}
+
+.absolute-right-middle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(110%, -50%);
+}
 
 .menu-options-header {
-    text-align: center;
-    margin: 20px 0 5px 0;
-    font-family: monospace;
-    font-size: .9em;
+  text-align: center;
+  margin: 20px 0 5px 0;
+  font-family: monospace;
+  font-size: .9em;
 }
 
 #metricsFrame {
@@ -334,7 +349,7 @@ button {
     touch-action: pan-x pan-y;
 }
 #screenViewer.fit {
-    width: 100%;
+    max-width: 99%;
     max-height: 99%;
     left: 50%;
     transform: translateX(-50%);
@@ -356,13 +371,6 @@ button {
     margin-top: 5px;
 }
 
-.beta-pill-logo {
-    margin-left: 5px;
-}
-
-.right-aligned {
-    text-align: right;
-}
 
 
 .toast-message {
