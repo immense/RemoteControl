@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System.Diagnostics;
 using Application = System.Windows.Application;
-using Nihs.SimpleMessenger;
+using Immense.SimpleMessenger;
 using System.Windows.Threading;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.Services;
