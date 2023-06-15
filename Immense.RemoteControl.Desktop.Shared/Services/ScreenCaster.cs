@@ -10,7 +10,7 @@ using MessagePack;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.IO;
 using System.Diagnostics;
-using Nihs.SimpleMessenger;
+using Immense.SimpleMessenger;
 using Immense.RemoteControl.Desktop.Shared.Messages;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;

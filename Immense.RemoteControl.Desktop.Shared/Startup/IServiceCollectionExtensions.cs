@@ -3,7 +3,7 @@ using Immense.RemoteControl.Shared.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Nihs.SimpleMessenger;
+using Immense.SimpleMessenger;
 
 namespace Immense.RemoteControl.Desktop.Shared.Startup;
 
