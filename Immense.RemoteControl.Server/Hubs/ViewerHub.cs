@@ -189,6 +189,7 @@ public class ViewerHub : Hub
         var logMessage = $"Remote control session requested.  " +
                             $"Login ID (if logged in): {Context.User?.Identity?.Name}.  " +
                             $"Machine Name: {SessionInfo.MachineName}.  " +
+                            $"Stream ID: {SessionInfo.StreamId}.  " +
                             $"Requester Name (if specified): {RequesterDisplayName}.  " +
                             $"Connection ID: {Context.ConnectionId}. User ID: {Context.UserIdentifier}.  " +
                             $"Screen Caster Connection ID: {SessionInfo.DesktopConnectionId}.  " +
