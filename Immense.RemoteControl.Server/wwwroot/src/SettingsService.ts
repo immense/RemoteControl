@@ -1,9 +1,12 @@
-﻿import { Settings } from "./Interfaces/Settings.js";
+﻿import { RemoteControlViewerOptions } from "./Interfaces/Dtos.js";
+import { Settings } from "./Interfaces/Settings.js";
 
 const defaultSettings = {
-    streamModeEnabled: false,
-    displayName: ""
-};
+    DisplayName: "",
+    ViewerOptions: {
+        ShouldRecordSession: false
+    } as RemoteControlViewerOptions
+} as Settings;
 
 
 export function GetSettings(): Settings {

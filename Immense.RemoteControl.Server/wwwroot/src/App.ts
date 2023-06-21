@@ -40,9 +40,9 @@ export const ViewerApp = {
         if (UI.RequesterNameInput.value) {
             ViewerApp.RequesterName = UI.RequesterNameInput.value;
         }
-        else if (ViewerApp.Settings.displayName) {
-            UI.RequesterNameInput.value = ViewerApp.Settings.displayName;
-            ViewerApp.RequesterName = ViewerApp.Settings.displayName;
+        else if (ViewerApp.Settings.DisplayName) {
+            UI.RequesterNameInput.value = ViewerApp.Settings.DisplayName;
+            ViewerApp.RequesterName = ViewerApp.Settings.DisplayName;
         }
 
         if (ViewerApp.Mode == RemoteControlMode.Unattended) {
@@ -74,7 +74,7 @@ export const ViewerApp = {
         ViewerApp.Mode = RemoteControlMode.Attended;
         ViewerApp.ViewerHubConnection.Connect();
 
-        ViewerApp.Settings.displayName = ViewerApp.RequesterName;
+        ViewerApp.Settings.DisplayName = ViewerApp.RequesterName;
         SetSettings(ViewerApp.Settings);
     }
 }
