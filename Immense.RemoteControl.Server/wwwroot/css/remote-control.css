@@ -187,17 +187,18 @@ button {
         }
 
 .menu-column {
-    display: flex;
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
 }
 
 .menu-column-left {
-    align-items: center;
-    align-content: center;
+  align-items: center;
+  align-content: center;
 }
 
 .menu-column-right {
     flex-direction: row-reverse;
-    flex-wrap: wrap;
     align-items: flex-start;
 }
 
@@ -470,4 +471,12 @@ footer {
     z-index: 3;
     padding: 10px;
     border-radius: 5px;
+}
+
+
+@media only screen and (max-width : 667px) {
+    /* Hide the logo column on mobile.  Not enough screen space for it. */
+  #menuFrame {
+    grid-template-columns: 0 2fr 1fr;
+  }
 }
