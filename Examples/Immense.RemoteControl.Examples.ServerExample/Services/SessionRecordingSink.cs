@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Shared.Helpers;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Immense.RemoteControl.Examples.ServerExample.Services;
@@ -9,7 +10,8 @@ public class SessionRecordingSink : ISessionRecordingSink
 {
     private readonly IWebHostEnvironment _hostingEnv;
 
-    public SessionRecordingSink(IWebHostEnvironment hostingEnv)
+    public SessionRecordingSink(
+        IWebHostEnvironment hostingEnv)
     {
         _hostingEnv = hostingEnv;
     }
@@ -32,8 +34,9 @@ public class SessionRecordingSink : ISessionRecordingSink
 
             _ = Directory.CreateDirectory(recordingDir);
 
+            var username = PathSanitizer.SanitizeFileName($"{hubCallerContext.User?.Identity?.Name ?? "UnknownUser"}");
             var fileName = 
-                $"{hubCallerContext.User?.Identity?.Name ?? "UnknownUser"}_" +
+                $"{username}_" +
                 $"{DateTimeOffset.Now:yyyyMMdd_HHmmssfff}.webm";
 
             using var fs = new FileStream(Path.Combine(recordingDir, fileName), FileMode.Create);
