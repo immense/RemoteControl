@@ -12,6 +12,8 @@ import { ProcessStream } from "./CaptureProcessor.js";
 import { HubConnectionState } from "./Enums/HubConnectionState.js";
 import { StreamingState } from "./Models/StreamingState.js";
 import { Result } from "./Models/Result.js";
+import { RemoteControlViewerOptions } from "./Interfaces/Dtos.js";
+import { GetSettings, SetSettings } from "./SettingsService.js";
 
 const MsgPack: MessagePack = window["MessagePack"];
 
@@ -35,7 +37,7 @@ export class ViewerHubConnection {
 
         this.ApplyMessageHandlers(this.Connection);
 
-        this.Connection.start().then(() => {
+        this.Connection.start().then(async () => {
             this.SendScreenCastRequestToDevice();
         }).catch(err => {
             console.error(err.toString());
@@ -57,6 +59,20 @@ export class ViewerHubConnection {
     ChangeWindowsSession(sessionID: number) {
         if (ViewerApp.Mode == RemoteControlMode.Unattended) {
             this.Connection.invoke("ChangeWindowsSession", sessionID);
+        }
+    }
+
+    async GetRemoteControlViewerOptions(): Promise<RemoteControlViewerOptions> {
+        const settings = GetSettings();
+
+        try {
+            settings.ViewerOptions = await this.Connection.invoke<RemoteControlViewerOptions>("GetViewerOptions");
+            SetSettings(settings);
+            return settings.ViewerOptions;
+        }
+        catch (e) {
+            console.error("Error while getting viewer options from server.", e);
+            return settings.ViewerOptions;
         }
     }
 
@@ -82,8 +98,17 @@ export class ViewerHubConnection {
         }
     }
 
+    // Subject is an interface that comes from the SignalR library.
+    // But we can't use the TypeScript library like we would in
+    // React/Vue, so we have to use "any" here.  This won't be an
+    // issue when we rewrite the front-end.
+    async SendRecordingChunks(subject: any) {
+        await this.Connection.send("StoreSessionRecording", subject);
+    }
 
     async SendScreenCastRequestToDevice() {
+        const viewerOptions = await this.GetRemoteControlViewerOptions();
+
         const result = await this.Connection.invoke<Result>("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
         if (!result.IsSuccess) {
             this.Connection.stop();
@@ -93,6 +118,10 @@ export class ViewerHubConnection {
 
         const streamingState = new StreamingState();
         ProcessStream(streamingState);
+
+        if (viewerOptions.ShouldRecordSession) {
+            ViewerApp.SessionRecorder.Start();
+        }
 
         this.Connection.stream("GetDesktopStream")
             .subscribe({
@@ -104,6 +133,7 @@ export class ViewerHubConnection {
                     if (!UI.StatusMessage.innerText) {
                         UI.SetStatusMessage("Stream ended.");
                     }
+                    ViewerApp.SessionRecorder.Stop();
                     UI.ToggleConnectUI(true);
                 },
                 error: (err) => {
@@ -112,6 +142,7 @@ export class ViewerHubConnection {
                     if (!UI.StatusMessage.innerText) {
                         UI.SetStatusMessage("Stream ended.");
                     }
+                    ViewerApp.SessionRecorder.Stop();
                     UI.ToggleConnectUI(true);
                 },
             });

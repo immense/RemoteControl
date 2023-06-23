@@ -41,7 +41,6 @@ export var TypeClipboardButton = document.getElementById("typeClipboardButton") 
 export var ConnectionP2PIcon = document.getElementById("connectionP2PIcon") as HTMLElement;
 export var ConnectionRelayedIcon = document.getElementById("connectionRelayedIcon") as HTMLElement;
 export var WindowsSessionSelect = document.getElementById("windowsSessionSelect") as HTMLSelectElement;
-export var RecordSessionButton = document.getElementById("recordSessionButton") as HTMLButtonElement;
 export var ViewOnlyButton = document.getElementById("viewOnlyButton") as HTMLButtonElement;
 export var FullScreenButton = document.getElementById("fullScreenButton") as HTMLButtonElement;
 export var ToastsWrapper = document.getElementById("toastsWrapper") as HTMLDivElement;
@@ -130,6 +129,7 @@ export function ShowToast(message: string) {
 
 export function ToggleConnectUI(shown: boolean) {
     if (shown) {
+        ConnectButton.innerText = "Connect";
         Screen2DContext.clearRect(0, 0, ScreenViewer.width, ScreenViewer.height);
         ScreenViewerWrapper.setAttribute("hidden", "hidden");
         if (ViewerApp.Mode == RemoteControlMode.Attended) {

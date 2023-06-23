@@ -1,4 +1,6 @@
-﻿export interface Settings {
-    displayName: string;
-    streamModeEnabled: boolean;
+﻿import { RemoteControlViewerOptions } from "./Dtos.js";
+
+export interface Settings {
+    DisplayName: string;
+    ViewerOptions: RemoteControlViewerOptions;
 }
