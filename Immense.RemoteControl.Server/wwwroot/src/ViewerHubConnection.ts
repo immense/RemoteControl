@@ -99,7 +99,7 @@ export class ViewerHubConnection {
     }
 
     // Subject is an interface that comes from the SignalR library.
-    // But we can't use the TypeScript library like we would in in
+    // But we can't use the TypeScript library like we would in
     // React/Vue, so we have to use "any" here.  This won't be an
     // issue when we rewrite the front-end.
     async SendRecordingChunks(subject: any) {
