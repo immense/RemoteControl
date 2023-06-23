@@ -41,7 +41,6 @@ export var TypeClipboardButton = document.getElementById("typeClipboardButton") 
 export var ConnectionP2PIcon = document.getElementById("connectionP2PIcon") as HTMLElement;
 export var ConnectionRelayedIcon = document.getElementById("connectionRelayedIcon") as HTMLElement;
 export var WindowsSessionSelect = document.getElementById("windowsSessionSelect") as HTMLSelectElement;
-export var RecordSessionButton = document.getElementById("recordSessionButton") as HTMLButtonElement;
 export var ViewOnlyButton = document.getElementById("viewOnlyButton") as HTMLButtonElement;
 export var FullScreenButton = document.getElementById("fullScreenButton") as HTMLButtonElement;
 export var ToastsWrapper = document.getElementById("toastsWrapper") as HTMLDivElement;
@@ -57,6 +56,7 @@ export var WindowsSessionMenu = document.getElementById("windowsSessionMenu") as
 export var WindowsSessionMenuButton = document.getElementById("windowsSessionMenuButton") as HTMLButtonElement;
 export var MetricsButton = document.getElementById("metricsButton") as HTMLButtonElement;
 export var MetricsFrame = document.getElementById("metricsFrame") as HTMLDivElement;
+export var BetaPillPullDown = document.getElementById("betaPillPullDown") as HTMLDivElement;
 
 export function CloseAllPopupMenus(exceptMenuId: string) {
     PopupMenus.forEach(x => {
@@ -129,6 +129,7 @@ export function ShowToast(message: string) {
 
 export function ToggleConnectUI(shown: boolean) {
     if (shown) {
+        ConnectButton.innerText = "Connect";
         Screen2DContext.clearRect(0, 0, ScreenViewer.width, ScreenViewer.height);
         ScreenViewerWrapper.setAttribute("hidden", "hidden");
         if (ViewerApp.Mode == RemoteControlMode.Attended) {
@@ -139,6 +140,7 @@ export function ToggleConnectUI(shown: boolean) {
         AudioButton.classList.remove("toggled");
         WorkAreaGrid.style.display = "none";
         BackgroundLayers.classList.remove("d-none");
+        CloseAllPopupMenus(null);
     }
     else {
         ConnectBox.style.display = "none";

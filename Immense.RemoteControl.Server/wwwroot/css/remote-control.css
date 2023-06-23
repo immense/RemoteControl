@@ -37,7 +37,8 @@ body {
 
 .logo-frame {
     position: absolute;
-    display: inline-block;
+    display: flex;
+    align-items: center;
     top: 32px;
     left: 50%;
     transform: translateX(-50%);
@@ -185,15 +186,24 @@ button {
             border: 1px solid #009888;
         }
 
-.menu-logo {
-    margin-top: 10px;
+.menu-column {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
 }
 
-.menu-right-column {
-    display: flex;
+.menu-column-left {
+  align-items: center;
+  align-content: center;
+}
+
+.menu-column-right {
     flex-direction: row-reverse;
-    flex-wrap: wrap;
     align-items: flex-start;
+}
+
+.menu-column-middle {
+    justify-content: center;
 }
 
 .popup-menu {
@@ -232,6 +242,10 @@ button {
     display: none !important;
 }
 
+.ms-1 {
+    margin-left: .25rem;
+}
+
 .text-center {
     text-align: center;
 }
@@ -244,12 +258,22 @@ button {
     text-align: right;
 }
 
+.right-aligned {
+  text-align: right;
+}
+
+.absolute-right-middle {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(110%, -50%);
+}
 
 .menu-options-header {
-    text-align: center;
-    margin: 20px 0 5px 0;
-    font-family: monospace;
-    font-size: .9em;
+  text-align: center;
+  margin: 20px 0 5px 0;
+  font-family: monospace;
+  font-size: .9em;
 }
 
 #metricsFrame {
@@ -333,30 +357,21 @@ button {
     object-fit: contain;
 }
 
-
-@keyframes fadeout {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: .1;
-    }
+.beta-pill {
+    display: inline-block;
+    font-size: .9em;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: rgb(40, 35, 21);
+    color: rgb(245, 222, 137);
 }
 
-.logo-subtitle {
-    font-size: .6em;
+#betaPillPullDown {
+    position: absolute;
+    left: 10px;
+    margin-top: 5px;
 }
 
-.logo-title {
-    font-size: 18px;
-}
-
-
-
-.right-aligned {
-    text-align: right;
-}
 
 
 .toast-message {
@@ -456,4 +471,12 @@ footer {
     z-index: 3;
     padding: 10px;
     border-radius: 5px;
+}
+
+
+@media only screen and (max-width : 667px) {
+    /* Hide the logo column on mobile.  Not enough screen space for it. */
+  #menuFrame {
+    grid-template-columns: 0 2fr 1fr;
+  }
 }

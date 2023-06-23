@@ -3,6 +3,7 @@ using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -13,6 +14,8 @@ namespace Immense.RemoteControl.Server.Hubs;
 public class ViewerHub : Hub
 {
     private readonly IHubContext<DesktopHub> _desktopHub;
+    private readonly IViewerOptionsProvider _viewerOptionsProvider;
+    private readonly ISessionRecordingSink _sessionRecordingSink;
     private readonly IDesktopHubSessionCache _desktopSessionCache;
     private readonly IHubEventHandler _hubEvents;
     private readonly ILogger<ViewerHub> _logger;
@@ -23,12 +26,16 @@ public class ViewerHub : Hub
         IDesktopHubSessionCache desktopSessionCache,
         IDesktopStreamCache streamCache,
         IHubContext<DesktopHub> desktopHub,
+        IViewerOptionsProvider viewerOptionsProvider,
+        ISessionRecordingSink sessionRecordingSink,
         ILogger<ViewerHub> logger)
     {
         _hubEvents = hubEvents;
         _desktopSessionCache = desktopSessionCache;
         _streamCache = streamCache;
         _desktopHub = desktopHub;
+        _viewerOptionsProvider = viewerOptionsProvider;
+        _sessionRecordingSink = sessionRecordingSink;
         _logger = logger;
     }
 
@@ -107,6 +114,11 @@ public class ViewerHub : Hub
             yield break;
         }
 
+        // At this point, if RequireConsent is enabled, the user has accepted the request.
+        // We can turn it off for the remainder of the session so that reconnects and session
+        // switches can happen without re-prompting.
+        SessionInfo.RequireConsent = false;
+
         try
         {
             await foreach (var chunk in signaler.Stream)
@@ -119,6 +131,11 @@ public class ViewerHub : Hub
             signaler.EndSignal.Release();
             _logger.LogInformation("Streaming session ended for {sessionId}.", SessionInfo.StreamId);
         }
+    }
+
+    public async Task<RemoteControlViewerOptions> GetViewerOptions()
+    {
+        return await _viewerOptionsProvider.GetViewerOptionsAsync(Context, SessionInfo);
     }
 
     public Task InvokeCtrlAltDel()
@@ -184,6 +201,7 @@ public class ViewerHub : Hub
         var logMessage = $"Remote control session requested.  " +
                             $"Login ID (if logged in): {Context.User?.Identity?.Name}.  " +
                             $"Machine Name: {SessionInfo.MachineName}.  " +
+                            $"Stream ID: {SessionInfo.StreamId}.  " +
                             $"Requester Name (if specified): {RequesterDisplayName}.  " +
                             $"Connection ID: {Context.ConnectionId}. User ID: {Context.UserIdentifier}.  " +
                             $"Screen Caster Connection ID: {SessionInfo.DesktopConnectionId}.  " +
@@ -215,5 +233,21 @@ public class ViewerHub : Hub
         }
 
         return Result.Ok();
+    }
+
+    public async Task StoreSessionRecording(IAsyncEnumerable<byte[]> webmStream)
+    {
+        try
+        {
+            await _sessionRecordingSink.SinkWebmStream(webmStream, Context, SessionInfo);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Session recording stopped for stream {streamId}.", SessionInfo.StreamId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while storing session recording for stream {streamId}.", SessionInfo.StreamId);
+        }
     }
 }

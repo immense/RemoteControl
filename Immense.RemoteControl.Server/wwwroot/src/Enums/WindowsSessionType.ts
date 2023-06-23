@@ -1,4 +1,4 @@
 ﻿export enum WindowsSessionType {
-    Console = 0,
-    RDP = 1
+    Console = 1,
+    RDP = 2
 }

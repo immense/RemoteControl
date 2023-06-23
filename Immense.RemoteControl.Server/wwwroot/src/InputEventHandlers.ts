@@ -21,7 +21,6 @@ import {
     MenuButton,
     ScreenViewerWrapper,
     WindowsSessionSelect,
-    RecordSessionButton,
     FileTransferMenu,
     FileUploadButtton,
     FileDownloadButton,
@@ -37,7 +36,8 @@ import {
     WindowsSessionMenu,
     MetricsButton,
     MetricsFrame,
-    SetStatusMessage
+    SetStatusMessage,
+    BetaPillPullDown
 } from "./UI.js";
 import { Sound } from "./Sound.js";
 import { ViewerApp } from "./App.js";
@@ -288,6 +288,13 @@ export function ApplyInputHandlers() {
     MenuButton.addEventListener("click", (ev) => {
         MenuFrame.classList.toggle("open");
         MenuButton.classList.toggle("open");
+
+        if (MenuFrame.classList.contains("open")) {
+            BetaPillPullDown.classList.add("d-none");
+        }
+        else {
+            BetaPillPullDown.classList.remove("d-none");
+        }
         CloseAllPopupMenus(null);
     });
 
@@ -640,18 +647,6 @@ export function ApplyInputHandlers() {
         SetStatusMessage("Switching sessions");
         ShowToast("Switching sessions");
         ViewerApp.MessageSender.ChangeWindowsSession(Number(WindowsSessionSelect.selectedOptions[0].value));
-    });
-    RecordSessionButton.addEventListener("click", () => {
-        RecordSessionButton.classList.toggle("toggled");
-        if (RecordSessionButton.classList.contains("toggled")) {
-            RecordSessionButton.innerHTML = `<i class="fas fa-record-vinyl"> Stop`;
-            ViewerApp.SessionRecorder.Start();
-        }
-        else {
-            RecordSessionButton.innerHTML = `<i class="fas fa-record-vinyl">Record`;
-            ViewerApp.SessionRecorder.Stop();
-            ViewerApp.SessionRecorder.DownloadVideo();
-        }
     });
 
     window.addEventListener("keydown", function (e) {

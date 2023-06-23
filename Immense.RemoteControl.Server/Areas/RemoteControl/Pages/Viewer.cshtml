@@ -48,6 +48,9 @@
         {
             <div class="logo-frame">
                 <img src="@(Model.LogoUrl)" />
+                <div class="beta-pill beta-pill-logo absolute-right-middle">
+                    BETA
+                </div>
             </div>
         }
     </div>
@@ -85,12 +88,6 @@
                 title="Transfer files to the remote computer.">
             <i class="fas fa-file-upload"></i>
             File Transfer
-        </button>
-
-        <button id="recordSessionButton"
-                title="Record session as a WEBM video in the browser.">
-            <i class="fas fa-record-vinyl"></i>
-            Record
         </button>
 
         <button id="inviteButton"
@@ -162,13 +159,16 @@
     <div id="workAreaGrid" style="display: none;">
         <div>
             <div id="menuFrame">
-                <div class="text-left">
+                <div class="menu-column menu-column-left">
                     @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
                     {
                         <img class="menu-logo" src="@(Model.LogoUrl)" />
+                        <div id="betaPillLogo" class="beta-pill beta-pill-logo ms-1">
+                            BETA
+                        </div>
                     }
                 </div>
-                <div>
+                <div class="menu-column menu-column-middle">
                     <button id="changeScreenButton"
                             title="Switch monitors on remote multi-monitor setups.">
                         <i class="fas fa-desktop"></i>
@@ -201,7 +201,7 @@
                     </button>
                 </div>
 
-                <div class="menu-right-column">
+                <div class="menu-column menu-column-right">
                     <button id="disconnectButton"
                             title="Disconnect from the current session.">
                         x
@@ -228,6 +228,9 @@
             </div>
 
             <div class="text-center">
+                <div id="betaPillPullDown" class="beta-pill ms-1">
+                    BETA
+                </div>
                 <button id="menuButton">
                     <i class="fas fa-chevron-down"></i>
                 </button>

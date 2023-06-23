@@ -1,11 +1,11 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Messages;
+using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System.Diagnostics;
 using Application = System.Windows.Application;
-using Nihs.SimpleMessenger;
+using Immense.SimpleMessenger;
 using System.Windows.Threading;
 
 namespace Immense.RemoteControl.Desktop.UI.WPF.Services;
@@ -143,11 +143,11 @@ public class WindowsUiDispatcher : IWindowsUiDispatcher
         }
         catch (TaskCanceledException)
         {
-            _logger.LogInformation("Task cancelled. Calling Environment.Exit.");
+            _logger.LogInformation("Task cancelled while shutting down UI threads.");
         }
         catch (TimeoutException)
         {
-            _logger.LogInformation("Timed out while waiting for WPF thread to close. Calling Environment.Exit.");
+            _logger.LogInformation("Timed out while waiting for UI threads to close.");
         }
     }
 

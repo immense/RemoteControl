@@ -149,7 +149,7 @@ public class DesktopHub : Hub
 
         if (SessionInfo.Mode == RemoteControlMode.Attended)
         {
-            _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
+            _ = _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
             await _viewerHub.Clients.Clients(ViewerList).SendAsync("ScreenCasterDisconnected");
         }
         else if (SessionInfo.Mode == RemoteControlMode.Unattended && !ShutdownExpected)
@@ -161,7 +161,7 @@ public class DesktopHub : Hub
             }
             else
             {
-                _sessionCache.Remove($"{SessionInfo.UnattendedSessionId}");
+                _ = _sessionCache.TryRemove($"{SessionInfo.UnattendedSessionId}", out _);
             }
         }
         
@@ -242,21 +242,23 @@ public class DesktopHub : Hub
 
     public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
     {
-        var session = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));
-        session.DesktopConnectionId = Context.ConnectionId;
+        using var signaler = _streamCache.GetOrAdd(streamId, key => new StreamSignaler(streamId));
+        signaler.DesktopConnectionId = Context.ConnectionId;
 
         try
         {
-            session.Stream = stream;
-            session.ReadySignal.Release();
-            await session.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+            signaler.Stream = stream;
+            signaler.ReadySignal.Release();
+
+            await _hubEvents.NotifyRemoteControlStarted(SessionInfo);
+            // TODO: We can remove the timeout once we implement add a
+            // timeout for viewer idle (i.e. no input).
+            await signaler.EndSignal.WaitAsync(TimeSpan.FromHours(8));
+            await _hubEvents.NotifyRemoteControlEnded(SessionInfo);
         }
         finally
         {
-            if (_streamCache.TryRemove(session.StreamId, out var signaler))
-            {
-                signaler.Dispose();
-            }
+            _ = _streamCache.TryRemove(signaler.StreamId, out _);
         }
     }
 }

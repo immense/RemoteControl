@@ -1,4 +1,6 @@
+using Immense.RemoteControl.Examples.ServerExample.Options;
 using Immense.RemoteControl.Examples.ServerExample.Services;
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +14,12 @@ builder.Services.AddRemoteControlServer(config =>
     config.AddHubEventHandler<HubEventHandler>();
     config.AddViewerAuthorizer<ViewerAuthorizer>();
     config.AddViewerPageDataProvider<ViewerPageDataProvider>();
+    config.AddViewerOptionsProvider<ViewerOptionsProvider>();
+    config.AddSessionRecordingSink<SessionRecordingSink>();
 });
+
+builder.Services.Configure<AppSettingsOptions>(
+    builder.Configuration.GetSection(AppSettingsOptions.KeyName));
 
 var app = builder.Build();
 

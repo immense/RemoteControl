@@ -1,3 +1,4 @@
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,8 @@ public interface IDesktopHubSessionCache
         string sessionId,
         RemoteControlSession session,
         Func<string, RemoteControlSession, RemoteControlSession> updateFactory);
+
     RemoteControlSession GetOrAdd(string sessionId, Func<string, RemoteControlSession> valueFactory);
-    void Remove(string sessionId);
     Task RemoveExpiredSessions();
     bool TryAdd(string sessionId, RemoteControlSession session);
 
@@ -26,61 +27,86 @@ public interface IDesktopHubSessionCache
 
 internal class DesktopHubSessionCache : IDesktopHubSessionCache
 {
-    private static readonly ConcurrentDictionary<string, RemoteControlSession> _sessions = new();
+    private readonly ConcurrentDictionary<string, RemoteControlSession> _sessions = new();
+    // ConcurrentDictionary's AddOrUpdate and GetOrAdd are not atomic operations,
+    // so we need to use an outer lock.
+    private readonly object _sessionsLock = new();
+
+    private readonly IHubEventHandler _hubEventHandler;
     private readonly ILogger<DesktopHubSessionCache> _logger;
     private readonly ISystemTime _systemTime;
-
     public DesktopHubSessionCache(
         ISystemTime systemTime,
+        IHubEventHandler hubEventHandler,
         ILogger<DesktopHubSessionCache> logger)
     {
         _systemTime = systemTime;
+        _hubEventHandler = hubEventHandler;
         _logger = logger;
     }
 
     public IEnumerable<RemoteControlSession> Sessions => _sessions.Values;
     public RemoteControlSession AddOrUpdate(string sessionId, RemoteControlSession session)
     {
-        return AddOrUpdate(sessionId, session, (k, v) =>
+        lock (_sessionsLock)
         {
-            v.Dispose();
-            return session;
-        });
+            return AddOrUpdate(sessionId, session, (k, v) =>
+            {
+                v.Dispose();
+                return session;
+            });
+        }
     }
 
     public RemoteControlSession AddOrUpdate(
-        string sessionId, 
-        RemoteControlSession session, 
+        string sessionId,
+        RemoteControlSession session,
         Func<string, RemoteControlSession, RemoteControlSession> updateFactory)
     {
-        return _sessions.AddOrUpdate(sessionId, session, updateFactory);
+        lock (_sessionsLock)
+        {
+            if (_sessions.ContainsKey(sessionId))
+            {
+                var newValue = updateFactory(sessionId, _sessions[sessionId]);
+                _sessions[sessionId] = newValue;
+                return newValue;
+            }
+
+            _sessions[sessionId] = session;
+            NotifySessionAdded(session);
+            return session;
+        }
     }
 
     public RemoteControlSession GetOrAdd(string sessionId, Func<string, RemoteControlSession> valueFactory)
     {
-        return _sessions.GetOrAdd(sessionId, valueFactory);
-    }
-
-    public void Remove(string sessionId)
-    {
-        if (_sessions.TryRemove(sessionId, out var session))
+        lock (_sessionsLock)
         {
-            session.Dispose();
+            return _sessions.GetOrAdd(sessionId, (key) =>
+            {
+                var session = valueFactory(key);
+                NotifySessionAdded(session);
+                return session;
+            });
         }
     }
 
     public Task RemoveExpiredSessions()
     {
-        foreach (var session in _sessions)
+        lock (_sessionsLock)
         {
-            if (session.Value.Mode is RemoteControlMode.Unattended or RemoteControlMode.Unknown &&
-                !session.Value.ViewerList.Any() &&
-                session.Value.Created < _systemTime.Now.AddMinutes(-1))
+            foreach (var session in _sessions)
             {
-                _logger.LogWarning("Removing expired session: {session}", JsonSerializer.Serialize(session.Value));
-                if (_sessions.TryRemove(session.Key, out var expiredSession))
+                if (session.Value.Mode is RemoteControlMode.Unattended or RemoteControlMode.Unknown &&
+                    !session.Value.ViewerList.Any() &&
+                    session.Value.Created < _systemTime.Now.AddMinutes(-1))
                 {
-                    expiredSession.Dispose();
+                    _logger.LogWarning("Removing expired session: {session}", JsonSerializer.Serialize(session.Value));
+                    if (_sessions.TryRemove(session.Key, out var expiredSession))
+                    {
+                        NotifySessionRemoved(expiredSession);
+                        expiredSession.Dispose();
+                    }
                 }
             }
         }
@@ -89,21 +115,62 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
 
     public bool TryAdd(string sessionId, RemoteControlSession session)
     {
-        return _sessions.TryAdd(sessionId, session);
+        lock (_sessionsLock)
+        {
+            if (_sessions.TryAdd(sessionId, session))
+            {
+                NotifySessionAdded(session);
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public bool TryGetValue(string sessionId, [NotNullWhen(true)] out RemoteControlSession? session)
     {
-        return _sessions.TryGetValue(sessionId, out session);
+        lock (_sessionsLock)
+        {
+            return _sessions.TryGetValue(sessionId, out session);
+        }
     }
 
     public bool TryRemove(string sessionId, [NotNullWhen(true)] out RemoteControlSession? session)
     {
-        if (_sessions.TryRemove(sessionId, out session))
+        lock (_sessionsLock)
         {
-            session.Dispose();
-            return true;
+            if (_sessions.TryRemove(sessionId, out session))
+            {
+                try
+                {
+                    NotifySessionRemoved(session);
+                    session.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error disposing RemoteControlSession ID {id}.", sessionId);
+                }
+
+                return true;
+            }
         }
         return false;
+    }
+
+    private void NotifySessionAdded(RemoteControlSession session)
+    {
+        try
+        {
+            _ = _hubEventHandler.NotifyDesktopSessionAdded(session);
+        }
+        catch { } // Ignore errors thrown by consumer.
+    }
+    private void NotifySessionRemoved(RemoteControlSession session)
+    {
+        try
+        {
+            _ = _hubEventHandler.NotifyDesktopSessionRemoved(session);
+        }
+        catch { } // Ignore errors thrown by consumer.
     }
 }

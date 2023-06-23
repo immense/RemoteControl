@@ -45,7 +45,7 @@ var url = $"https://localhost:7024/RemoteControl/Viewer?mode=Unattended&sessionI
 Console.WriteLine(url);
 var thread = new Thread(() =>
 {
-    Clipboard.SetText(url);
+    Clipboard.SetDataObject(url);
 });
 thread.SetApartmentState(ApartmentState.STA);
 thread.Start();

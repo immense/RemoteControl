@@ -134,6 +134,10 @@ export class MouseWheelDto {
     DeltaY: number;
 }
 
+export interface RemoteControlViewerOptions {
+    ShouldRecordSession: boolean;
+}
+
 export interface ScreenDataDto {
     DisplayNames: string[];
     SelectedDisplay: string;
