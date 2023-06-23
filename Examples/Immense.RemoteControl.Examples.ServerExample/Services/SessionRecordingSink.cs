@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Immense.RemoteControl.Examples.ServerExample.Services;
 
+// This is just a demo implementation.
 public class SessionRecordingSink : ISessionRecordingSink
 {
     private readonly IWebHostEnvironment _hostingEnv;
