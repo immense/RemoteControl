@@ -41,7 +41,7 @@ public interface IHubEventHandler
     Task InvokeCtrlAltDel(RemoteControlSession session, string viewerConnectionId);
 
     /// <summary>
-    /// This is called when a new session is added to the <see cref="IDesktopHubSessionCache"/>.
+    /// This is called when a new session is added to the <see cref="IRemoteControlSessionCache"/>.
     /// </summary>
     /// <param name="sessionInfo"></param>
     /// <returns></returns>
@@ -49,7 +49,7 @@ public interface IHubEventHandler
 
     /// <summary>
     /// This is called when all viewers have left a remote control session
-    /// and the session is removed from the <see cref="IDesktopHubSessionCache"/>.
+    /// and the session is removed from the <see cref="IRemoteControlSessionCache"/>.
     /// </summary>
     /// <param name="sessionInfo"></param>
     /// <returns></returns>

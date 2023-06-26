@@ -10,13 +10,13 @@ using Moq;
 namespace Immense.RemoteControl.Server.Tests;
 
 [TestClass]
-public class DesktopHubSessionCacheTests
+public class RemoteControlSessionCacheTests
 {
 #nullable disable
     private SystemTime _systemTime;
     private Mock<IHubEventHandler> _hubEventHandler;
-    private Mock<ILogger<DesktopHubSessionCache>> _logger;
-    private DesktopHubSessionCache _sessionCache;
+    private Mock<ILogger<RemoteControlSessionCache>> _logger;
+    private RemoteControlSessionCache _sessionCache;
 #nullable enable
 
     [TestInitialize]
@@ -24,9 +24,9 @@ public class DesktopHubSessionCacheTests
     {
         _systemTime = new SystemTime();
         _hubEventHandler = new Mock<IHubEventHandler>();
-        _logger = new Mock<ILogger<DesktopHubSessionCache>>();
+        _logger = new Mock<ILogger<RemoteControlSessionCache>>();
 
-        _sessionCache = new DesktopHubSessionCache(_systemTime, _hubEventHandler.Object, _logger.Object);
+        _sessionCache = new RemoteControlSessionCache(_systemTime, _hubEventHandler.Object, _logger.Object);
     }
 
     [TestMethod]

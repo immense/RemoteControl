@@ -1,7 +1,14 @@
 using Immense.RemoteControl.Shared.Helpers;
+using Immense.RemoteControl.Server.Services;
 
 namespace Immense.RemoteControl.Server.Models;
 
+/// <summary>
+/// Contains data related to a remote control session.  Consuming projects
+/// are expected to derive a class from this and add project-specific properties.
+/// They should add these derived classes to<see cref="IRemoteControlSessionCache"/>
+/// when sessions are created.
+/// </summary>
 public class RemoteControlSession : IDisposable
 {
     private readonly ManualResetEventSlim _sessionReadySignal = new(false);

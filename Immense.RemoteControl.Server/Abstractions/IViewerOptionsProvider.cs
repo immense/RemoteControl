@@ -15,6 +15,5 @@ namespace Immense.RemoteControl.Server.Abstractions;
 public interface IViewerOptionsProvider
 {
     Task<RemoteControlViewerOptions> GetViewerOptionsAsync(
-        HubCallerContext hubCallerContext,
         RemoteControlSession session);
 }
