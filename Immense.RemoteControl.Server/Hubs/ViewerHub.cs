@@ -239,7 +239,7 @@ public class ViewerHub : Hub
     {
         try
         {
-            await _sessionRecordingSink.SinkWebmStream(webmStream, Context, SessionInfo);
+            await _sessionRecordingSink.SinkWebmStream(webmStream, SessionInfo);
         }
         catch (OperationCanceledException)
         {

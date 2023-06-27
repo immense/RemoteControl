@@ -107,9 +107,14 @@ export class ViewerHubConnection {
     }
 
     async SendScreenCastRequestToDevice() {
-        const viewerOptions = await this.GetRemoteControlViewerOptions();
+      const viewerOptions = await this.GetRemoteControlViewerOptions();
 
-        const result = await this.Connection.invoke<Result>("SendScreenCastRequestToDevice", ViewerApp.SessionId, ViewerApp.AccessKey, ViewerApp.RequesterName);
+      const result = await this.Connection.invoke<Result>(
+        "SendScreenCastRequestToDevice",
+        ViewerApp.SessionId,
+        ViewerApp.AccessKey,
+        ViewerApp.RequesterName);
+
         if (!result.IsSuccess) {
             this.Connection.stop();
             UI.SetStatusMessage(result.Reason);
