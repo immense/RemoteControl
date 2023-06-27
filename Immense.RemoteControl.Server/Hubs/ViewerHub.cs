@@ -135,7 +135,18 @@ public class ViewerHub : Hub
 
     public async Task<RemoteControlViewerOptions> GetViewerOptions()
     {
-        return await _viewerOptionsProvider.GetViewerOptionsAsync(SessionInfo);
+        try
+        {
+            return await _viewerOptionsProvider.GetViewerOptionsAsync(SessionInfo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting viewer options.");
+            return new()
+            {
+                ShouldRecordSession = false
+            };
+        }
     }
 
     public Task InvokeCtrlAltDel()
