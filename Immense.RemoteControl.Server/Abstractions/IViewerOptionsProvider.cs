@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -14,6 +14,5 @@ namespace Immense.RemoteControl.Server.Abstractions;
 /// </summary>
 public interface IViewerOptionsProvider
 {
-    Task<RemoteControlViewerOptions> GetViewerOptionsAsync(
-        RemoteControlSession session);
+    Task<RemoteControlViewerOptions> GetViewerOptions();
 }

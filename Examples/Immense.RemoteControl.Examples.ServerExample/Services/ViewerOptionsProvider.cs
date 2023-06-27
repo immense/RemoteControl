@@ -16,8 +16,7 @@ public class ViewerOptionsProvider : IViewerOptionsProvider
         _appSettings = appSettings;
     }
 
-    public Task<RemoteControlViewerOptions> GetViewerOptionsAsync(
-        RemoteControlSession session)
+    public Task<RemoteControlViewerOptions> GetViewerOptions()
     {
         var options = new RemoteControlViewerOptions()
         {
