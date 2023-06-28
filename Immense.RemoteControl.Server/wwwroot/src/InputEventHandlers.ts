@@ -411,6 +411,10 @@ export function ApplyInputHandlers() {
             e.preventDefault();
             e.stopPropagation();
 
+            if (ViewerApp.ViewOnlyMode) {
+                return;
+            }
+
             const rect = ScreenViewer.getBoundingClientRect();
             const offsetX = e.touches[0].pageX - rect.left;
             const offsetY = e.touches[0].pageY - rect.top;
@@ -566,7 +570,11 @@ export function ApplyInputHandlers() {
 
     ScreenViewer.addEventListener("contextmenu", (ev) => {
         ev.preventDefault();
-        
+
+        if (ViewerApp.ViewOnlyMode) {
+            return;
+        }
+
         if (currentPointerDevice == "touch") {
             // We're either starting a right-click or left-button drag.
             // Either way, we'll move the cursor to the initial touch point.
