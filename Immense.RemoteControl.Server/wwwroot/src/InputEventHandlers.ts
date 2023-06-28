@@ -568,6 +568,12 @@ export function ApplyInputHandlers() {
         ev.preventDefault();
         
         if (currentPointerDevice == "touch") {
+            // We're either starting a right-click or left-button drag.
+            // Either way, we'll move the cursor to the initial touch point.
+            const percentX = (ev.pageX - ScreenViewer.getBoundingClientRect().left) / ScreenViewer.clientWidth;
+            const percentY = (ev.pageY - ScreenViewer.getBoundingClientRect().top) / ScreenViewer.clientHeight;
+            ViewerApp.MessageSender.SendMouseMove(percentX, percentY);
+
             longPressStarted = true;
             longPressStartOffsetX = ev.offsetX;
             longPressStartOffsetY = ev.offsetY;
