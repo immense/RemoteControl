@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Examples.ServerExample.Options;
+using Immense.RemoteControl.Examples.ServerExample.Options;
 using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Models;
@@ -16,9 +16,7 @@ public class ViewerOptionsProvider : IViewerOptionsProvider
         _appSettings = appSettings;
     }
 
-    public Task<RemoteControlViewerOptions> GetViewerOptionsAsync(
-        HubCallerContext hubCallerContext, 
-        RemoteControlSession session)
+    public Task<RemoteControlViewerOptions> GetViewerOptions()
     {
         var options = new RemoteControlViewerOptions()
         {

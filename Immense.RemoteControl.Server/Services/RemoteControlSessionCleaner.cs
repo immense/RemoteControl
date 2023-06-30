@@ -1,19 +1,18 @@
-﻿using Immense.RemoteControl.Server.Hubs;
+using Immense.RemoteControl.Server.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Server.Services;
 
-public class DesktopHubSessionCleaner : BackgroundService
+public class RemoteControlSessionCleaner : BackgroundService
 {
-    private readonly IDesktopHubSessionCache _sessionCache;
-    private readonly ILogger<DesktopHubSessionCleaner> _logger;
+    private readonly IRemoteControlSessionCache _sessionCache;
+    private readonly ILogger<RemoteControlSessionCleaner> _logger;
 
-    public DesktopHubSessionCleaner(
-        IHubContext<DesktopHub> desktopHub,
-        IDesktopHubSessionCache sessionCache,
-        ILogger<DesktopHubSessionCleaner> logger)
+    public RemoteControlSessionCleaner(
+        IRemoteControlSessionCache sessionCache,
+        ILogger<RemoteControlSessionCleaner> logger)
     {
         _sessionCache = sessionCache;
         _logger = logger;

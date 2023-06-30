@@ -12,11 +12,11 @@ public class DesktopHub : Hub
 {
     private readonly IHubEventHandler _hubEvents;
     private readonly ILogger<DesktopHub> _logger;
-    private readonly IDesktopHubSessionCache _sessionCache;
+    private readonly IRemoteControlSessionCache _sessionCache;
     private readonly IDesktopStreamCache _streamCache;
     private readonly IHubContext<ViewerHub> _viewerHub;
     public DesktopHub(
-        IDesktopHubSessionCache sessionCache,
+        IRemoteControlSessionCache sessionCache,
         IDesktopStreamCache streamCache,
         IHubContext<ViewerHub> viewerHubContext,
         IHubEventHandler hubEvents,

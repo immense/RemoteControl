@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Models;
+using Immense.RemoteControl.Server.Models;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,6 @@ public interface ISessionRecordingSink
 {
     /// <summary>
     /// Sink a live webm stream to persistent storage. 
-    /// The HubCallerContext is that of the viewer.
     /// </summary>
     /// <param name="webmStream"></param>
     /// <param name="hubCallerContext"></param>
@@ -23,6 +22,5 @@ public interface ISessionRecordingSink
     /// <returns></returns>
     Task SinkWebmStream(
         IAsyncEnumerable<byte[]> webmStream,
-        HubCallerContext hubCallerContext,
         RemoteControlSession session);
 }

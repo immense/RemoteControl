@@ -57,7 +57,7 @@ public static class CommandProvider
         var sessionIdOption = new Option<string>(
            new[] { "-s", "--session-id" },
            "In Unattended mode, this unique session ID will be assigned to this connection and " +
-           "shared with the server.  The connection can then be found in the DesktopHubSessionCache " +
+           "shared with the server.  The connection can then be found in the RemoteControlSessionCache " +
            "using this ID.");
         rootCommand.AddOption(sessionIdOption);
 

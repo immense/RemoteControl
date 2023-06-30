@@ -16,14 +16,14 @@ public class ViewerHub : Hub
     private readonly IHubContext<DesktopHub> _desktopHub;
     private readonly IViewerOptionsProvider _viewerOptionsProvider;
     private readonly ISessionRecordingSink _sessionRecordingSink;
-    private readonly IDesktopHubSessionCache _desktopSessionCache;
+    private readonly IRemoteControlSessionCache _desktopSessionCache;
     private readonly IHubEventHandler _hubEvents;
     private readonly ILogger<ViewerHub> _logger;
     private readonly IDesktopStreamCache _streamCache;
 
     public ViewerHub(
         IHubEventHandler hubEvents,
-        IDesktopHubSessionCache desktopSessionCache,
+        IRemoteControlSessionCache desktopSessionCache,
         IDesktopStreamCache streamCache,
         IHubContext<DesktopHub> desktopHub,
         IViewerOptionsProvider viewerOptionsProvider,
@@ -135,7 +135,7 @@ public class ViewerHub : Hub
 
     public async Task<RemoteControlViewerOptions> GetViewerOptions()
     {
-        return await _viewerOptionsProvider.GetViewerOptionsAsync(Context, SessionInfo);
+        return await _viewerOptionsProvider.GetViewerOptions();
     }
 
     public Task InvokeCtrlAltDel()
@@ -239,7 +239,7 @@ public class ViewerHub : Hub
     {
         try
         {
-            await _sessionRecordingSink.SinkWebmStream(webmStream, Context, SessionInfo);
+            await _sessionRecordingSink.SinkWebmStream(webmStream, SessionInfo);
         }
         catch (OperationCanceledException)
         {

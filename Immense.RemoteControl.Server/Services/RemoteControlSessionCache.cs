@@ -8,7 +8,10 @@ using System.Text.Json;
 
 namespace Immense.RemoteControl.Server.Services;
 
-public interface IDesktopHubSessionCache
+/// <summary>
+/// A cache containing all active remote control sessions.
+/// </summary>
+public interface IRemoteControlSessionCache
 {
     IEnumerable<RemoteControlSession> Sessions { get; }
     RemoteControlSession AddOrUpdate(string sessionId, RemoteControlSession session);
@@ -25,7 +28,7 @@ public interface IDesktopHubSessionCache
     bool TryRemove(string sessionId, [NotNullWhen(true)] out RemoteControlSession? session);
 }
 
-internal class DesktopHubSessionCache : IDesktopHubSessionCache
+internal class RemoteControlSessionCache : IRemoteControlSessionCache
 {
     private readonly ConcurrentDictionary<string, RemoteControlSession> _sessions = new();
     // ConcurrentDictionary's AddOrUpdate and GetOrAdd are not atomic operations,
@@ -33,12 +36,13 @@ internal class DesktopHubSessionCache : IDesktopHubSessionCache
     private readonly object _sessionsLock = new();
 
     private readonly IHubEventHandler _hubEventHandler;
-    private readonly ILogger<DesktopHubSessionCache> _logger;
+    private readonly ILogger<RemoteControlSessionCache> _logger;
     private readonly ISystemTime _systemTime;
-    public DesktopHubSessionCache(
+
+    public RemoteControlSessionCache(
         ISystemTime systemTime,
         IHubEventHandler hubEventHandler,
-        ILogger<DesktopHubSessionCache> logger)
+        ILogger<RemoteControlSessionCache> logger)
     {
         _systemTime = systemTime;
         _hubEventHandler = hubEventHandler;

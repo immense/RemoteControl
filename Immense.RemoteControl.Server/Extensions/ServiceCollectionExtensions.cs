@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Filters;
+using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,9 +30,9 @@ public static class ServiceCollectionExtensions
             })
             .AddMessagePackProtocol();
 
-        services.AddHostedService<DesktopHubSessionCleaner>();
+        services.AddHostedService<RemoteControlSessionCleaner>();
         services.AddSingleton<IDesktopStreamCache, DesktopStreamCache>();
-        services.AddSingleton<IDesktopHubSessionCache, DesktopHubSessionCache>();
+        services.AddSingleton<IRemoteControlSessionCache, RemoteControlSessionCache>();
         services.AddSingleton<ISystemTime, SystemTime>();
         services.AddScoped<ViewerAuthorizationFilter>();
 

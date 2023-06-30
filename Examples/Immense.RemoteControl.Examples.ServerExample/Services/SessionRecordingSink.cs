@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Abstractions;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Shared.Helpers;
 using Microsoft.AspNetCore.SignalR;
@@ -18,7 +18,6 @@ public class SessionRecordingSink : ISessionRecordingSink
 
     public async Task SinkWebmStream(
         IAsyncEnumerable<byte[]> webmStream, 
-        HubCallerContext hubCallerContext, 
         RemoteControlSession session)
     {
         try
@@ -34,7 +33,7 @@ public class SessionRecordingSink : ISessionRecordingSink
 
             _ = Directory.CreateDirectory(recordingDir);
 
-            var username = PathSanitizer.SanitizeFileName($"{hubCallerContext.User?.Identity?.Name ?? "UnknownUser"}");
+            var username = PathSanitizer.SanitizeFileName($"{session.RequesterName ?? "UnknownUser"}");
             var fileName = 
                 $"{username}_" +
                 $"{DateTimeOffset.Now:yyyyMMdd_HHmmssfff}.webm";
