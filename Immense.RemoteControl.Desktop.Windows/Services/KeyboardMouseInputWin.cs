@@ -6,6 +6,7 @@ using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using static Immense.RemoteControl.Desktop.Native.Windows.User32;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
@@ -65,22 +66,12 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (!ConvertJavaScriptKeyToVirtualKey(key, out var keyCode) || keyCode is null)
+                if (!ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
                 {
                     return;
                 }
 
-                var union = new InputUnion()
-                {
-                    ki = new KEYBDINPUT()
-                    {
-                        wVk = keyCode.Value,
-                        wScan = (ScanCodeShort)MapVirtualKeyEx((uint)keyCode.Value, VkMapType.MAPVK_VK_TO_VSC, GetKeyboardLayout()),
-                        time = 0,
-                        dwExtraInfo = GetMessageExtraInfo()
-                    }
-                };
-                var input = new INPUT() { type = InputType.KEYBOARD, U = union };
+                var input = CreateKeyboardInput(keyCode.Value);
                 _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
             }
             catch (Exception ex)
@@ -97,23 +88,12 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (!ConvertJavaScriptKeyToVirtualKey(key, out var keyCode) || keyCode is null)
+                if (!ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
                 {
                     return;
                 }
 
-                var union = new InputUnion()
-                {
-                    ki = new KEYBDINPUT()
-                    {
-                        wVk = keyCode.Value,
-                        wScan = (ScanCodeShort)MapVirtualKeyEx((uint)keyCode.Value, VkMapType.MAPVK_VK_TO_VSC, GetKeyboardLayout()),
-                        time = 0,
-                        dwFlags = KEYEVENTF.KEYUP,
-                        dwExtraInfo = GetMessageExtraInfo()
-                    }
-                };
-                var input = new INPUT() { type = InputType.KEYBOARD, U = union };
+                var input = CreateKeyboardInput(keyCode.Value, KEYEVENTF.KEYUP);
                 _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
             }
             catch (Exception ex)
@@ -289,18 +269,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
                         var state = GetKeyState(key);
                         if (state == -127)
                         {
-                            var union = new InputUnion()
-                            {
-                                ki = new KEYBDINPUT()
-                                {
-                                    wVk = key,
-                                    wScan = 0,
-                                    time = 0,
-                                    dwFlags = KEYEVENTF.KEYUP,
-                                    dwExtraInfo = GetMessageExtraInfo()
-                                }
-                            };
-                            var input = new INPUT() { type = InputType.KEYBOARD, U = union };
+                            var input = CreateKeyboardInput(key, KEYEVENTF.KEYUP);
                             _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
                         }
                     }
@@ -370,7 +339,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         _logger.LogInformation("Stopping input processing on thread {threadId}.", Environment.CurrentManagedThreadId);
     }
 
-    private bool ConvertJavaScriptKeyToVirtualKey(string key, out VirtualKey? result)
+    private bool ConvertJavaScriptKeyToVirtualKey(string key, [NotNullWhen(true)] out VirtualKey? result)
     {
         result = key switch
         {
@@ -450,7 +419,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         // processes a queue of input events.
         _inputProcessingThread = new Thread(() =>
         {
-            _logger.LogInformation("New input processing thread started on thread {threadId}.", Thread.CurrentThread.ManagedThreadId);
+            _logger.LogInformation("New input processing thread started on thread {threadId}.", Environment.CurrentManagedThreadId);
 
             if (_inputBlocked)
             {
