@@ -5,14 +5,17 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using static Immense.RemoteControl.Desktop.Native.Windows.User32;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class KeyboardMouseInputWin : IKeyboardMouseInput
 {
-    private readonly ConcurrentQueue<Action> _inputActions = new();
     private readonly IWindowsUiDispatcher _dispatcher;
+    private readonly ConcurrentQueue<Action> _inputActions = new();
     private readonly ILogger<KeyboardMouseInputWin> _logger;
     private volatile bool _inputBlocked;
     private Thread? _inputProcessingThread;
@@ -23,6 +26,18 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
     {
         _dispatcher = dispatcher;
         _logger = logger;
+    }
+
+    [Flags]
+    private enum ShiftState : byte
+    {
+        None = 0,
+        ShiftPressed = 1 << 0,
+        CtrlPressed = 1 << 1,
+        AltPressed = 1 << 2,
+        HankakuPressed = 1 << 3,
+        Reserved1 = 1 << 4,
+        Reserved2 = 1 << 5,
     }
 
     public Tuple<double, double> GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer capturer)
@@ -227,7 +242,31 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                SendKeys.SendWait(transferText);
+
+                var inputs = new List<INPUT>();
+                
+                foreach (var character in transferText)
+                {
+                    // Return value explained here:
+                    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-vkkeyscanexw#return-value
+                    var keyCode = VkKeyScanEx(character, GetKeyboardLayout((uint)Environment.CurrentManagedThreadId));
+                    var shortHelper = new ShortHelper(keyCode);
+                    var vkCode = (VirtualKey)shortHelper.Low;
+                    var shiftState = (ShiftState)shortHelper.High;
+
+                    AddShiftInput(inputs, shiftState);
+
+                    var keyDown = CreateKeyboardInput(vkCode);
+                    inputs.Add(keyDown);
+
+                    var keyUp = CreateKeyboardInput(vkCode, KEYEVENTF.KEYUP);
+                    inputs.Add(keyUp);
+
+                    AddShiftInput(inputs, shiftState, KEYEVENTF.KEYUP);
+                }
+
+                var result = SendInput((uint)inputs.Count, inputs.ToArray(), INPUT.Size);
+                Debug.Assert(result == inputs.Count);
             }
             catch (Exception ex)
             {
@@ -235,6 +274,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             }
         });
     }
+
 
     public void SetKeyStatesUp()
     {
@@ -280,6 +320,34 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             var result = BlockInput(toggleOn);
             _logger.LogInformation("Result of ToggleBlockInput set to {toggleOn}: {result}", toggleOn, result);
         });
+    }
+
+    private void AddShiftInput(List<INPUT> inputs, ShiftState shiftState, KEYEVENTF keyEvent = default)
+    {
+        switch (shiftState)
+        {
+            case ShiftState.ShiftPressed:
+                {
+                    inputs.Add(CreateKeyboardInput(VirtualKey.SHIFT, keyEvent));
+                    break;
+                }
+            case ShiftState.CtrlPressed:
+                {
+                    inputs.Add(CreateKeyboardInput(VirtualKey.CONTROL, keyEvent));
+                    break;
+                }
+            case ShiftState.AltPressed:
+                {
+                    inputs.Add(CreateKeyboardInput(VirtualKey.MENU, keyEvent));
+                    break;
+                }
+            case ShiftState.HankakuPressed:
+            case ShiftState.None:
+            case ShiftState.Reserved1:
+            case ShiftState.Reserved2:
+            default:
+                break;
+        }
     }
 
     private void CheckQueue(CancellationToken cancelToken)
@@ -354,6 +422,27 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         }
         return true;
     }
+    private INPUT CreateKeyboardInput(
+        VirtualKey virtualKey,
+        KEYEVENTF keyEvent = default)
+    {
+        return new INPUT()
+        {
+            type = InputType.KEYBOARD,
+            U = new InputUnion()
+            {
+                ki = new KEYBDINPUT()
+                {
+                    wVk = virtualKey,
+                    wScan = (ScanCodeShort)MapVirtualKeyEx((uint)virtualKey, VkMapType.MAPVK_VSC_TO_VK_EX, GetKeyboardLayout((uint)Environment.CurrentManagedThreadId)),
+                    dwFlags = keyEvent,
+                    dwExtraInfo = GetMessageExtraInfo()
+                }
+            }
+        };
+    }
+
+
     private void StartInputProcessingThread()
     {
         // After BlockInput is enabled, only simulated input coming from the same thread
@@ -396,5 +485,21 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
                 _logger.LogError(ex, "Error during input queue processing.");
             }
         });
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct ShortHelper
+    {
+        public ShortHelper(short value)
+        {
+            Value = value;
+        }
+
+        [FieldOffset(0)] 
+        public short Value;
+        [FieldOffset(0)] 
+        public byte Low;
+        [FieldOffset(1)] 
+        public byte High;
     }
 }
