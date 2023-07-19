@@ -1311,6 +1311,9 @@ public static class User32
     [DllImport("user32.dll")]
     public static extern short VkKeyScan(char ch);
 
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern short VkKeyScanEx(char ch, IntPtr dwhkl);
+
     [DllImport("user32.dll")]
     public static extern int SendMessage(int hWnd, int hMsg, int wParam, int lParam);
 
