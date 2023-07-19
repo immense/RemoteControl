@@ -292,29 +292,19 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
 
     private void AddShiftInput(List<INPUT> inputs, ShiftState shiftState, KEYEVENTF keyEvent = default)
     {
-        switch (shiftState)
+        if (shiftState.HasFlag(ShiftState.ShiftPressed))
         {
-            case ShiftState.ShiftPressed:
-                {
-                    inputs.Add(CreateKeyboardInput(VirtualKey.SHIFT, keyEvent));
-                    break;
-                }
-            case ShiftState.CtrlPressed:
-                {
-                    inputs.Add(CreateKeyboardInput(VirtualKey.CONTROL, keyEvent));
-                    break;
-                }
-            case ShiftState.AltPressed:
-                {
-                    inputs.Add(CreateKeyboardInput(VirtualKey.MENU, keyEvent));
-                    break;
-                }
-            case ShiftState.HankakuPressed:
-            case ShiftState.None:
-            case ShiftState.Reserved1:
-            case ShiftState.Reserved2:
-            default:
-                break;
+            inputs.Add(CreateKeyboardInput(VirtualKey.SHIFT, keyEvent));
+        }
+
+        if (shiftState.HasFlag(ShiftState.CtrlPressed))
+        {
+            inputs.Add(CreateKeyboardInput(VirtualKey.CONTROL, keyEvent));
+        }
+
+        if (shiftState.HasFlag(ShiftState.AltPressed))
+        {
+            inputs.Add(CreateKeyboardInput(VirtualKey.MENU, keyEvent));
         }
     }
 
