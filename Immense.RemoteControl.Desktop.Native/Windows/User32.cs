@@ -77,7 +77,6 @@ public static class User32
 
     public enum VirtualKey : short
     {
-        None = 0,
         ///<summary>
                 ///Left mouse button
                 ///</summary>
