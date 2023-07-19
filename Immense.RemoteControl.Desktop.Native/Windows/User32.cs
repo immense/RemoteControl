@@ -77,6 +77,7 @@ public static class User32
 
     public enum VirtualKey : short
     {
+        None = 0,
         ///<summary>
                 ///Left mouse button
                 ///</summary>
@@ -1110,6 +1111,17 @@ public static class User32
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct InputEx
+    {
+        public InputType type;
+        public InputUnionEx U;
+        public static int Size
+        {
+            get { return Marshal.SizeOf(typeof(InputEx)); }
+        }
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     public struct InputUnion
     {
@@ -1120,6 +1132,18 @@ public static class User32
         [FieldOffset(0)]
         public HARDWAREINPUT hi;
     }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct InputUnionEx
+    {
+        [FieldOffset(0)]
+        public MOUSEINPUT mi;
+        [FieldOffset(0)]
+        public KeybdInputEx ki;
+        [FieldOffset(0)]
+        public HARDWAREINPUT hi;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct MOUSEINPUT
     {
@@ -1139,6 +1163,17 @@ public static class User32
         public int time;
         public UIntPtr dwExtraInfo;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KeybdInputEx
+    {
+        public ushort wVk;
+        public ushort wScan;
+        public KEYEVENTF dwFlags;
+        public int time;
+        public UIntPtr dwExtraInfo;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct HARDWAREINPUT
     {
@@ -1280,6 +1315,9 @@ public static class User32
 
     [DllImport("user32.dll")]
     public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs, int cbSize);
+    [DllImport("user32.dll")]
+    public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] InputEx[] pInputs, int cbSize);
+
     [DllImport("user32.dll", SetLastError = false)]
     public static extern UIntPtr GetMessageExtraInfo();
     [DllImport("sas.dll")]
