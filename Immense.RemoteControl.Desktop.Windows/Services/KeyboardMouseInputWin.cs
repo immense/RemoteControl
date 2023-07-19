@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using static Immense.RemoteControl.Desktop.Native.Windows.User32;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
