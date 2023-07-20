@@ -65,19 +65,43 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (!ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
+                if (key.Length == 1)
                 {
-                    return;
+                    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate#return-value
+                    var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
+                    var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
+                    var character = Convert.ToChar(key);
+                    
+                    // If Ctrl or Alt is pressed, we need to send the virtual key
+                    // so the command will execute.  For example, without this,
+                    // Ctrl+A would result in simply typing "a".
+                    if (ctrlPressed || altPressed)
+                    {
+                        var vkey = (VirtualKey)VkKeyScan(character);
+                        var input = CreateKeyboardInput(vkey);
+                        _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    }
+                    else
+                    {
+                        var keyCode = Convert.ToUInt16(character);
+                        var inputEx = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE);
+                        _ = SendInput(1, new InputEx[] { inputEx }, InputEx.Size);
+                    }
                 }
-
-                var input = CreateKeyboardInput(keyCode.Value);
-                _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                else if (ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
+                {
+                    var input = CreateKeyboardInput(keyCode.Value, KEYEVENTF.EXTENDEDKEY);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to simulate key input {key}.", key);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while sending key down.");
             }
-
         });
     }
 
@@ -87,13 +111,35 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (!ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
+                if (key.Length == 1)
                 {
-                    return;
-                }
+                    var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
+                    var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
+                    var character = Convert.ToChar(key);
 
-                var input = CreateKeyboardInput(keyCode.Value, KEYEVENTF.KEYUP);
-                _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    if (ctrlPressed || altPressed)
+                    {
+                        var vkey = (VirtualKey)VkKeyScan(character);
+                        var input = CreateKeyboardInput(vkey, KEYEVENTF.KEYUP);
+                        _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                    }
+                    else
+                    {
+                        var keyCode = Convert.ToUInt16(character);
+                        var inputEx = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE | KEYEVENTF.KEYUP);
+                        _ = SendInput(1, new InputEx[] { inputEx }, InputEx.Size);
+                    }
+
+                }
+                else if (ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
+                {
+                    var input = CreateKeyboardInput(keyCode.Value, KEYEVENTF.KEYUP | KEYEVENTF.EXTENDEDKEY);
+                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to simulate key input {key}.", key);
+                }
             }
             catch (Exception ex)
             {
@@ -222,30 +268,28 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             try
             {
 
-                var inputs = new List<INPUT>();
+                var inputs = new List<InputEx>();
                 
                 foreach (var character in transferText)
                 {
-                    // Return value explained here:
-                    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-vkkeyscanexw#return-value
-                    var keyCode = VkKeyScanEx(character, GetKeyboardLayout((uint)Environment.CurrentManagedThreadId));
-                    var shortHelper = new ShortHelper(keyCode);
-                    var vkCode = (VirtualKey)shortHelper.Low;
-                    var shiftState = (ShiftState)shortHelper.High;
-
-                    AddShiftInput(inputs, shiftState);
-
-                    var keyDown = CreateKeyboardInput(vkCode);
+                    var keyCode = Convert.ToUInt16(character);
+                    var keyDown = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE);
+                    var keyUp = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE | KEYEVENTF.KEYUP);
                     inputs.Add(keyDown);
-
-                    var keyUp = CreateKeyboardInput(vkCode, KEYEVENTF.KEYUP);
                     inputs.Add(keyUp);
-
-                    AddShiftInput(inputs, shiftState, KEYEVENTF.KEYUP);
                 }
 
-                var result = SendInput((uint)inputs.Count, inputs.ToArray(), INPUT.Size);
+                var result = SendInput((uint)inputs.Count, inputs.ToArray(), InputEx.Size);
                 Debug.Assert(result == inputs.Count);
+
+                if (result != inputs.Count)
+                {
+                    _logger.LogWarning(
+                        "Input simulation failed.  Expected inputs: {count}.  " +
+                        "Actual inputs sent: {result}.",
+                        inputs.Count,
+                        result);
+                }
             }
             catch (Exception ex)
             {
@@ -400,6 +444,33 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         };
     }
 
+    private InputEx CreateKeyboardInput(
+      ushort unicodeKey,
+      KEYEVENTF keyEvent = KEYEVENTF.UNICODE)
+    {
+        return new InputEx()
+        {
+            type = InputType.KEYBOARD,
+            U = new InputUnionEx()
+            {
+                ki = new KeybdInputEx()
+                {
+                    wVk = 0,
+                    wScan = unicodeKey,
+                    dwFlags = keyEvent,
+                    dwExtraInfo = GetMessageExtraInfo()
+                }
+            }
+        };
+    }
+
+    private (bool Pressed, bool Toggled) GetKeyPressState(VirtualKey vkey)
+    {
+        var state = GetKeyState(vkey);
+        var pressed = state < 0;
+        var toggled = (state & 1) != 0;
+        return (pressed, toggled);
+    }
 
     private void StartInputProcessingThread()
     {
