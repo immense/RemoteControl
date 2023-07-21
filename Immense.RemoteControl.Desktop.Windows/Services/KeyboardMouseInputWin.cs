@@ -67,15 +67,12 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             {
                 if (key.Length == 1)
                 {
-                    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate#return-value
-                    var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
-                    var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
                     var character = Convert.ToChar(key);
                     
-                    // If Ctrl or Alt is pressed, we need to send the virtual key
+                    // If a modifier key is pressed, we need to send the virtual key
                     // so the command will execute.  For example, without this,
                     // Ctrl+A would result in simply typing "a".
-                    if (ctrlPressed || altPressed)
+                    if (IsModKeyPressed())
                     {
                         var vkey = (VirtualKey)VkKeyScan(character);
                         var input = CreateKeyboardInput(vkey);
@@ -113,11 +110,9 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             {
                 if (key.Length == 1)
                 {
-                    var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
-                    var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
                     var character = Convert.ToChar(key);
 
-                    if (ctrlPressed || altPressed)
+                    if (IsModKeyPressed())
                     {
                         var vkey = (VirtualKey)VkKeyScan(character);
                         var input = CreateKeyboardInput(vkey, KEYEVENTF.KEYUP);
@@ -269,7 +264,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             {
 
                 var inputs = new List<InputEx>();
-                
+
                 foreach (var character in transferText)
                 {
                     var keyCode = Convert.ToUInt16(character);
@@ -297,7 +292,6 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             }
         });
     }
-
 
     public void SetKeyStatesUp()
     {
@@ -424,6 +418,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         }
         return true;
     }
+
     private INPUT CreateKeyboardInput(
         VirtualKey virtualKey,
         KEYEVENTF keyEvent = default)
@@ -466,12 +461,24 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
 
     private (bool Pressed, bool Toggled) GetKeyPressState(VirtualKey vkey)
     {
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate#return-value
         var state = GetKeyState(vkey);
         var pressed = state < 0;
         var toggled = (state & 1) != 0;
         return (pressed, toggled);
     }
 
+    private bool IsModKeyPressed()
+    {
+        var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
+        var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
+        
+        // I'm not sure we'll be able to get these to work with a browser front-end.
+        //var (lwinPressed, _) = GetKeyPressState(VirtualKey.LWIN);
+        //var (rwinPressed, _) = GetKeyPressState(VirtualKey.RWIN);
+
+        return ctrlPressed || altPressed;
+    }
     private void StartInputProcessingThread()
     {
         // After BlockInput is enabled, only simulated input coming from the same thread
