@@ -24,6 +24,7 @@ public class RelayCommand : ICommand
     }
 
     public event EventHandler? CanExecuteChanged;
+
     public bool CanExecute(object? parameter)
     {
         return _canExecute.Invoke();
@@ -32,6 +33,11 @@ public class RelayCommand : ICommand
     public void Execute(object? parameter)
     {
         _execute.Invoke();
+    }
+
+    public void NotifyCanExecuteChanged()
+    {
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }
 
