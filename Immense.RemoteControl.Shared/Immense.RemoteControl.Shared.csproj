@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Immense.SimpleMessenger" Version="1.0.0" />
+    <PackageReference Include="Immense.SimpleMessenger" Version="1.1.0" />
     <PackageReference Include="MessagePack" Version="2.5.124" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
   </ItemGroup>
