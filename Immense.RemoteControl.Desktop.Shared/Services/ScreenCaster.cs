@@ -69,9 +69,6 @@ internal class ScreenCaster : IScreenCaster
 
     public async ValueTask DisposeAsync()
     {
-        _metricsCts.Cancel();
-        _metricsCts.Dispose();
-
         foreach (var task in _messengerRegistrations)
         {
             try
@@ -81,6 +78,9 @@ internal class ScreenCaster : IScreenCaster
             }
             catch { }
         }
+        _metricsCts.Cancel();
+        _metricsCts.Dispose();
+
         GC.SuppressFinalize(this);
     }
 
