@@ -15,12 +15,12 @@ public class DesktopHub : Hub<IDesktopHubClient>
     private readonly ILogger<DesktopHub> _logger;
     private readonly IRemoteControlSessionCache _sessionCache;
     private readonly IDesktopStreamCache _streamCache;
-    private readonly IHubContext<ViewerHub> _viewerHub;
+    private readonly IHubContext<ViewerHub, IViewerHubClient> _viewerHub;
 
     public DesktopHub(
         IRemoteControlSessionCache sessionCache,
         IDesktopStreamCache streamCache,
-        IHubContext<ViewerHub> viewerHubContext,
+        IHubContext<ViewerHub, IViewerHubClient> viewerHubContext,
         IHubEventHandler hubEvents,
         ILogger<DesktopHub> logger)
     {
@@ -77,7 +77,7 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
         if (notifyViewer)
         {
-            await _viewerHub.Clients.Client(viewerID).SendAsync("ViewerRemoved");
+            await _viewerHub.Clients.Client(viewerID).ViewerRemoved();
         }
     }
 
@@ -126,7 +126,7 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public async Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
     {
-        await _viewerHub.Clients.Clients(ViewerList).SendAsync("ShowMessage", "Changing sessions");
+        await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Changing sessions");
         ShutdownExpected = true;
         await _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
     }
@@ -134,7 +134,11 @@ public class DesktopHub : Hub<IDesktopHubClient>
     public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
     {
         SessionInfo.DesktopConnectionId = Context.ConnectionId;
-        return _viewerHub.Clients.Clients(viewerIDs).SendAsync("RelaunchedScreenCasterReady", SessionInfo.UnattendedSessionId, SessionInfo.AccessKey);
+        return _viewerHub.Clients
+            .Clients(viewerIDs)
+            .RelaunchedScreenCasterReady(
+                SessionInfo.UnattendedSessionId, 
+                SessionInfo.AccessKey);
     }
 
     public override async Task OnConnectedAsync()
@@ -152,13 +156,13 @@ public class DesktopHub : Hub<IDesktopHubClient>
         if (SessionInfo.Mode == RemoteControlMode.Attended)
         {
             _ = _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
-            await _viewerHub.Clients.Clients(ViewerList).SendAsync("ScreenCasterDisconnected");
+            await _viewerHub.Clients.Clients(ViewerList).ScreenCasterDisconnected();
         }
         else if (SessionInfo.Mode == RemoteControlMode.Unattended && !ShutdownExpected)
         {
             if (ViewerList.Count > 0)
             {
-                await _viewerHub.Clients.Clients(ViewerList).SendAsync("Reconnecting");
+                await _viewerHub.Clients.Clients(ViewerList).Reconnecting();
                 await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
             }
             else
@@ -175,7 +179,7 @@ public class DesktopHub : Hub<IDesktopHubClient>
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            var response = await _viewerHub.Clients.Client(viewerConnectionId).InvokeAsync<string>("PingViewer", cts.Token);
+            var response = await _viewerHub.Clients.Client(viewerConnectionId).PingViewer(cts.Token);
             return Result.Ok(response);
         }
         catch (Exception ex)
@@ -223,22 +227,22 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public Task SendConnectionFailedToViewers(List<string> viewerIDs)
     {
-        return _viewerHub.Clients.Clients(viewerIDs).SendAsync("ConnectionFailed");
+        return _viewerHub.Clients.Clients(viewerIDs).ConnectionFailed();
     }
 
     public Task SendConnectionRequestDenied(string viewerID)
     {
-        return _viewerHub.Clients.Client(viewerID).SendAsync("ConnectionRequestDenied");
+        return _viewerHub.Clients.Client(viewerID).ConnectionRequestDenied();
     }
 
     public Task SendDtoToViewer(byte[] dto, string viewerId)
     {
-        return _viewerHub.Clients.Client(viewerId).SendAsync("SendDtoToViewer", dto);
+        return _viewerHub.Clients.Client(viewerId).SendDtoToViewer(dto);
     }
 
     public Task SendMessageToViewer(string viewerId, string message)
     {
-        return _viewerHub.Clients.Client(viewerId).SendAsync("ShowMessage", message);
+        return _viewerHub.Clients.Client(viewerId).ShowMessage(message);
     }
 
 

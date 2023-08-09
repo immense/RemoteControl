@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace Immense.RemoteControl.Server.Hubs;
 
 [ServiceFilter(typeof(ViewerAuthorizationFilter))]
-public class ViewerHub : Hub
+public class ViewerHub : Hub<IViewerHubClient>
 {
     private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHub;
     private readonly IViewerOptionsProvider _viewerOptionsProvider;
@@ -105,7 +105,7 @@ public class ViewerHub : Hub
         if (!sessionResult.IsSuccess)
         {
             _logger.LogError("Timed out while waiting for desktop stream.");
-            await Clients.Caller.SendAsync("ShowMessage", "Request timed out");
+            await Clients.Caller.ShowMessage("Request timed out");
             yield break;
         }
 
