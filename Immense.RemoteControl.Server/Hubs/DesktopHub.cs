@@ -3,18 +3,20 @@ using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
+using Immense.RemoteControl.Shared.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Server.Hubs;
 
-public class DesktopHub : Hub
+public class DesktopHub : Hub<IDesktopHubClient>
 {
     private readonly IHubEventHandler _hubEvents;
     private readonly ILogger<DesktopHub> _logger;
     private readonly IRemoteControlSessionCache _sessionCache;
     private readonly IDesktopStreamCache _streamCache;
     private readonly IHubContext<ViewerHub> _viewerHub;
+
     public DesktopHub(
         IRemoteControlSessionCache sessionCache,
         IDesktopStreamCache streamCache,
