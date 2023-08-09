@@ -15,7 +15,7 @@ using Immense.RemoteControl.Desktop.Shared.Messages;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
-public interface IScreenCaster : IDisposable
+public interface IScreenCaster : IAsyncDisposable
 {
     Task BeginScreenCasting(ScreenCastRequest screenCastRequest);
 }
@@ -32,7 +32,7 @@ internal class ScreenCaster : IScreenCaster
     private readonly IShutdownService _shutdownService;
     private readonly ISystemTime _systemTime;
     private readonly IViewerFactory _viewerFactory;
-    private bool _disposedValue;
+    private readonly List<Task<IAsyncDisposable>> _messengerRegistrations = new();
     private bool _isWindowsSessionEnding;
 
     public ScreenCaster(
@@ -55,8 +55,11 @@ internal class ScreenCaster : IScreenCaster
         _viewerFactory = viewerFactory;
         _logger = logger;
 
-        messenger.Register<WindowsSessionSwitchedMessage>(this, HandleWindowsSessionSwitchedMessage);
-        messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEndingMessage);
+        _messengerRegistrations.AddRange(new[]
+        {
+            messenger.Register<WindowsSessionSwitchedMessage>(this, HandleWindowsSessionSwitchedMessage),
+            messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEndingMessage)
+        });
     }
 
     public async Task BeginScreenCasting(ScreenCastRequest screenCastRequest)
@@ -64,25 +67,21 @@ internal class ScreenCaster : IScreenCaster
         await BeginScreenCastingImpl(screenCastRequest).ConfigureAwait(false);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposedValue)
+        foreach (var task in _messengerRegistrations)
         {
-            if (disposing)
+            try
             {
-                _metricsCts.Cancel();
-                _metricsCts.Dispose();
+                var registration = await task;
+                await registration.DisposeAsync();
             }
-
-            _disposedValue = true;
+            catch { }
         }
+        _metricsCts.Cancel();
+        _metricsCts.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 
     private async Task BeginScreenCastingImpl(ScreenCastRequest screenCastRequest)

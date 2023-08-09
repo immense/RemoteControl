@@ -341,7 +341,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 
         if (result == MessageBoxResult.Yes)
         {
-            using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+            await using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
             await screenCaster.BeginScreenCasting(screenCastRequest);
         }
     }

@@ -327,7 +327,7 @@ public class DesktopHubConnection : IDesktopHubConnection
                 // start this in a new task.
                 _ = Task.Run(async () =>
                 {
-                    using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+                    await using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
                     await screenCaster.BeginScreenCasting(
                         new ScreenCastRequest()
                         {
