@@ -3,6 +3,7 @@ using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Interfaces;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -13,7 +14,7 @@ namespace Immense.RemoteControl.Server.Hubs;
 [ServiceFilter(typeof(ViewerAuthorizationFilter))]
 public class ViewerHub : Hub
 {
-    private readonly IHubContext<DesktopHub> _desktopHub;
+    private readonly IHubContext<DesktopHub, IDesktopHubClient> _desktopHub;
     private readonly IViewerOptionsProvider _viewerOptionsProvider;
     private readonly ISessionRecordingSink _sessionRecordingSink;
     private readonly IRemoteControlSessionCache _desktopSessionCache;
@@ -25,7 +26,7 @@ public class ViewerHub : Hub
         IHubEventHandler hubEvents,
         IRemoteControlSessionCache desktopSessionCache,
         IDesktopStreamCache streamCache,
-        IHubContext<DesktopHub> desktopHub,
+        IHubContext<DesktopHub, IDesktopHubClient> desktopHub,
         IViewerOptionsProvider viewerOptionsProvider,
         ISessionRecordingSink sessionRecordingSink,
         ILogger<ViewerHub> logger)
@@ -83,7 +84,9 @@ public class ViewerHub : Hub
         }
 
         SessionInfo.ViewerList.Remove(Context.ConnectionId);
-        await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
+        await _desktopHub.Clients
+            .Client(SessionInfo.DesktopConnectionId)
+            .ViewerDisconnected(Context.ConnectionId);
 
         SessionInfo = SessionInfo.CreateNew();
         _desktopSessionCache.AddOrUpdate($"{SessionInfo.UnattendedSessionId}", SessionInfo);
@@ -147,7 +150,9 @@ public class ViewerHub : Hub
     {
         if (!string.IsNullOrWhiteSpace(SessionInfo.DesktopConnectionId))
         {
-            await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("ViewerDisconnected", Context.ConnectionId);
+            await _desktopHub.Clients
+                .Client(SessionInfo.DesktopConnectionId)
+                .ViewerDisconnected(Context.ConnectionId);
         }
 
         SessionInfo.ViewerList.Remove(Context.ConnectionId);
@@ -161,7 +166,9 @@ public class ViewerHub : Hub
             return Task.CompletedTask;
         }
 
-        return _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync("SendDtoToClient", dtoWrapper, Context.ConnectionId);
+        return _desktopHub.Clients
+            .Client(SessionInfo.DesktopConnectionId)
+            .SendDtoToClient(dtoWrapper, Context.ConnectionId);
     }
     public async Task<Result> SendScreenCastRequestToDevice(string sessionId, string accessKey, string requesterName)
     {
@@ -212,24 +219,26 @@ public class ViewerHub : Hub
 
         if (SessionInfo.Mode == RemoteControlMode.Unattended)
         {
-            await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
-                "GetScreenCast",
-                Context.ConnectionId,
-                RequesterDisplayName,
-                SessionInfo.NotifyUserOnStart,
-                SessionInfo.RequireConsent,
-                SessionInfo.OrganizationName,
-                SessionInfo.StreamId);
+            await _desktopHub.Clients
+                .Client(SessionInfo.DesktopConnectionId)
+                .GetScreenCast(
+                    Context.ConnectionId,
+                    RequesterDisplayName,
+                    SessionInfo.NotifyUserOnStart,
+                    SessionInfo.RequireConsent,
+                    SessionInfo.OrganizationName,
+                    SessionInfo.StreamId);
         }
         else
         {
             SessionInfo.Mode = RemoteControlMode.Attended;
-            await _desktopHub.Clients.Client(SessionInfo.DesktopConnectionId).SendAsync(
-                "RequestScreenCast", 
-                Context.ConnectionId, 
-                RequesterDisplayName,
-                SessionInfo.NotifyUserOnStart,
-                SessionInfo.StreamId);
+            await _desktopHub.Clients
+                .Client(SessionInfo.DesktopConnectionId)
+                .RequestScreenCast(
+                    Context.ConnectionId, 
+                    RequesterDisplayName,
+                    SessionInfo.NotifyUserOnStart,
+                    SessionInfo.StreamId);
         }
 
         return Result.Ok();

@@ -33,9 +33,11 @@ public class SessionRecordingSink : ISessionRecordingSink
 
             _ = Directory.CreateDirectory(recordingDir);
 
-            var username = PathSanitizer.SanitizeFileName($"{session.RequesterName ?? "UnknownUser"}");
+            var filePrefix = !string.IsNullOrWhiteSpace(session.RequesterName) ?
+                $"{session.RequesterName}" :
+                "UnknownUser";
             var fileName = 
-                $"{username}_" +
+                $"{filePrefix}_" +
                 $"{DateTimeOffset.Now:yyyyMMdd_HHmmssfff}.webm";
 
             using var fs = new FileStream(Path.Combine(recordingDir, fileName), FileMode.Create);
