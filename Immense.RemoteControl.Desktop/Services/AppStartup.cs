@@ -60,29 +60,32 @@ internal class AppStartup : IAppStartup
         switch (_appState.Mode)
         {
             case AppMode.Unattended:
-                _ = Task.Run(() => _dispatcher.StartUnattended());
-
-                var waitResult = await WaitHelper.WaitForAsync(
-                    () => _dispatcher.CurrentApp is not null,
-                    TimeSpan.FromSeconds(10));
-
-                if (!waitResult)
                 {
-                    _logger.LogError("Unattended dispatcher failed to start in time.");
-                    _dispatcher.Shutdown();
-                    return;
+                    var result = await _dispatcher.StartHeadless();
+                    if (!result.IsSuccess)
+                    {
+                        return;
+                    }
+                    await StartScreenCasting().ConfigureAwait(false);
+                    break;
                 }
-
-                await StartScreenCasting().ConfigureAwait(false);
-                break;
             case AppMode.Attended:
-                _dispatcher.StartAttended();
-                break;
+                {
+                    _dispatcher.StartClassicDesktop();
+                    break;
+                }
             case AppMode.Chat:
-                await _chatHostService
-                    .StartChat(_appState.PipeName, _appState.OrganizationName)
-                    .ConfigureAwait(false);
-                break;
+                {
+                    var result = await _dispatcher.StartHeadless();
+                    if (!result.IsSuccess)
+                    {
+                        return;
+                    }
+                    await _chatHostService
+                        .StartChat(_appState.PipeName, _appState.OrganizationName)
+                        .ConfigureAwait(false);
+                    break;
+                }
             default:
                 break;
         }

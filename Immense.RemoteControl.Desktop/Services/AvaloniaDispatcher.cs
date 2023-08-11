@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
+using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -24,9 +26,9 @@ public interface IAvaloniaDispatcher
     Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default);
     void Post(Action action, DispatcherPriority priority = default);
     void Shutdown();
-    void StartAttended();
+    void StartClassicDesktop();
 
-    void StartUnattended();
+    Task<Result> StartHeadless();
 }
 
 internal class AvaloniaDispatcher : IAvaloniaDispatcher
@@ -35,6 +37,8 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
     private static Application? _currentApp;
     private readonly ILogger<AvaloniaDispatcher> _logger;
     private AppBuilder? _appBuilder;
+    private Task? _runHeadlessTask;
+
     public AvaloniaDispatcher(ILogger<AvaloniaDispatcher> logger)
     {
         _logger = logger;
@@ -111,7 +115,7 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
         }
     }
 
-    public void StartAttended()
+    public void StartClassicDesktop()
     {
         try
         {
@@ -126,20 +130,38 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
         }
     }
 
-    public void StartUnattended()
+    public async Task<Result> StartHeadless()
     {
         try
         {
             var args = Environment.GetCommandLineArgs();
             var argString = string.Join(", ", args);
             _logger.LogInformation("Starting dispatcher in unattended mode with args: [{args}].", argString);
-            _appBuilder = BuildAvaloniaApp();
-            _appBuilder.Start(MainImpl, args);
+
+            _runHeadlessTask = Task.Run(() =>
+            {
+                _appBuilder = BuildAvaloniaApp();
+                _appBuilder.Start(RunHeadless, args);
+            }, _appCts.Token);
+
+            var waitResult = await WaitHelper.WaitForAsync(
+                    () => CurrentApp is not null,
+                    TimeSpan.FromSeconds(10));
+
+            if (!waitResult)
+            {
+                const string err = "Unattended dispatcher failed to start in time.";
+                _logger.LogError(err);
+                Shutdown();
+                return Result.Fail(err);
+            }
+
+            return Result.Ok();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while starting background app.");
-            throw;
+            return Result.Fail(ex);
         }
     }
     // Avalonia configuration, don't remove; also used by visual designer.
@@ -149,7 +171,7 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
             .WithInterFont()
             .LogToTrace();
 
-    private static void MainImpl(Application app, string[] args)
+    private static void RunHeadless(Application app, string[] args)
     {
         _currentApp = app;
         app.Run(_appCts.Token);

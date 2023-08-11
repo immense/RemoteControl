@@ -29,9 +29,9 @@ public interface IBrandedViewModelBase
 public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
 {
     private static BrandingInfoBase? _brandingInfo;
+    protected readonly ILogger<BrandedViewModelBase> _logger;
+    protected readonly IAvaloniaDispatcher _dispatcher;
     private readonly IBrandingProvider _brandingProvider;
-    private readonly ILogger<BrandedViewModelBase> _logger;
-    private readonly IAvaloniaDispatcher _dispatcher;
 
 
     public BrandedViewModelBase(
