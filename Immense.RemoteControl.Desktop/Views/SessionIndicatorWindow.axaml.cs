@@ -14,11 +14,6 @@ public partial class SessionIndicatorWindow : Window
     public SessionIndicatorWindow()
     {
         InitializeComponent();
-    }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
 
         Closing += SessionIndicatorWindow_Closing;
         PointerPressed += SessionIndicatorWindow_PointerPressed;

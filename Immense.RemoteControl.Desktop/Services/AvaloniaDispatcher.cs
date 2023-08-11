@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using System;
@@ -12,33 +13,51 @@ namespace Immense.RemoteControl.Desktop.Services;
 public interface IAvaloniaDispatcher
 {
     CancellationToken AppCancellationToken { get; }
-
+    IClipboard? Clipboard { get; }
     Application? CurrentApp { get; }
 
     Window? MainWindow { get; }
 
-    Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
-    Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal);
-    Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal);
-    void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
+    void Invoke(Action action);
+    Task InvokeAsync(Action action, DispatcherPriority priority = default);
+    Task InvokeAsync(Func<Task> func, DispatcherPriority priority = default);
+    Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default);
+    void Post(Action action, DispatcherPriority priority = default);
     void Shutdown();
-    void StartUnattended();
     void StartAttended();
+
+    void StartUnattended();
 }
 
 internal class AvaloniaDispatcher : IAvaloniaDispatcher
 {
     private static readonly CancellationTokenSource _appCts = new();
-    private AppBuilder? _appBuilder;
     private static Application? _currentApp;
     private readonly ILogger<AvaloniaDispatcher> _logger;
-
+    private AppBuilder? _appBuilder;
     public AvaloniaDispatcher(ILogger<AvaloniaDispatcher> logger)
     {
         _logger = logger;
     }
 
     public CancellationToken AppCancellationToken => _appCts.Token;
+
+    public IClipboard? Clipboard
+    {
+        get
+        {
+            if (CurrentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
+            {
+                return desktopApp.MainWindow?.Clipboard;
+            }
+
+            if (CurrentApp?.ApplicationLifetime is ISingleViewApplicationLifetime svApp)
+            {
+                return TopLevel.GetTopLevel(svApp.MainView)?.Clipboard;
+            }
+            return null;
+        }
+    }
 
     public Application? CurrentApp => _currentApp ?? _appBuilder?.Instance;
 
@@ -50,27 +69,32 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
             {
                 return app.MainWindow;
             }
+
             return null;
         }
     }
+    public void Invoke(Action action)
+    {
+        Dispatcher.UIThread.Invoke(action);
+    }
 
-    public Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal)
+    public Task InvokeAsync(Func<Task> func, DispatcherPriority priority = default)
     {
 
         return Dispatcher.UIThread.InvokeAsync(func, priority);
     }
 
-    public Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal)
+    public Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default)
     {
         return Dispatcher.UIThread.InvokeAsync(func, priority);
     }
 
-    public Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
+    public async Task InvokeAsync(Action action, DispatcherPriority priority = default)
     {
-        return Dispatcher.UIThread.InvokeAsync(action, priority);
+        await Dispatcher.UIThread.InvokeAsync(action, priority);
     }
 
-    public void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
+    public void Post(Action action, DispatcherPriority priority = default)
     {
         Dispatcher.UIThread.Post(action, priority);
     }
@@ -84,6 +108,21 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
             {
                 Environment.Exit(0);
             }
+        }
+    }
+
+    public void StartAttended()
+    {
+        try
+        {
+            var args = Environment.GetCommandLineArgs();
+            _appBuilder = BuildAvaloniaApp();
+            _appBuilder.StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while starting foreground app.");
+            throw;
         }
     }
 
@@ -103,27 +142,11 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
             throw;
         }
     }
-
-    public void StartAttended()
-    {
-        try
-        {
-            var args = Environment.GetCommandLineArgs();
-            _appBuilder = BuildAvaloniaApp();
-            _appBuilder.StartWithClassicDesktopLifetime(args);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while starting foreground app.");
-            throw;
-        }
-    }
-
-
     // Avalonia configuration, don't remove; also used by visual designer.
     private static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .WithInterFont()
             .LogToTrace();
 
     private static void MainImpl(Application app, string[] args)

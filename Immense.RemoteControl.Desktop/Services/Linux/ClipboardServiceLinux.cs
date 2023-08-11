@@ -42,18 +42,18 @@ public class ClipboardServiceLinux : IClipboardService
     {
         try
         {
-            if (_dispatcher.CurrentApp?.Clipboard is null)
+            if (_dispatcher?.Clipboard is null)
             {
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(clipboardText))
             {
-                await _dispatcher.CurrentApp.Clipboard.ClearAsync();
+                await _dispatcher.Clipboard.ClearAsync();
             }
             else
             {
-                await _dispatcher.CurrentApp.Clipboard.SetTextAsync(clipboardText);
+                await _dispatcher.Clipboard.SetTextAsync(clipboardText);
             }
         }
         catch (Exception ex)
@@ -75,12 +75,12 @@ public class ClipboardServiceLinux : IClipboardService
         {
             try
             {
-                if (_dispatcher.CurrentApp?.Clipboard is null)
+                if (_dispatcher?.Clipboard is null)
                 {
                     continue;
                 }
 
-                var currentText = await _dispatcher.CurrentApp.Clipboard.GetTextAsync();
+                var currentText = await _dispatcher.Clipboard.GetTextAsync();
                 if (!string.IsNullOrEmpty(currentText) && currentText != ClipboardText)
                 {
                     ClipboardText = currentText;

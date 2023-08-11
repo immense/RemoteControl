@@ -13,7 +13,7 @@ namespace Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
 public interface IBrandedViewModelBase
 {
     BitmapImage? Icon { get; set; }
-    string? ProductName { get; set; }
+    string ProductName { get; set; }
     SolidColorBrush? TitleBackgroundColor { get; set; }
     SolidColorBrush? TitleButtonForegroundColor { get; set; }
     SolidColorBrush? TitleForegroundColor { get; set; }
@@ -36,7 +36,14 @@ public abstract class BrandedViewModelBase : ObservableObject, IBrandedViewModel
         _brandingProvider = brandingProvider;
         _dispatcher = dispatcher;
         _logger = logger;
-        _ = Task.Run(ApplyBranding);
+        if (_brandingInfo is not null)
+        {
+            ApplyBrandingImpl();
+        }
+        else
+        {
+            _ = Task.Run(ApplyBranding);
+        }
     }
 
     public BitmapImage? Icon
@@ -45,10 +52,10 @@ public abstract class BrandedViewModelBase : ObservableObject, IBrandedViewModel
         set => Set(value);
     }
 
-    public string? ProductName
+    public string ProductName
     {
-        get => Get<string?>();
-        set => Set(value);
+        get => Get<string?>() ?? "Remote Control";
+        set => Set(value ?? "Remote Control");
     }
 
     public SolidColorBrush? TitleBackgroundColor
@@ -77,12 +84,28 @@ public abstract class BrandedViewModelBase : ObservableObject, IBrandedViewModel
             {
                 _brandingInfo ??= await _brandingProvider.GetBrandingInfo();
 
-                ProductName = "Remote Control";
+                ApplyBrandingImpl();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying branding.");
+            }
+        });
 
-                if (!string.IsNullOrWhiteSpace(_brandingInfo.Product))
+    }
+
+    private void ApplyBrandingImpl()
+    {
+        _dispatcher.InvokeWpf(() =>
+        {
+            try
+            {
+                if (_brandingInfo is null)
                 {
-                    ProductName = _brandingInfo.Product;
+                    return;
                 }
+
+                ProductName = _brandingInfo.Product;
 
                 TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
                     _brandingInfo.TitleBackgroundRed,
@@ -112,8 +135,8 @@ public abstract class BrandedViewModelBase : ObservableObject, IBrandedViewModel
                 _logger.LogError(ex, "Error applying branding.");
             }
         });
-
     }
+
     private BitmapImage GetBitmapImageIcon(BrandingInfoBase bi)
     {
         try

@@ -12,9 +12,4 @@ public partial class HostNamePrompt : Window
     }
 
     public HostNamePromptViewModel? ViewModel => DataContext as HostNamePromptViewModel;
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
 }

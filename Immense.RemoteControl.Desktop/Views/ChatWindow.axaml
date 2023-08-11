@@ -3,17 +3,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.ViewModels"
-		    xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.ViewModels.Fakes"
+		xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.ViewModels.Fakes"
         xmlns:Models="clr-namespace:Immense.RemoteControl.Shared.Models;assembly=Immense.RemoteControl.Shared"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Immense.RemoteControl.Desktop.Views.ChatWindow"
         Icon="{Binding WindowIcon}"
-        HasSystemDecorations="False"
+		SystemDecorations="None"
         BorderBrush="DimGray"
         BorderThickness="1"
         MinHeight="250"
         MinWidth="200"
         Topmost="True"
+		x:DataType="vm:ChatWindowViewModel"
+		x:Name="ChatWindowRef"
         Title="Chat Session" Height="450" Width="450">
 
 	<Design.DataContext>
@@ -41,8 +43,8 @@
           <Image Grid.Column="0" Height="50" Width="50" Source="{Binding Icon}" Margin="0,0,10,0"></Image>
           <TextBlock Grid.Column="1" Text="{Binding ProductName}" Foreground="{Binding TitleForegroundColor}" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
           <TextBlock Grid.Column="2" Text=" Chat"  Foreground="{Binding TitleForegroundColor}" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
-          <Button Grid.Column="4" Classes="TitlebarButton" Foreground="{Binding TitleButtonForegroundColor}" Background="{Binding TitleBackgroundColor}" Command="{Binding MinimizeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" Content="__"/>
-          <Button Grid.Column="5" Classes="TitlebarButton" Foreground="{Binding TitleButtonForegroundColor}" Background="{Binding TitleBackgroundColor}" Command="{Binding CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" Content="X" />
+          <Button Grid.Column="4" Classes="TitlebarButton" Foreground="{Binding TitleButtonForegroundColor}" Background="{Binding TitleBackgroundColor}" Command="{Binding MinimizeCommand}" CommandParameter="{Binding #ChatWindowRef}" Content="__"/>
+          <Button Grid.Column="5" Classes="TitlebarButton" Foreground="{Binding TitleButtonForegroundColor}" Background="{Binding TitleBackgroundColor}" Command="{Binding CloseCommand}" CommandParameter="{Binding #ChatWindowRef}" Content="X" />
         </Grid>
     </Border>
 
@@ -63,7 +65,7 @@
           
             <Border BorderBrush="Gray" BorderThickness="1" Margin="5">
                 <ScrollViewer x:Name="MessagesScrollViewer">
-                    <ItemsControl x:Name="MessagesListBox" Items="{Binding ChatMessages}">
+                    <ItemsControl x:Name="MessagesListBox" ItemsSource="{Binding ChatMessages}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type Models:ChatMessage}">
                           <!-- TODO: Replace with Run when implemented. -->

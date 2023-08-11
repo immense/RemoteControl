@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Immense.RemoteControl.Desktop.ViewModels;
 using System;
@@ -40,8 +41,7 @@ public partial class ChatWindow : Window
         this.FindControl<Border>("TitleBanner").PointerPressed += TitleBanner_PointerPressed;
 
         this.FindControl<TextBox>("InputTextBox").KeyUp += ChatWindow_KeyUp;
-
-        this.FindControl<ItemsControl>("MessagesListBox").ItemContainerGenerator.Materialized += ItemContainerGenerator_Materialized;
+        MessagesListBox.Loaded += ItemContainerGenerator_Materialized;
     }
 
     private void ChatWindow_Opened(object? sender, EventArgs e)
@@ -49,7 +49,7 @@ public partial class ChatWindow : Window
         Topmost = false;
     }
 
-    private async void ItemContainerGenerator_Materialized(object? sender, Avalonia.Controls.Generators.ItemContainerEventArgs e)
+    private async void ItemContainerGenerator_Materialized(object? sender, RoutedEventArgs e)
     {
         // Allows listbox height to adjust to content before scrolling the scrollviewer.
         await Task.Delay(1);

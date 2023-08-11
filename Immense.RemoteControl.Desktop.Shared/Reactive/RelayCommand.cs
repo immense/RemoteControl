@@ -69,7 +69,10 @@ public class RelayCommand<T> : ICommand
 
         if (parameter is not T typedParam)
         {
-            throw new InvalidOperationException("Paramter is not of the correct type.");
+            throw new InvalidOperationException(
+                "Parameter is not of the correct type.  " +
+                $"Expected type {typeof(T)}.  " +
+                $"Received type {parameter.GetType()}.");
         }
 
         return _canExecute.Invoke(typedParam);
@@ -85,7 +88,10 @@ public class RelayCommand<T> : ICommand
 
         if (parameter is not T typedParam)
         {
-            throw new InvalidOperationException("Paramter is not of the correct type.");
+            throw new InvalidOperationException(
+               "Parameter is not of the correct type.  " +
+               $"Expected type {typeof(T)}.  " +
+               $"Received type {parameter.GetType()}.");
         }
 
         _execute.Invoke(typedParam);

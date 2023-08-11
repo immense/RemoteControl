@@ -17,7 +17,7 @@ namespace Immense.RemoteControl.Desktop.ViewModels;
 public interface IBrandedViewModelBase
 {
     Bitmap? Icon { get; set; }
-    string? ProductName { get; set; }
+    string ProductName { get; set; }
     SolidColorBrush? TitleBackgroundColor { get; set; }
     SolidColorBrush? TitleButtonForegroundColor { get; set; }
     SolidColorBrush? TitleForegroundColor { get; set; }
@@ -43,7 +43,15 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
         _brandingProvider = brandingProvider;
         _dispatcher = dispatcher;
         _logger = logger;
-        _ = Task.Run(ApplyBranding);
+        
+        if (_brandingInfo is not null)
+        {
+            ApplyBrandingImpl();
+        }
+        else
+        {
+            _ = Task.Run(ApplyBranding);
+        }
     }
 
     public Bitmap? Icon
@@ -52,10 +60,10 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
         set => Set(value);
     }
 
-    public string? ProductName
+    public string ProductName
     {
-        get => Get<string?>();
-        set => Set(value);
+        get => Get<string?>() ?? "Remote Control";
+        set => Set(value ?? "Remote Control");
     }
     public SolidColorBrush? TitleBackgroundColor
     {
@@ -86,36 +94,51 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
             {
                 _brandingInfo ??= await _brandingProvider.GetBrandingInfo();
 
-                ProductName = "Remote Control";
+                ApplyBrandingImpl();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying branding.");
+            }
+        });
+    }
+    private void ApplyBrandingImpl()
+    {
+        _dispatcher.Invoke(() =>
+        {
+            try
+            {
+                _brandingInfo ??= new BrandingInfoBase();
 
-                if (!string.IsNullOrWhiteSpace(_brandingInfo?.Product))
-                {
-                    ProductName = _brandingInfo.Product;
-                }
+                ProductName = _brandingInfo.Product;
 
                 TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
-                    _brandingInfo?.TitleBackgroundRed ?? 70,
-                    _brandingInfo?.TitleBackgroundGreen ?? 70,
-                    _brandingInfo?.TitleBackgroundBlue ?? 70));
+                    _brandingInfo.TitleBackgroundRed,
+                    _brandingInfo.TitleBackgroundGreen,
+                    _brandingInfo.TitleBackgroundBlue));
 
                 TitleForegroundColor = new SolidColorBrush(Color.FromRgb(
-                   _brandingInfo?.TitleForegroundRed ?? 29,
-                   _brandingInfo?.TitleForegroundGreen ?? 144,
-                   _brandingInfo?.TitleForegroundBlue ?? 241));
+                   _brandingInfo.TitleForegroundRed,
+                   _brandingInfo.TitleForegroundGreen,
+                   _brandingInfo.TitleForegroundBlue));
 
                 TitleButtonForegroundColor = new SolidColorBrush(Color.FromRgb(
-                   _brandingInfo?.ButtonForegroundRed ?? 255,
-                   _brandingInfo?.ButtonForegroundGreen ?? 255,
-                   _brandingInfo?.ButtonForegroundBlue ?? 255));
+                   _brandingInfo.ButtonForegroundRed,
+                   _brandingInfo.ButtonForegroundGreen,
+                   _brandingInfo.ButtonForegroundBlue));
 
-                if (_brandingInfo?.Icon?.Any() == true)
+                if (_brandingInfo.Icon?.Any() == true)
                 {
                     using var imageStream = new MemoryStream(_brandingInfo.Icon);
                     Icon = new Bitmap(imageStream);
                 }
                 else
                 {
-                    using var imageStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Immense.RemoteControl.Desktop.Assets.DefaultIcon.png");
+                    using var imageStream = 
+                        Assembly
+                            .GetExecutingAssembly()
+                            .GetManifestResourceStream("Immense.RemoteControl.Desktop.Shared.Assets.DefaultIcon.png") ?? new MemoryStream();
+
                     Icon = new Bitmap(imageStream);
                 }
 
