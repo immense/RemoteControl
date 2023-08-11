@@ -13,6 +13,13 @@ public partial class ChatWindow : Window
     public ChatWindow()
     {
         InitializeComponent();
+
+        Closed += ChatWindow_Closed;
+        Opened += ChatWindow_Opened;
+
+        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
+        InputTextBox.KeyUp += ChatWindow_KeyUp;
+        MessagesListBox.Loaded += MessageListBox_Loaded;
     }
 
     private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
@@ -31,17 +38,6 @@ public partial class ChatWindow : Window
         }
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-
-        Closed += ChatWindow_Closed;
-        Opened += ChatWindow_Opened;
-
-        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
-        InputTextBox.KeyUp += ChatWindow_KeyUp;
-        MessagesListBox.Loaded += MessageListBox_Loaded;
-    }
 
     private void ChatWindow_Opened(object? sender, EventArgs e)
     {

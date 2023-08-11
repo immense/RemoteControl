@@ -40,9 +40,9 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           
-          <Image Grid.Column="0" Height="50" Width="50" Source="{Binding Icon}" Margin="0,0,10,0"></Image>
-          <TextBlock Grid.Column="1" Text="{Binding ProductName}" Foreground="{Binding TitleForegroundColor}" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
-          <TextBlock Grid.Column="2" Text=" Chat"  Foreground="{Binding TitleForegroundColor}" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
+          <Image Grid.Column="0" Source="{Binding Icon}" Margin="0,0,10,0"></Image>
+          <TextBlock Grid.Column="1" Text="{Binding ProductName}" Foreground="{Binding TitleForegroundColor}" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" Margin="0,0,5,0" />
+          <TextBlock Grid.Column="2" Text="Chat"  Foreground="{Binding TitleForegroundColor}" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
           <Button Grid.Column="4" Classes="TitlebarButton" Foreground="{Binding TitleButtonForegroundColor}" Background="{Binding TitleBackgroundColor}" Command="{Binding MinimizeCommand}" CommandParameter="{Binding #ChatWindowRef}" Content="__"/>
           <Button Grid.Column="5" Classes="TitlebarButton" Foreground="{Binding TitleButtonForegroundColor}" Background="{Binding TitleBackgroundColor}" Command="{Binding CloseCommand}" CommandParameter="{Binding #ChatWindowRef}" Content="X" />
         </Grid>
