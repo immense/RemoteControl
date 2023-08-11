@@ -20,10 +20,11 @@ public partial class FileTransferWindow : Window
     {
         Topmost = false;
 
-        var left = Screens.Primary.WorkingArea.Right - Width;
-
-        var top = Screens.Primary.WorkingArea.Bottom - Height;
-
-        Position = new PixelPoint((int)left, (int)top);
+        if (Screens.Primary is not null)
+        {
+            var left = Screens.Primary.WorkingArea.Right - Width;
+            var top = Screens.Primary.WorkingArea.Bottom - Height;
+            Position = new PixelPoint((int)left, (int)top);
+        }
     }
 }

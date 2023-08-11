@@ -49,6 +49,11 @@ public class ChatUiServiceLinux : IChatUiService
 
     public void ShowChatWindow(string organizationName, StreamWriter writer)
     {
+        if (_dispatcher.CurrentApp is null)
+        {
+            return;
+        }
+
         _dispatcher.Post(() =>
         {
             _chatViewModel = _viewModelFactory.CreateChatWindowViewModel(organizationName, writer);

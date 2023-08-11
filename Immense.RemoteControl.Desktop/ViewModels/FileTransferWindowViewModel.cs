@@ -105,30 +105,32 @@ public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWi
 
     private async Task OpenFileUploadDialog(FileTransferWindow? window)
     {
+        if (window is null)
+        {
+            return;
+        }
+
         var initialDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         if (!Directory.Exists(initialDir))
         {
             initialDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "RemoteControl")).FullName;
         }
 
-        var ofd = new OpenFileDialog
+        var startFolder = await window.StorageProvider.TryGetFolderFromPathAsync(new Uri(initialDir));
+        var result = await window.StorageProvider.OpenFilePickerAsync(new()
         {
             Title = "Upload File via Remotely",
             AllowMultiple = true,
-            Directory = initialDir
-        };
-
-        var result = await ofd.ShowAsync(window!);
+            SuggestedStartLocation = startFolder
+        });
+        
         if (result?.Any() != true)
         {
             return;
         }
         foreach (var file in result)
         {
-            if (File.Exists(file))
-            {
-                await UploadFile(file);
-            }
+            await UploadFile($"{file.Path}");
         }
     }
 }

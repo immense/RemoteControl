@@ -279,6 +279,11 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
     public async Task PromptForHostName()
     {
+        if (_dispatcher.MainWindow is null)
+        {
+            return;
+        }
+
         var viewModel = _viewModelFactory.CreateHostNamePromptViewModel();
         var prompt = new HostNamePrompt()
         {

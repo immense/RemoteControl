@@ -13,8 +13,8 @@ public partial class MainView : UserControl
         DataContext = StaticServiceProvider.Instance?.GetService<IMainViewViewModel>();
 
         InitializeComponent();
-        this.FindControl<Border>(nameof(TitleBanner)).PointerPressed += TitleBanner_PointerPressed;
-        this.FindControl<ListBox>(nameof(ViewerListBox)).SelectionChanged += ViewerListBox_SelectionChanged;
+        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
+        ViewerListBox.SelectionChanged += ViewerListBox_SelectionChanged;
 
         Loaded += MainView_Loaded;
     }
@@ -22,7 +22,8 @@ public partial class MainView : UserControl
     private void ViewerListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (DataContext is MainViewViewModel viewModel &&
-            sender is ListBox viewerListBox)
+            sender is ListBox viewerListBox &&
+            viewerListBox.SelectedItems is not null)
         {
             viewModel.SelectedViewers = viewerListBox.SelectedItems.Cast<IViewer>().ToList();
         }

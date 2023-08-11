@@ -38,10 +38,9 @@ public partial class ChatWindow : Window
         Closed += ChatWindow_Closed;
         Opened += ChatWindow_Opened;
 
-        this.FindControl<Border>("TitleBanner").PointerPressed += TitleBanner_PointerPressed;
-
-        this.FindControl<TextBox>("InputTextBox").KeyUp += ChatWindow_KeyUp;
-        MessagesListBox.Loaded += ItemContainerGenerator_Materialized;
+        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
+        InputTextBox.KeyUp += ChatWindow_KeyUp;
+        MessagesListBox.Loaded += MessageListBox_Loaded;
     }
 
     private void ChatWindow_Opened(object? sender, EventArgs e)
@@ -49,14 +48,12 @@ public partial class ChatWindow : Window
         Topmost = false;
     }
 
-    private async void ItemContainerGenerator_Materialized(object? sender, RoutedEventArgs e)
+    private async void MessageListBox_Loaded(object? sender, RoutedEventArgs e)
     {
         // Allows listbox height to adjust to content before scrolling the scrollviewer.
         await Task.Delay(1);
         // TODO: Replace with ScrollToEnd when implemented.
-        var scrollViewer = this.FindControl<ScrollViewer>("MessagesScrollViewer");
-        var listBox = this.FindControl<ItemsControl>("MessagesListBox");
-        scrollViewer.Offset = new Vector(0, listBox.Bounds.Height);
+        MessagesScrollViewer.Offset = new Vector(0, MessagesListBox.Bounds.Height);
     }
 
 
