@@ -1,5 +1,4 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Examples.LinuxDesktopExample;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Startup;
@@ -8,6 +7,8 @@ using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Avalonia;
 using Immense.RemoteControl.Desktop;
+
+namespace Immense.RemoteControl.Examples.LinuxDesktopExample;
 
 class Program
 {
