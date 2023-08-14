@@ -9,7 +9,7 @@ using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System.Windows;
 
-namespace Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 internal class AppStartup : IAppStartup
 {

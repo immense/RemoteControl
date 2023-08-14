@@ -12,7 +12,7 @@ using System.Security.Principal;
 using System.Windows;
 using MessageBoxOptions = System.Windows.MessageBoxOptions;
 
-namespace Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 public class FileTransferServiceWin : IFileTransferService
 {

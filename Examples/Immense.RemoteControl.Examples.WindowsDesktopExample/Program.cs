@@ -1,12 +1,12 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.UI.WPF.Services;
 using Immense.RemoteControl.Examples.WindowsDesktopExample;
-using Immense.RemoteControl.Desktop.Windows.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using System.Windows;
+using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Startup;
 
 var services = new ServiceCollection();
 services.AddRemoteControlWindows(config =>

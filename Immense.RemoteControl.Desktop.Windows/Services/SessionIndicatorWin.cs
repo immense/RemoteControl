@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.IO;
 
-namespace Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 public class SessionIndicatorWin : ISessionIndicator
 {

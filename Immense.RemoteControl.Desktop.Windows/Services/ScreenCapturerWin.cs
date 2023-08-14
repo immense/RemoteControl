@@ -34,11 +34,11 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared;
 using Result = Immense.RemoteControl.Shared.Result;
-using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Native.Windows;
 using System.Diagnostics.CodeAnalysis;
+using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Models;
 
-namespace Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 public class ScreenCapturerWin : IScreenCapturer
 {
@@ -58,7 +58,7 @@ public class ScreenCapturerWin : IScreenCapturer
         _logger = logger;
 
         Init();
-        
+
         SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
     }
 
@@ -95,7 +95,7 @@ public class ScreenCapturerWin : IScreenCapturer
 
     public Result<SKBitmap> GetImageDiff()
     {
-        
+
         if (CurrentFrame is null)
         {
             return Result.Fail<SKBitmap>("Current frame cannot be empty.");
@@ -247,12 +247,12 @@ public class ScreenCapturerWin : IScreenCapturer
             var bounds = dxOutput.Bounds;
 
             var result = outputDuplication.TryAcquireNextFrame(timeoutInMilliseconds: 25, out var duplicateFrameInfo, out var screenResource);
-            
+
             if (!result.Success)
             {
                 return DxCaptureResult.TryAcquireFailed(result);
             }
-            
+
             if (duplicateFrameInfo.AccumulatedFrames == 0)
             {
                 try
@@ -273,8 +273,8 @@ public class ScreenCapturerWin : IScreenCapturer
             for (var y = 0; y < bounds.Height; y++)
             {
                 Utilities.CopyMemory(bitmapDataPointer, dataBoxPointer, bounds.Width * 4);
-                dataBoxPointer = IntPtr.Add(dataBoxPointer, dataBox.RowPitch);
-                bitmapDataPointer = IntPtr.Add(bitmapDataPointer, bitmapData.Stride);
+                dataBoxPointer = nint.Add(dataBoxPointer, dataBox.RowPitch);
+                bitmapDataPointer = nint.Add(bitmapDataPointer, bitmapData.Stride);
             }
             bitmap.UnlockBits(bitmapData);
             device.ImmediateContext.UnmapSubresource(texture2D, 0);
