@@ -49,7 +49,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
     public MainViewViewModel(
       IBrandingProvider brandingProvider,
-      IAvaloniaDispatcher dispatcher,
+      IUiDispatcher dispatcher,
       IAppState appState,
       IDesktopHubConnection hubConnection,
       IServiceProvider serviceProvider,
@@ -222,7 +222,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
         try
         {
-            var result = await _hubConnection.Connect(TimeSpan.FromSeconds(10), _dispatcher.AppCancellationToken);
+            var result = await _hubConnection.Connect(TimeSpan.FromSeconds(10), _dispatcher.ApplicationExitingToken);
 
             if (result && _hubConnection.Connection is not null)
             {

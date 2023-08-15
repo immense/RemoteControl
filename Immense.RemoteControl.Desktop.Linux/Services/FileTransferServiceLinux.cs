@@ -16,12 +16,12 @@ public class FileTransferServiceLinux : IFileTransferService
     private static readonly SemaphoreSlim _writeLock = new(1, 1);
     private static volatile bool _messageBoxPending;
     private readonly IViewModelFactory _viewModelFactory;
-    private readonly IAvaloniaDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly ILogger<FileTransferServiceLinux> _logger;
 
     public FileTransferServiceLinux(
         IViewModelFactory viewModelFactory,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<FileTransferServiceLinux> logger)
     {
         _viewModelFactory = viewModelFactory;

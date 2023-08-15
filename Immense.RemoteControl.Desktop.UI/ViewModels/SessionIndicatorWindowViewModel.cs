@@ -11,7 +11,7 @@ public class SessionIndicatorWindowViewModel : BrandedViewModelBase, ISessionInd
 {
     public SessionIndicatorWindowViewModel(
         IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<BrandedViewModelBase> logger)
         : base(brandingProvider, dispatcher, logger)
     {

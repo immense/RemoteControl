@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows7.0</TargetFramework>
-	<UseWPF>true</UseWPF>
 	<UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -19,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Immense.RemoteControl.Desktop.Shared\Immense.RemoteControl.Desktop.Shared.csproj" />
-    <ProjectReference Include="..\Immense.RemoteControl.Desktop.UI.WPF\Immense.RemoteControl.Desktop.UI.WPF.csproj" />
+    <ProjectReference Include="..\Immense.RemoteControl.Desktop.UI\Immense.RemoteControl.Desktop.UI.csproj" />
   </ItemGroup>
 	
 </Project>

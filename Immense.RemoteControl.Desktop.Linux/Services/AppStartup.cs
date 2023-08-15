@@ -16,7 +16,7 @@ internal class AppStartup : IAppStartup
     private readonly IClipboardService _clipboardService;
     private readonly IChatHostService _chatHostService;
     private readonly ICursorIconWatcher _cursorIconWatcher;
-    private readonly IAvaloniaDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly IIdleTimer _idleTimer;
     private readonly IShutdownService _shutdownService;
     private readonly ILogger<AppStartup> _logger;
@@ -28,7 +28,7 @@ internal class AppStartup : IAppStartup
         IClipboardService clipboardService,
         IChatHostService chatHostService,
         ICursorIconWatcher iconWatcher,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         IIdleTimer idleTimer,
         IShutdownService shutdownService,
         ILogger<AppStartup> logger)
@@ -91,7 +91,7 @@ internal class AppStartup : IAppStartup
 
     private async Task StartScreenCasting()
     {
-        if (!await _desktopHub.Connect(TimeSpan.FromSeconds(30), _dispatcher.AppCancellationToken))
+        if (!await _desktopHub.Connect(TimeSpan.FromSeconds(30), _dispatcher.ApplicationExitingToken))
         {
             await _shutdownService.Shutdown();
             return;

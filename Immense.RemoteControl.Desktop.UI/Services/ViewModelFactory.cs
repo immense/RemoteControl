@@ -28,7 +28,7 @@ internal class ViewModelFactory : IViewModelFactory
     public ChatWindowViewModel CreateChatWindowViewModel(string organizationName, StreamWriter streamWriter)
     {
         var branding = _serviceProvider.GetRequiredService<IBrandingProvider>();
-        var dispatcher = _serviceProvider.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
         var logger = _serviceProvider.GetRequiredService<ILogger<ChatWindowViewModel>>();
         return new ChatWindowViewModel(streamWriter, organizationName, branding, dispatcher, logger);
     }
@@ -37,7 +37,7 @@ internal class ViewModelFactory : IViewModelFactory
         IViewer viewer)
     {
         var brandingProvider = _serviceProvider.GetRequiredService<IBrandingProvider>();
-        var dispatcher = _serviceProvider.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
         var logger = _serviceProvider.GetRequiredService<ILogger<FileTransferWindowViewModel>>();
         var fileTransfer = _serviceProvider.GetRequiredService<IFileTransferService>();
         return new FileTransferWindowViewModel(viewer, brandingProvider, dispatcher, fileTransfer, logger);
@@ -46,7 +46,7 @@ internal class ViewModelFactory : IViewModelFactory
     public PromptForAccessWindowViewModel CreatePromptForAccessViewModel(string requesterName, string organizationName)
     {
         var brandingProvider = _serviceProvider.GetRequiredService<IBrandingProvider>();
-        var dispatcher = _serviceProvider.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
         var logger = _serviceProvider.GetRequiredService<ILogger<PromptForAccessWindowViewModel>>();
         return new PromptForAccessWindowViewModel(requesterName, organizationName, brandingProvider, dispatcher, logger);
     }
@@ -54,7 +54,7 @@ internal class ViewModelFactory : IViewModelFactory
     public HostNamePromptViewModel CreateHostNamePromptViewModel()
     {
         var brandingProvider = _serviceProvider.GetRequiredService<IBrandingProvider>();
-        var dispatcher = _serviceProvider.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
         var logger = _serviceProvider.GetRequiredService<ILogger<HostNamePromptViewModel>>();
         return new HostNamePromptViewModel(brandingProvider, dispatcher, logger);
     }

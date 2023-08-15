@@ -18,7 +18,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
-        var dispatcher = StaticServiceProvider.Instance?.GetService<IAvaloniaDispatcher>();
+        var dispatcher = StaticServiceProvider.Instance?.GetService<IUiDispatcher>();
         dispatcher?.Shutdown();
     }
 }

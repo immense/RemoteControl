@@ -10,7 +10,7 @@ using Immense.RemoteControl.Desktop.UI.Services;
 
 namespace Immense.RemoteControl.Examples.LinuxDesktopExample;
 
-class Program
+public class Program
 {
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
@@ -58,10 +58,10 @@ class Program
         Console.WriteLine($"https://localhost:7024/RemoteControl/Viewer?mode=Unattended&sessionId={appState.SessionId}&accessKey={appState.AccessKey}");
 
         Console.WriteLine("Press Ctrl + C to exit.");
-        var dispatcher = provider.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = provider.GetRequiredService<IUiDispatcher>();
         try
         {
-            await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.AppCancellationToken);
+            await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.ApplicationExitingToken);
         }
         catch (TaskCanceledException)
         {

@@ -27,7 +27,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IAppStartup, AppStartup>();
         services.AddSingleton<ICursorIconWatcher, CursorIconWatcherLinux>();
         services.AddSingleton<IKeyboardMouseInput, KeyboardMouseInputLinux>();
-        services.AddSingleton<IClipboardService, ClipboardServiceLinux>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
         services.AddSingleton<IAudioCapturer, AudioCapturerLinux>();
         services.AddTransient<IScreenCapturer, ScreenCapturerLinux>();
         services.AddScoped<IFileTransferService, FileTransferServiceLinux>();

@@ -9,8 +9,9 @@ internal static class IServiceCollectionExtensions
     internal static void AddRemoteControlUi(
        this IServiceCollection services)
     {
-        services.AddSingleton<IAvaloniaDispatcher, AvaloniaDispatcher>();
+        services.AddSingleton<IUiDispatcher, UiDispatcher>();
         services.AddSingleton<IChatUiService, ChatUiService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
         services.AddScoped<IRemoteControlAccessService, RemoteControlAccessService>();
         services.AddSingleton<IViewModelFactory, ViewModelFactory>();
         services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();

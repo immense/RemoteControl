@@ -107,7 +107,7 @@
 				</ContextMenu>
 			</Button.ContextMenu>
 			<Image 
-				Source="avares://Immense.RemoteControl.Desktop/Assets/Gear.png"
+				Source="avares://Immense.RemoteControl.Desktop.UI/Assets/Gear.png"
 				VerticalAlignment="Stretch"
 				HorizontalAlignment="Stretch"
 				Stretch="Fill"/>

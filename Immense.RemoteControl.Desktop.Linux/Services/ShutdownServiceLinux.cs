@@ -8,13 +8,13 @@ namespace Immense.RemoteControl.Desktop.Linux.Services;
 public class ShutdownServiceLinux : IShutdownService
 {
     private readonly IDesktopHubConnection _hubConnection;
-    private readonly IAvaloniaDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly IAppState _appState;
     private readonly ILogger<ShutdownServiceLinux> _logger;
 
     public ShutdownServiceLinux(
         IDesktopHubConnection hubConnection,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         IAppState appState,
         ILogger<ShutdownServiceLinux> logger)
     {

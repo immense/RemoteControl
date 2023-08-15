@@ -1,35 +1,31 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Views;
+using Immense.RemoteControl.Desktop.UI.Services;
+using Immense.RemoteControl.Desktop.UI.Views;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Windows;
-using MessageBoxOptions = System.Windows.MessageBoxOptions;
 
 namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 public class FileTransferServiceWin : IFileTransferService
 {
-    private static readonly ConcurrentDictionary<string, FileStream> _partialTransfers =
-        new();
-
     private static readonly ConcurrentDictionary<string, FileTransferWindow> _fileTransferWindows =
         new();
 
-    private static readonly SemaphoreSlim _writeLock = new(1, 1);
-    private static MessageBoxResult? _result;
-    private readonly IWindowsUiDispatcher _dispatcher;
-    private readonly IViewModelFactory _viewModelFactory;
-    private readonly ILogger<FileTransferServiceWin> _logger;
+    private static readonly ConcurrentDictionary<string, FileStream> _partialTransfers =
+        new();
 
+    private static readonly SemaphoreSlim _writeLock = new(1, 1);
+    private static DialogResult? _result;
+    private readonly IUiDispatcher _dispatcher;
+    private readonly ILogger<FileTransferServiceWin> _logger;
+    private readonly IViewModelFactory _viewModelFactory;
     public FileTransferServiceWin(
-        IWindowsUiDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         IViewModelFactory viewModelFactory,
         ILogger<FileTransferServiceWin> logger)
     {
@@ -46,7 +42,7 @@ public class FileTransferServiceWin : IFileTransferService
 
     public void OpenFileTransferWindow(IViewer viewer)
     {
-        _dispatcher.InvokeWpf(() =>
+        _dispatcher.Invoke(() =>
         {
             if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionId, out var window))
             {
@@ -55,7 +51,10 @@ public class FileTransferServiceWin : IFileTransferService
             else
             {
                 var viewModel = _viewModelFactory.CreateFileTransferWindowViewModel(viewer);
-                window = new FileTransferWindow(viewModel);
+                window = new FileTransferWindow()
+                {
+                    DataContext = viewModel
+                };
                 window.Closed += (sender, arg) =>
                 {
                     _fileTransferWindows.Remove(viewer.ViewerConnectionId, out _);
@@ -142,7 +141,7 @@ public class FileTransferServiceWin : IFileTransferService
         }
     }
 
-    private void SetFileOrFolderPermissions(string path)
+    private static void SetFileOrFolderPermissions(string path)
     {
         FileSystemSecurity ds;
 
@@ -195,14 +194,14 @@ public class FileTransferServiceWin : IFileTransferService
         // Prevent multiple dialogs from popping up.
         if (_result is null)
         {
-            _result = System.Windows.MessageBox.Show("File transfer complete.  Show folder?",
+            _result = MessageBox.Show("File transfer complete.  Show folder?",
                 "Transfer Complete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question,
-                MessageBoxResult.Yes,
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button1,
                 MessageBoxOptions.ServiceNotification);
 
-            if (_result == MessageBoxResult.Yes)
+            if (_result == DialogResult.Yes)
             {
                 Process.Start("explorer.exe", GetBaseDirectory());
             }

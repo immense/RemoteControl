@@ -25,7 +25,7 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
         string requesterName,
         string organizationName,
         IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<BrandedViewModelBase> logger)
         : base(brandingProvider, dispatcher, logger)
     {

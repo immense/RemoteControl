@@ -7,13 +7,13 @@ namespace Immense.RemoteControl.Desktop.UI.Services;
 public class RemoteControlAccessService : IRemoteControlAccessService
 {
     private readonly IViewModelFactory _viewModelFactory;
-    private readonly IAvaloniaDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly ILogger<RemoteControlAccessService> _logger;
     private volatile int _promptCount = 0;
 
     public RemoteControlAccessService(
         IViewModelFactory viewModelFactory,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<RemoteControlAccessService> logger)
     {
         _viewModelFactory = viewModelFactory;

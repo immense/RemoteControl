@@ -30,7 +30,7 @@ public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWi
     public FileTransferWindowViewModel(
        IViewer viewer,
        IBrandingProvider brandingProvider,
-       IAvaloniaDispatcher dispatcher,
+       IUiDispatcher dispatcher,
        IFileTransferService fileTransferService,
        ILogger<FileTransferWindowViewModel> logger)
        : base(brandingProvider, dispatcher, logger)

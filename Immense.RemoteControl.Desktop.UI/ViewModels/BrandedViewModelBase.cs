@@ -26,13 +26,13 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
 {
     private static BrandingInfoBase? _brandingInfo;
     protected readonly ILogger<BrandedViewModelBase> _logger;
-    protected readonly IAvaloniaDispatcher _dispatcher;
+    protected readonly IUiDispatcher _dispatcher;
     private readonly IBrandingProvider _brandingProvider;
 
 
     public BrandedViewModelBase(
         IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<BrandedViewModelBase> logger)
     {
 

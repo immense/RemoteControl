@@ -36,7 +36,7 @@ public class FakeBrandedViewModelBase : IBrandedViewModelBase
         get => _icon;
         set => _icon = value;
     }
-    public string? ProductName { get; set; } = "Test Product";
+    public string ProductName { get; set; } = "Test Product";
     public SolidColorBrush? TitleBackgroundColor { get; set; }
     public SolidColorBrush? TitleButtonForegroundColor { get; set; }
     public SolidColorBrush? TitleForegroundColor { get; set; }

@@ -10,9 +10,9 @@ using System.Threading;
 
 namespace Immense.RemoteControl.Desktop.UI.Services;
 
-public interface IAvaloniaDispatcher
+public interface IUiDispatcher
 {
-    CancellationToken AppCancellationToken { get; }
+    CancellationToken ApplicationExitingToken { get; }
     IClipboard? Clipboard { get; }
     Application? CurrentApp { get; }
 
@@ -29,20 +29,20 @@ public interface IAvaloniaDispatcher
     Task<Result> StartHeadless();
 }
 
-internal class AvaloniaDispatcher : IAvaloniaDispatcher
+internal class UiDispatcher : IUiDispatcher
 {
     private static readonly CancellationTokenSource _appCts = new();
     private static Application? _currentApp;
-    private readonly ILogger<AvaloniaDispatcher> _logger;
+    private readonly ILogger<UiDispatcher> _logger;
     private AppBuilder? _appBuilder;
     private Task? _runHeadlessTask;
 
-    public AvaloniaDispatcher(ILogger<AvaloniaDispatcher> logger)
+    public UiDispatcher(ILogger<UiDispatcher> logger)
     {
         _logger = logger;
     }
 
-    public CancellationToken AppCancellationToken => _appCts.Token;
+    public CancellationToken ApplicationExitingToken => _appCts.Token;
 
     public IClipboard? Clipboard
     {
@@ -104,13 +104,13 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
     public void Shutdown()
     {
         _appCts.Cancel();
-        if (_currentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+        if (_currentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime &&
+            lifetime.TryShutdown())
         {
-            if (!lifetime.TryShutdown())
-            {
-                Environment.Exit(0);
-            }
+            return;
         }
+
+        Environment.Exit(0);
     }
 
     public void StartClassicDesktop()

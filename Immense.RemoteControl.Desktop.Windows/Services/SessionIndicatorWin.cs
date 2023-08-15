@@ -1,16 +1,16 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Shared;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
-using System.IO;
 
 namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 public class SessionIndicatorWin : ISessionIndicator
 {
-    private readonly IWindowsUiDispatcher _dispatcher;
+    private readonly IWinFormsDispatcher _winFormsDispatcher;
+    private readonly IUiDispatcher _uiDispatcher;
     private readonly IDesktopHubConnection _hubConnection;
     private readonly IBrandingProvider _brandingProvider;
     private readonly ILogger<SessionIndicatorWin> _logger;
@@ -19,12 +19,14 @@ public class SessionIndicatorWin : ISessionIndicator
     private NotifyIcon? _notifyIcon;
 
     public SessionIndicatorWin(
-        IWindowsUiDispatcher dispatcher,
+        IWinFormsDispatcher winFormsDispatcher,
+        IUiDispatcher uiDispatcher,
         IDesktopHubConnection hubConnection,
         IBrandingProvider brandingProvider,
         ILogger<SessionIndicatorWin> logger)
     {
-        _dispatcher = dispatcher;
+        _winFormsDispatcher = winFormsDispatcher;
+        _uiDispatcher = uiDispatcher;
         _hubConnection = hubConnection;
         _brandingProvider = brandingProvider;
         _logger = logger;
@@ -39,13 +41,10 @@ public class SessionIndicatorWin : ISessionIndicator
                 return;
             }
 
-            _dispatcher.InvokeWpf(() =>
+            _winFormsDispatcher.InvokeWinForms(async () =>
             {
-                _dispatcher.CurrentApp.Exit += App_Exit;
-            });
+                _uiDispatcher.ApplicationExitingToken.Register(CloseNotifyIcon);
 
-            _dispatcher.InvokeWinForms(async () =>
-            {
                 _container = new Container();
                 _contextMenuStrip = new ContextMenuStrip(_container);
                 _contextMenuStrip.Items.Add("Exit", null, ExitMenuItem_Click);
@@ -93,13 +92,13 @@ public class SessionIndicatorWin : ISessionIndicator
         }
     }
 
-    private void App_Exit(object sender, EventArgs e)
+    private void CloseNotifyIcon()
     {
-        if (_notifyIcon != null)
+        if (_notifyIcon is not null)
         {
             _notifyIcon.Visible = false;
-            _notifyIcon?.Dispose();
-            _notifyIcon?.Icon?.Dispose();
+            _notifyIcon.Icon?.Dispose();
+            _notifyIcon.Dispose();
         }
     }
 

@@ -1,20 +1,20 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
-using Immense.RemoteControl.Desktop.UI.Services;
+using System.Threading;
 
-namespace Immense.RemoteControl.Desktop.Linux.Services;
+namespace Immense.RemoteControl.Desktop.UI.Services;
 
-public class ClipboardServiceLinux : IClipboardService
+public class ClipboardService : IClipboardService
 {
-    private readonly IAvaloniaDispatcher _dispatcher;
-    private readonly ILogger<ClipboardServiceLinux> _logger;
-    private CancellationTokenSource? _cancelTokenSource;
+    private readonly IUiDispatcher _dispatcher;
+    private readonly ILogger<ClipboardService> _logger;
+    private Task? _watcherTask;
 
     public event EventHandler<string>? ClipboardTextChanged;
 
-    public ClipboardServiceLinux(
-        IAvaloniaDispatcher dispatcher,
-        ILogger<ClipboardServiceLinux> logger)
+    public ClipboardService(
+        IUiDispatcher dispatcher,
+        ILogger<ClipboardService> logger)
     {
         _dispatcher = dispatcher;
         _logger = logger;
@@ -24,15 +24,14 @@ public class ClipboardServiceLinux : IClipboardService
 
     public void BeginWatching()
     {
-        try
+        if (_watcherTask?.Status == TaskStatus.Running)
         {
-            StopWatching();
+            return;
         }
-        finally
-        {
-            _cancelTokenSource = new CancellationTokenSource();
-            _ = Task.Run(async () => await WatchClipboard(_cancelTokenSource.Token));
-        }
+
+        _watcherTask = Task.Run(
+            async () => await WatchClipboard(_dispatcher.ApplicationExitingToken),
+            _dispatcher.ApplicationExitingToken);
     }
 
     public async Task SetText(string clipboardText)
@@ -41,6 +40,7 @@ public class ClipboardServiceLinux : IClipboardService
         {
             if (_dispatcher?.Clipboard is null)
             {
+                _logger.LogWarning("Clipboard is null.");
                 return;
             }
 
@@ -59,15 +59,10 @@ public class ClipboardServiceLinux : IClipboardService
         }
     }
 
-    public void StopWatching()
-    {
-        _cancelTokenSource?.Cancel();
-        _cancelTokenSource?.Dispose();
-    }
-
     private async Task WatchClipboard(CancellationToken cancelToken)
     {
-        while (!cancelToken.IsCancellationRequested &&
+        while (
+            !cancelToken.IsCancellationRequested &&
             !Environment.HasShutdownStarted)
         {
             try

@@ -16,7 +16,7 @@ public class HostNamePromptViewModel : BrandedViewModelBase, IHostNamePromptView
 {
     public HostNamePromptViewModel(
         IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<HostNamePromptViewModel> logger)
         : base(brandingProvider, dispatcher, logger)
     {

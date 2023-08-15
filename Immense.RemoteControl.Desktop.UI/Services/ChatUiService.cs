@@ -8,12 +8,12 @@ namespace Immense.RemoteControl.Desktop.UI.Services;
 
 public class ChatUiService : IChatUiService
 {
-    private readonly IAvaloniaDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly IViewModelFactory _viewModelFactory;
     private ChatWindowViewModel? _chatViewModel;
 
     public ChatUiService(
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         IViewModelFactory viewModelFactory)
     {
         _dispatcher = dispatcher;

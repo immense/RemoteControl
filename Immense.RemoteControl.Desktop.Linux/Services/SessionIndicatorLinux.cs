@@ -6,9 +6,9 @@ namespace Immense.RemoteControl.Desktop.Linux.Services;
 
 public class SessionIndicatorLinux : ISessionIndicator
 {
-    private readonly IAvaloniaDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
 
-    public SessionIndicatorLinux(IAvaloniaDispatcher dispatcher)
+    public SessionIndicatorLinux(IUiDispatcher dispatcher)
     {
         _dispatcher = dispatcher;
     }

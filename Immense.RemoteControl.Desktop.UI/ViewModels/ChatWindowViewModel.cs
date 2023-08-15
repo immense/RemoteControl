@@ -31,7 +31,7 @@ public class ChatWindowViewModel : BrandedViewModelBase, IChatWindowViewModel
         StreamWriter streamWriter,
         string organizationName,
         IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<ChatWindowViewModel> logger)
         : base(brandingProvider, dispatcher, logger)
     {

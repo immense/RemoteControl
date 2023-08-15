@@ -34,7 +34,7 @@ public partial class MessageBox : Window
                 break;
         }
 
-        var dispatcher = StaticServiceProvider.Instance.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = StaticServiceProvider.Instance.GetRequiredService<IUiDispatcher>();
 
         if (dispatcher.CurrentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
             desktop.Windows.Any())

@@ -11,7 +11,7 @@ public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
 {
     public MainWindowViewModel(
         IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<BrandedViewModelBase> logger)
         : base(brandingProvider, dispatcher, logger)
     {

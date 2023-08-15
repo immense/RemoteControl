@@ -23,7 +23,7 @@ public class MessageBoxViewModel : BrandedViewModelBase, IMessageBoxViewModel
 {
     public MessageBoxViewModel
         (IBrandingProvider brandingProvider,
-        IAvaloniaDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<BrandedViewModelBase> logger)
         : base(brandingProvider, dispatcher, logger)
     {

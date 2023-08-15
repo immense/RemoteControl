@@ -2,7 +2,7 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -14,14 +14,14 @@ namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 
 public class KeyboardMouseInputWin : IKeyboardMouseInput
 {
-    private readonly IWindowsUiDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly ConcurrentQueue<Action> _inputActions = new();
     private readonly ILogger<KeyboardMouseInputWin> _logger;
     private volatile bool _inputBlocked;
     private Thread? _inputProcessingThread;
 
     public KeyboardMouseInputWin(
-        IWindowsUiDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<KeyboardMouseInputWin> logger)
     {
         _dispatcher = dispatcher;
