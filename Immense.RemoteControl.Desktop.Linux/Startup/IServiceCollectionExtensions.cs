@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Immense.RemoteControl.Desktop.Linux.Services;
 using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Services;
+using Immense.RemoteControl.Desktop.UI.Startup;
 
 namespace Immense.RemoteControl.Desktop.Linux.Startup;
 
@@ -21,23 +22,16 @@ public static class IServiceCollectionExtensions
         Action<IRemoteControlClientBuilder> clientConfig)
     {
         services.AddRemoteControlXplat(clientConfig);
+        services.AddRemoteControlUi();
 
+        services.AddSingleton<IAppStartup, AppStartup>();
         services.AddSingleton<ICursorIconWatcher, CursorIconWatcherLinux>();
         services.AddSingleton<IKeyboardMouseInput, KeyboardMouseInputLinux>();
         services.AddSingleton<IClipboardService, ClipboardServiceLinux>();
         services.AddSingleton<IAudioCapturer, AudioCapturerLinux>();
-        services.AddSingleton<IChatUiService, ChatUiServiceLinux>();
         services.AddTransient<IScreenCapturer, ScreenCapturerLinux>();
         services.AddScoped<IFileTransferService, FileTransferServiceLinux>();
         services.AddSingleton<ISessionIndicator, SessionIndicatorLinux>();
         services.AddSingleton<IShutdownService, ShutdownServiceLinux>();
-        services.AddScoped<IRemoteControlAccessService, RemoteControlAccessServiceLinux>();
-        services.AddSingleton<IAvaloniaDispatcher, AvaloniaDispatcher>();
-        services.AddSingleton<IAppStartup, AppStartup>();
-        services.AddSingleton<IViewModelFactory, ViewModelFactory>();
-        services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
-        services.AddSingleton<IMainViewViewModel, MainViewViewModel>();
-        services.AddSingleton<ISessionIndicatorWindowViewModel, SessionIndicatorWindowViewModel>();
-        services.AddTransient<IMessageBoxViewModel, MessageBoxViewModel>();
     }
 }

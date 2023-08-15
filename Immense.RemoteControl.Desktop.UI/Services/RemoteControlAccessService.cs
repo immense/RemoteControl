@@ -1,21 +1,20 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
-using Immense.RemoteControl.Desktop.UI.Services;
-using Immense.RemoteControl.Desktop.UI.Views;
+using System.Threading;
 
-namespace Immense.RemoteControl.Desktop.Linux.Services;
+namespace Immense.RemoteControl.Desktop.UI.Services;
 
-public class RemoteControlAccessServiceLinux : IRemoteControlAccessService
+public class RemoteControlAccessService : IRemoteControlAccessService
 {
     private readonly IViewModelFactory _viewModelFactory;
     private readonly IAvaloniaDispatcher _dispatcher;
-    private readonly ILogger<RemoteControlAccessServiceLinux> _logger;
+    private readonly ILogger<RemoteControlAccessService> _logger;
     private volatile int _promptCount = 0;
 
-    public RemoteControlAccessServiceLinux(
+    public RemoteControlAccessService(
         IViewModelFactory viewModelFactory,
         IAvaloniaDispatcher dispatcher,
-        ILogger<RemoteControlAccessServiceLinux> logger)
+        ILogger<RemoteControlAccessService> logger)
     {
         _viewModelFactory = viewModelFactory;
         _dispatcher = dispatcher;

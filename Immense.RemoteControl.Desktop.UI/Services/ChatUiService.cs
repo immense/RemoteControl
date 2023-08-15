@@ -2,20 +2,17 @@ using Avalonia.Controls;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Shared.Models;
 using System.ComponentModel;
-using Immense.RemoteControl.Desktop.UI.ViewModels;
 using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
-using Immense.RemoteControl.Desktop.UI.Services;
-using Immense.RemoteControl.Desktop.UI.Views;
 
-namespace Immense.RemoteControl.Desktop.Linux.Services;
+namespace Immense.RemoteControl.Desktop.UI.Services;
 
-public class ChatUiServiceLinux : IChatUiService
+public class ChatUiService : IChatUiService
 {
     private readonly IAvaloniaDispatcher _dispatcher;
     private readonly IViewModelFactory _viewModelFactory;
     private ChatWindowViewModel? _chatViewModel;
 
-    public ChatUiServiceLinux(
+    public ChatUiService(
         IAvaloniaDispatcher dispatcher,
         IViewModelFactory viewModelFactory)
     {
@@ -31,7 +28,8 @@ public class ChatUiServiceLinux : IChatUiService
         {
             if (chatMessage.Disconnected)
             {
-                await MessageBox.Show("The partner has disconnected.", "Partner Disconnected", MessageBoxType.OK);
+                // TODO: IDialogService.
+                await MessageBox.Show("The partner has disconnected from the chat.", "Partner Disconnected", MessageBoxType.OK);
                 Environment.Exit(0);
                 return;
             }
