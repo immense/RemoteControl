@@ -1,6 +1,6 @@
-using Immense.RemoteControl.Desktop.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Shared;
 using Microsoft.Extensions.DependencyInjection;

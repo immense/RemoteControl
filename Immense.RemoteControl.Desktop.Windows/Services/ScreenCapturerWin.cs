@@ -34,9 +34,9 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared;
 using Result = Immense.RemoteControl.Shared.Result;
-using Immense.RemoteControl.Desktop.Native.Windows;
 using System.Diagnostics.CodeAnalysis;
 using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Models;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 

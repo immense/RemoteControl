@@ -1,4 +1,3 @@
-using Immense.RemoteControl.Desktop.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Services;
@@ -113,23 +112,6 @@ internal class AppStartup : IAppStartup
 
         try
         {
-            if (OperatingSystem.IsWindows())
-            {
-                if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
-                {
-                    _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to get initial desktop name.");
-                }
-
-                if (!Win32Interop.SwitchToInputDesktop())
-                {
-                    _logger.LogWarning("Failed to set initial desktop.");
-                }
-            }
-
             if (_appState.ArgDict.ContainsKey("relaunch"))
             {
                 _logger.LogInformation("Resuming after relaunch.");

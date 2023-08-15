@@ -2,7 +2,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Windows;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 public static class User32
 {
@@ -1079,8 +1079,8 @@ public static class User32
         public bool fIcon;
         public int xHotspot;
         public int yHotspot;
-        public IntPtr hbmMask;
-        public IntPtr hbmColor;
+        public nint hbmMask;
+        public nint hbmColor;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -1096,7 +1096,7 @@ public static class User32
     {
         public int cbSize;
         public int flags;
-        public IntPtr hCursor;
+        public nint hCursor;
         public POINT ptScreenPos;
     }
     [StructLayout(LayoutKind.Sequential)]
@@ -1151,7 +1151,7 @@ public static class User32
         public int mouseData;
         public MOUSEEVENTF dwFlags;
         public uint time;
-        public UIntPtr dwExtraInfo;
+        public nuint dwExtraInfo;
     }
     [StructLayout(LayoutKind.Sequential)]
     public struct KEYBDINPUT
@@ -1160,7 +1160,7 @@ public static class User32
         public ScanCodeShort wScan;
         public KEYEVENTF dwFlags;
         public int time;
-        public UIntPtr dwExtraInfo;
+        public nuint dwExtraInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -1170,7 +1170,7 @@ public static class User32
         public ushort wScan;
         public KEYEVENTF dwFlags;
         public int time;
-        public UIntPtr dwExtraInfo;
+        public nuint dwExtraInfo;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -1186,25 +1186,25 @@ public static class User32
     [DllImport("user32.dll")]
     public static extern bool GetCursorInfo(out CursorInfo pci);
     [DllImport("user32.dll", SetLastError = false)]
-    public static extern IntPtr GetDesktopWindow();
+    public static extern nint GetDesktopWindow();
 
     [DllImport("user32.dll")]
-    public static extern IntPtr GetCursor();
+    public static extern nint GetCursor();
 
     [DllImport("user32.dll")]
-    public static extern IntPtr CopyIcon(IntPtr hIcon);
+    public static extern nint CopyIcon(nint hIcon);
 
     [DllImport("user32.dll")]
-    public static extern bool DrawIcon(IntPtr hdc, int x, int y, IntPtr hIcon);
+    public static extern bool DrawIcon(nint hdc, int x, int y, nint hIcon);
 
     [DllImport("user32.dll")]
-    public static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+    public static extern bool GetIconInfo(nint hIcon, out ICONINFO piconinfo);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-    public static extern void Mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, UIntPtr dwExtraInfo);
+    public static extern void Mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, nuint dwExtraInfo);
 
     [DllImport("user32.dll")]
-    public static extern void Keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+    public static extern void Keybd_event(byte bVk, byte bScan, uint dwFlags, nuint dwExtraInfo);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -1214,38 +1214,38 @@ public static class User32
     public static extern bool SetCursorPos(int x, int y);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr SetCursor(IntPtr hcursor);
+    public static extern nint SetCursor(nint hcursor);
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType,
+    static extern nint LoadImage(nint hinst, string lpszName, uint uType,
                                     int cxDesired, int cyDesired, uint fuLoad);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr CreateCursor(IntPtr hInst, int xHotSpot, int yHotSpot,
+    public static extern nint CreateCursor(nint hInst, int xHotSpot, int yHotSpot,
                                         int nWidth, int nHeight, byte[] pvANDPlane, byte[] pvXORPlane);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
+    public static extern bool PrintWindow(nint hwnd, nint hDC, uint nFlags);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool SwitchDesktop(IntPtr hDesktop);
+    public static extern bool SwitchDesktop(nint hDesktop);
 
-    public delegate bool EnumDesktopsDelegate(string desktop, IntPtr lParam);
+    public delegate bool EnumDesktopsDelegate(string desktop, nint lParam);
 
     [DllImport("user32.dll")]
-    public static extern bool EnumDesktopsA(IntPtr hwinsta, EnumDesktopsDelegate lpEnumFunc, IntPtr lParam);
+    public static extern bool EnumDesktopsA(nint hwinsta, EnumDesktopsDelegate lpEnumFunc, nint lParam);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, ACCESS_MASK dwDesiredAccess);
+    public static extern nint OpenInputDesktop(uint dwFlags, bool fInherit, ACCESS_MASK dwDesiredAccess);
 
-    public delegate bool EnumWindowStationsDelegate(string windowsStation, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    public static extern bool EnumWindowStations(EnumWindowStationsDelegate lpEnumFunc, IntPtr lParam);
+    public delegate bool EnumWindowStationsDelegate(string windowsStation, nint lParam);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr GetShellWindow();
+    public static extern bool EnumWindowStations(EnumWindowStationsDelegate lpEnumFunc, nint lParam);
+
+    [DllImport("user32.dll")]
+    public static extern nint GetShellWindow();
 
     public sealed class SafeWindowStationHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
@@ -1263,54 +1263,54 @@ public static class User32
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("user32", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern bool CloseWindowStation(IntPtr hWinsta);
+    public static extern bool CloseWindowStation(nint hWinsta);
 
     [DllImport("user32", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern SafeWindowStationHandle OpenWindowStation([MarshalAs(UnmanagedType.LPTStr)] string lpszWinSta, [MarshalAs(UnmanagedType.Bool)] bool fInherit, ACCESS_MASK dwDesiredAccess);
 
     [DllImport("user32", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern IntPtr OpenWindowStationW([MarshalAs(UnmanagedType.LPTStr)] string lpszWinSta, [MarshalAs(UnmanagedType.Bool)] bool fInherit, ACCESS_MASK dwDesiredAccess);
+    public static extern nint OpenWindowStationW([MarshalAs(UnmanagedType.LPTStr)] string lpszWinSta, [MarshalAs(UnmanagedType.Bool)] bool fInherit, ACCESS_MASK dwDesiredAccess);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool SetProcessWindowStation(IntPtr hWinSta);
+    public static extern bool SetProcessWindowStation(nint hWinSta);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr GetWindowDC(IntPtr hWnd);
+    public static extern nint GetWindowDC(nint hWnd);
 
-    public delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
+    public delegate bool EnumWindowsProc(nint hwnd, nint lParam);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
+    public static extern bool EnumChildWindows(nint hwndParent, EnumWindowsProc lpEnumFunc, nint lParam);
 
     [DllImport("User32.dll")]
-    public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+    public static extern int ReleaseDC(nint hWnd, nint hDC);
 
     [DllImport("User32.dll")]
-    public static extern IntPtr GetProcessWindowStation();
+    public static extern nint GetProcessWindowStation();
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool SetThreadDesktop(IntPtr hDesktop);
+    public static extern bool SetThreadDesktop(nint hDesktop);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr OpenDesktop(string lpszDesktop, uint dwFlags, bool fInherit, ACCESS_MASK dwDesiredAccess);
+    public static extern nint OpenDesktop(string lpszDesktop, uint dwFlags, bool fInherit, ACCESS_MASK dwDesiredAccess);
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool CloseDesktop(IntPtr hDesktop);
+    public static extern bool CloseDesktop(nint hDesktop);
 
-    public delegate bool EnumDesktopWindowsDelegate(IntPtr hWnd, int lParam);
-
-    [DllImport("user32.dll")]
-    public static extern bool EnumDesktopWindows(IntPtr hDesktop, EnumDesktopWindowsDelegate lpfn, IntPtr lParam);
+    public delegate bool EnumDesktopWindowsDelegate(nint hWnd, int lParam);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr GetDC(IntPtr hWnd);
+    public static extern bool EnumDesktopWindows(nint hDesktop, EnumDesktopWindowsDelegate lpfn, nint lParam);
+
+    [DllImport("user32.dll")]
+    public static extern nint GetDC(nint hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern IntPtr SetActiveWindow(IntPtr hWnd);
+    public static extern nint SetActiveWindow(nint hWnd);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool SetForegroundWindow(IntPtr hWnd);
+    public static extern bool SetForegroundWindow(nint hWnd);
 
     [DllImport("user32.dll")]
     public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs, int cbSize);
@@ -1318,20 +1318,20 @@ public static class User32
     public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] InputEx[] pInputs, int cbSize);
 
     [DllImport("user32.dll", SetLastError = false)]
-    public static extern UIntPtr GetMessageExtraInfo();
+    public static extern nuint GetMessageExtraInfo();
     [DllImport("sas.dll")]
     public static extern void SendSAS(bool AsUser);
     [DllImport("user32.dll")]
-    public static extern bool OpenClipboard(IntPtr hWnd);
+    public static extern bool OpenClipboard(nint hWnd);
     [DllImport("user32.dll")]
     public static extern bool EmptyClipboard();
     [DllImport("user32.dll")]
     public static extern bool CloseClipboard();
     [DllImport("user32.dll")]
-    public static extern IntPtr SetClipboardData(int Format, IntPtr hMem);
+    public static extern nint SetClipboardData(int Format, nint hMem);
 
     [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true)]
-    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    public static extern bool ShowWindow(nint hWnd, int nCmdShow);
     /* 
 *  SystemParametersInfo(
 *      SPI_SETDESKWALLPAPER, 0, "filename.bmp", 
@@ -1349,7 +1349,7 @@ public static class User32
     public static extern short VkKeyScan(char ch);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    public static extern short VkKeyScanEx(char ch, IntPtr dwhkl);
+    public static extern short VkKeyScanEx(char ch, nint dwhkl);
 
     [DllImport("user32.dll")]
     public static extern int SendMessage(int hWnd, int hMsg, int wParam, int lParam);
@@ -1359,19 +1359,19 @@ public static class User32
     public static extern bool BlockInput([MarshalAs(UnmanagedType.Bool)] bool fBlockIt);
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    public static extern int MessageBox(IntPtr hWnd, string text, string caption, long type);
+    public static extern int MessageBox(nint hWnd, string text, string caption, long type);
 
     [DllImport("USER32.dll")]
     public static extern short GetKeyState(VirtualKey nVirtKey);
 
     [DllImport("user32.dll")]
-    public static extern uint MapVirtualKeyEx(uint uCode, VkMapType uMapType, IntPtr dwhkl);
+    public static extern uint MapVirtualKeyEx(uint uCode, VkMapType uMapType, nint dwhkl);
 
     [DllImport("user32.dll")]
-    public static extern IntPtr GetKeyboardLayout(uint threadId = 0);
+    public static extern nint GetKeyboardLayout(uint threadId = 0);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool GetUserObjectInformationW(IntPtr hObj, int nIndex,
+    public static extern bool GetUserObjectInformationW(nint hObj, int nIndex,
          [Out] byte[] pvInfo, uint nLength, out uint lpnLengthNeeded);
     #endregion
 }

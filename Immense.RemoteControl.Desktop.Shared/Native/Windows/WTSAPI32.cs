@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Windows;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 public static class WTSAPI32
 {
-    public static IntPtr WTS_CURRENT_SERVER_HANDLE = IntPtr.Zero;
+    public static nint WTS_CURRENT_SERVER_HANDLE = nint.Zero;
 
     public enum WTS_CONNECTSTATE_CLASS
     {
@@ -53,20 +53,20 @@ public static class WTSAPI32
 
     [DllImport("wtsapi32.dll", SetLastError = true)]
     public static extern int WTSEnumerateSessions(
-        IntPtr hServer,
+        nint hServer,
         int Reserved,
         int Version,
-        ref IntPtr ppSessionInfo,
+        ref nint ppSessionInfo,
         ref int pCount);
 
     [DllImport("wtsapi32.dll", ExactSpelling = true, SetLastError = false)]
-    public static extern void WTSFreeMemory(IntPtr memory);
+    public static extern void WTSFreeMemory(nint memory);
 
     [DllImport("Wtsapi32.dll")]
-    public static extern bool WTSQuerySessionInformation(IntPtr hServer, uint sessionId, WTS_INFO_CLASS wtsInfoClass, out IntPtr ppBuffer, out uint pBytesReturned);
+    public static extern bool WTSQuerySessionInformation(nint hServer, uint sessionId, WTS_INFO_CLASS wtsInfoClass, out nint ppBuffer, out uint pBytesReturned);
 
     [DllImport("wtsapi32.dll", SetLastError = true)]
-    static extern IntPtr WTSOpenServer(string pServerName);
+    static extern nint WTSOpenServer(string pServerName);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct WTS_SESSION_INFO

@@ -36,8 +36,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{CE8FF8
 		.build\Pre-Build.ps1 = .build\Pre-Build.ps1
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.Native", "Immense.RemoteControl.Desktop.Native\Immense.RemoteControl.Desktop.Native.csproj", "{2483EFAC-826E-4529-ABF0-863C91418E29}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{23EA60E0-9118-4932-80E5-07C7950720F1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Server.Tests", "Tests\Immense.RemoteControl.Server.Tests\Immense.RemoteControl.Server.Tests.csproj", "{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}"
@@ -84,10 +82,6 @@ Global
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -1,19 +1,19 @@
-using Immense.RemoteControl.Desktop.Native.DataStructures;
+using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using static Immense.RemoteControl.Desktop.Native.Windows.ADVAPI32;
-using static Immense.RemoteControl.Desktop.Native.Windows.User32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Windows.ADVAPI32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 
-namespace Immense.RemoteControl.Desktop.Native.Windows;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
-// TODO: Use https://github.com/dotnet/pinvoke for all p/invokes.  Remove signatures from this project.
+// TODO: Use https://github.com/microsoft/CsWin32 for all p/invokes.
 public class Win32Interop
 {
-    private static IntPtr _lastInputDesktop;
+    private static nint _lastInputDesktop;
 
     public static List<WindowsSession> GetActiveSessions()
     {
@@ -27,7 +27,7 @@ public class Win32Interop
             Username = GetUsernameFromSessionId(consoleSessionId)
         });
 
-        IntPtr ppSessionInfo = IntPtr.Zero;
+        nint ppSessionInfo = nint.Zero;
         var count = 0;
         var enumSessionResult = WTSAPI32.WTSEnumerateSessions(WTSAPI32.WTS_CURRENT_SERVER_HANDLE, 0, 1, ref ppSessionInfo, ref count);
         var dataSize = Marshal.SizeOf(typeof(WTSAPI32.WTS_SESSION_INFO));
@@ -92,7 +92,7 @@ public class Win32Interop
     {
         var username = string.Empty;
 
-        if (WTSAPI32.WTSQuerySessionInformation(IntPtr.Zero, sessionId, WTSAPI32.WTS_INFO_CLASS.WTSUserName, out var buffer, out var strLen) && strLen > 1)
+        if (WTSAPI32.WTSQuerySessionInformation(nint.Zero, sessionId, WTSAPI32.WTS_INFO_CLASS.WTSUserName, out var buffer, out var strLen) && strLen > 1)
         {
             username = Marshal.PtrToStringAnsi(buffer);
             WTSAPI32.WTSFreeMemory(buffer);
@@ -101,7 +101,7 @@ public class Win32Interop
         return username ?? string.Empty;
     }
 
-    public static IntPtr OpenInputDesktop()
+    public static nint OpenInputDesktop()
     {
         return User32.OpenInputDesktop(0, true, ACCESS_MASK.GENERIC_ALL);
     }
@@ -115,9 +115,9 @@ public class Win32Interop
          out PROCESS_INFORMATION procInfo)
     {
         uint winlogonPid = 0;
-        var hUserTokenDup = IntPtr.Zero;
-        var hPToken = IntPtr.Zero;
-        var hProcess = IntPtr.Zero;
+        var hUserTokenDup = nint.Zero;
+        var hPToken = nint.Zero;
+        var hProcess = nint.Zero;
 
         procInfo = new PROCESS_INFORMATION();
 
@@ -199,7 +199,7 @@ public class Win32Interop
             ref sa,
             false,
             dwCreationFlags,
-            IntPtr.Zero,
+            nint.Zero,
             null,
             ref si,
             out procInfo);
@@ -217,7 +217,7 @@ public class Win32Interop
         SendMessage(0xFFFF, 0x112, 0xF170, (int)state);
     }
 
-    public static MessageBoxResult ShowMessageBox(IntPtr owner,
+    public static MessageBoxResult ShowMessageBox(nint owner,
         string message,
         string caption,
         MessageBoxType messageBoxType)
@@ -232,7 +232,7 @@ public class Win32Interop
             CloseDesktop(_lastInputDesktop);
             var inputDesktop = OpenInputDesktop();
 
-            if (inputDesktop == IntPtr.Zero)
+            if (inputDesktop == nint.Zero)
             {
                 return false;
             }

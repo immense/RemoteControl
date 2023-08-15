@@ -18,8 +18,4 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Immense.RemoteControl.Desktop.Native\Immense.RemoteControl.Desktop.Native.csproj" />
-  </ItemGroup>
-
 </Project>

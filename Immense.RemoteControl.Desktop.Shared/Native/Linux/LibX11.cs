@@ -26,69 +26,69 @@ in this Software without prior written authorization from The Open Group.
 
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Linux;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Linux;
 
 public static unsafe class LibX11
 {
 
     [DllImport("libX11")]
-    public static extern IntPtr XGetImage(IntPtr display, IntPtr drawable, int x, int y, int width, int height, long plane_mask, int format);
+    public static extern nint XGetImage(nint display, nint drawable, int x, int y, int width, int height, long plane_mask, int format);
 
     [DllImport("libX11")]
-    public static extern IntPtr XDefaultVisual(IntPtr display, int screen_number);
+    public static extern nint XDefaultVisual(nint display, int screen_number);
     [DllImport("libX11")]
-    public static extern int XScreenCount(IntPtr display);
+    public static extern int XScreenCount(nint display);
     [DllImport("libX11")]
-    public static extern int XDefaultScreen(IntPtr display);
+    public static extern int XDefaultScreen(nint display);
     [DllImport("libX11")]
-    public static extern IntPtr XOpenDisplay(string display_name);
+    public static extern nint XOpenDisplay(string display_name);
     [DllImport("libX11")]
-    public static extern void XCloseDisplay(IntPtr display);
+    public static extern void XCloseDisplay(nint display);
     [DllImport("libX11")]
-    public static extern IntPtr XRootWindow(IntPtr display, int screen_number);
+    public static extern nint XRootWindow(nint display, int screen_number);
 
     [DllImport("libX11")]
-    public static extern IntPtr XGetSubImage(IntPtr display, IntPtr drawable, int x, int y, uint width, uint height, ulong plane_mask, int format, IntPtr dest_image, int dest_x, int dest_y);
+    public static extern nint XGetSubImage(nint display, nint drawable, int x, int y, uint width, uint height, ulong plane_mask, int format, nint dest_image, int dest_x, int dest_y);
     [DllImport("libX11")]
-    public static extern IntPtr XScreenOfDisplay(IntPtr display, int screen_number);
+    public static extern nint XScreenOfDisplay(nint display, int screen_number);
     [DllImport("libX11")]
-    public static extern int XDisplayWidth(IntPtr display, int screen_number);
+    public static extern int XDisplayWidth(nint display, int screen_number);
     [DllImport("libX11")]
-    public static extern int XDisplayHeight(IntPtr display, int screen_number);
+    public static extern int XDisplayHeight(nint display, int screen_number);
     [DllImport("libX11")]
-    public static extern int XWidthOfScreen(IntPtr screen);
+    public static extern int XWidthOfScreen(nint screen);
     [DllImport("libX11")]
-    public static extern int XHeightOfScreen(IntPtr screen);
+    public static extern int XHeightOfScreen(nint screen);
     [DllImport("libX11")]
-    public static extern IntPtr XDefaultGC(IntPtr display, int screen_number);
+    public static extern nint XDefaultGC(nint display, int screen_number);
     [DllImport("libX11")]
-    public static extern IntPtr XDefaultRootWindow(IntPtr display);
+    public static extern nint XDefaultRootWindow(nint display);
     [DllImport("libX11")]
-    public static extern void XGetInputFocus(IntPtr display, out IntPtr focus_return, out int revert_to_return);
+    public static extern void XGetInputFocus(nint display, out nint focus_return, out int revert_to_return);
     [DllImport("libX11")]
-    public static extern IntPtr XStringToKeysym(string key);
+    public static extern nint XStringToKeysym(string key);
     [DllImport("libX11")]
-    public static extern uint XKeysymToKeycode(IntPtr display, IntPtr keysym);
+    public static extern uint XKeysymToKeycode(nint display, nint keysym);
 
     [DllImport("libX11")]
-    public static extern IntPtr XRootWindowOfScreen(IntPtr screen);
+    public static extern nint XRootWindowOfScreen(nint screen);
     [DllImport("libX11")]
-    public static extern ulong XNextRequest(IntPtr display);
+    public static extern ulong XNextRequest(nint display);
     [DllImport("libX11")]
-    public static extern void XForceScreenSaver(IntPtr display, int mode);
+    public static extern void XForceScreenSaver(nint display, int mode);
     [DllImport("libX11")]
-    public static extern void XSync(IntPtr display, bool discard);
+    public static extern void XSync(nint display, bool discard);
     [DllImport("libX11")]
-    public static extern void XDestroyImage(IntPtr ximage);
+    public static extern void XDestroyImage(nint ximage);
 
     [DllImport("libX11")]
-    public static extern void XNoOp(IntPtr display);
+    public static extern void XNoOp(nint display);
 
     [DllImport("libX11")]
-    public static extern void XFree(IntPtr data);
+    public static extern void XFree(nint data);
 
     [DllImport("libX11")]
-    public static extern int XGetWindowAttributes(IntPtr display, IntPtr window, out XWindowAttributes windowAttributes);
+    public static extern int XGetWindowAttributes(nint display, nint window, out XWindowAttributes windowAttributes);
 
     public struct XImage
     {
@@ -97,7 +97,7 @@ public static unsafe class LibX11
         public int xoffset;               /* number of pixels offset in X direction */
         public int format;                /* XYBitmap, XYPixmap, ZPixmap */
         //public char* data;                /* pointer to image data */
-        public IntPtr data;                /* pointer to image data */
+        public nint data;                /* pointer to image data */
         public int byte_order;            /* data byte order, LSBFirst, MSBFirst */
         public int bitmap_unit;           /* quant. of scanline 8, 16, 32 */
         public int bitmap_bit_order;      /* LSBFirst, MSBFirst */
@@ -108,7 +108,7 @@ public static unsafe class LibX11
         public ulong red_mask;    /* bits in z arrangement */
         public ulong green_mask;
         public ulong blue_mask;
-        public IntPtr obdata;           /* hook for the object routines to hang on */
+        public nint obdata;           /* hook for the object routines to hang on */
     }
 
     public struct XWindowAttributes
@@ -119,8 +119,8 @@ public static unsafe class LibX11
         public int height;
         public int border_width;
         public int depth;
-        public IntPtr visual;
-        public IntPtr root;
+        public nint visual;
+        public nint root;
         public int @class;
         public int bit_gravity;
         public int win_gravity;
@@ -128,13 +128,13 @@ public static unsafe class LibX11
         public ulong backing_planes;
         public ulong backing_pixel;
         public bool save_under;
-        public IntPtr colormap;
+        public nint colormap;
         public bool map_installed;
         public int map_state;
         public long all_event_masks;
         public long your_event_mask;
         public long do_not_propagate_mask;
         public bool override_redirect;
-        public IntPtr screen;
+        public nint screen;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Windows;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 public static class GDI32
 {
@@ -55,26 +55,26 @@ public static class GDI32
 
     [DllImport("gdi32.dll", EntryPoint = "BitBlt", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool BitBlt([In] IntPtr hdc, int nXDest, int nYDest, int nWidth, int nHeight, [In] IntPtr hdcSrc, int nXSrc, int nYSrc, TernaryRasterOperations dwRop);
+    public static extern bool BitBlt([In] nint hdc, int nXDest, int nYDest, int nWidth, int nHeight, [In] nint hdcSrc, int nXSrc, int nYSrc, TernaryRasterOperations dwRop);
 
     [DllImport("gdi32.dll")]
-    public static extern IntPtr CreateDC(string lpszDriver, string lpszDevice, string lpszOutput, IntPtr lpInitData);
+    public static extern nint CreateDC(string lpszDriver, string lpszDevice, string lpszOutput, nint lpInitData);
 
     [DllImport("GDI32.dll")]
-    public static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int nWidth, int nHeight); [DllImport("GDI32.dll")]
-    public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+    public static extern nint CreateCompatibleBitmap(nint hdc, int nWidth, int nHeight); [DllImport("GDI32.dll")]
+    public static extern nint CreateCompatibleDC(nint hdc);
 
     [DllImport("GDI32.dll")]
-    public static extern bool DeleteDC(IntPtr hdc);
+    public static extern bool DeleteDC(nint hdc);
 
     [DllImport("GDI32.dll")]
-    public static extern bool DeleteObject(IntPtr hObject);
+    public static extern bool DeleteObject(nint hObject);
 
     [DllImport("GDI32.dll")]
-    public static extern IntPtr GetDeviceCaps(IntPtr hdc, int nIndex);
+    public static extern nint GetDeviceCaps(nint hdc, int nIndex);
 
     [DllImport("GDI32.dll")]
-    public static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
+    public static extern nint SelectObject(nint hdc, nint hgdiobj);
 
     #endregion
 }

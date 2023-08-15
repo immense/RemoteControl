@@ -1,25 +1,25 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Windows;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 public static class Kernel32
 {
     [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool CloseHandle(IntPtr hSnapshot);
+    public static extern bool CloseHandle(nint hSnapshot);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-    public static extern IntPtr GetCommandLine();
+    public static extern nint GetCommandLine();
 
     [DllImport("kernel32.dll")]
-    public static extern IntPtr GetConsoleWindow();
+    public static extern nint GetConsoleWindow();
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
 
     [DllImport("kernel32.dll")]
-    public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
+    public static extern nint OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
 
     [DllImport("kernel32.dll")]
     public static extern bool ProcessIdToSessionId(uint dwProcessId, ref uint pSessionId);

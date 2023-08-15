@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -34,7 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Immense.RemoteControl.Desktop.Native\Immense.RemoteControl.Desktop.Native.csproj" />
     <ProjectReference Include="..\Immense.RemoteControl.Shared\Immense.RemoteControl.Shared.csproj" />
   </ItemGroup>
 </Project>

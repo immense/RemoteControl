@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security;
 
-namespace Immense.RemoteControl.Desktop.Native.Windows;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 public static class ADVAPI32
 {
@@ -34,14 +34,14 @@ public static class ADVAPI32
     public struct SECURITY_ATTRIBUTES
     {
         public int Length;
-        public IntPtr lpSecurityDescriptor;
+        public nint lpSecurityDescriptor;
         public bool bInheritHandle;
     }
     [StructLayout(LayoutKind.Sequential)]
     public struct PROCESS_INFORMATION
     {
-        public IntPtr hProcess;
-        public IntPtr hThread;
+        public nint hProcess;
+        public nint hThread;
         public int dwProcessId;
         public int dwThreadId;
     }
@@ -62,10 +62,10 @@ public static class ADVAPI32
         public int dwFlags;
         public short wShowWindow;
         public short cbReserved2;
-        public IntPtr lpReserved2;
-        public IntPtr hStdInput;
-        public IntPtr hStdOutput;
-        public IntPtr hStdError;
+        public nint lpReserved2;
+        public nint hStdInput;
+        public nint hStdOutput;
+        public nint hStdError;
     }
     #endregion
 
@@ -304,7 +304,7 @@ public static class ADVAPI32
     #region DLL Imports
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool AdjustTokenPrivileges(IntPtr tokenHandle,
+    public static extern bool AdjustTokenPrivileges(nint tokenHandle,
        [MarshalAs(UnmanagedType.Bool)] bool disableAllPrivileges,
        ref TOKEN_PRIVILEGES newState,
        uint bufferLengthInBytes,
@@ -312,29 +312,29 @@ public static class ADVAPI32
        out uint returnLengthInBytes);
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     public static extern bool CreateProcessAsUser(
-        IntPtr hToken,
+        nint hToken,
         string? lpApplicationName,
         string lpCommandLine,
         ref SECURITY_ATTRIBUTES lpProcessAttributes,
         ref SECURITY_ATTRIBUTES lpThreadAttributes,
         bool bInheritHandles,
         uint dwCreationFlags,
-        IntPtr lpEnvironment,
+        nint lpEnvironment,
         string? lpCurrentDirectory,
         ref STARTUPINFO lpStartupInfo,
         out PROCESS_INFORMATION lpProcessInformation);
 
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool AllocateLocallyUniqueId(out IntPtr pLuid);
+    public static extern bool AllocateLocallyUniqueId(out nint pLuid);
 
     [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = false)]
     public static extern SECUR32.WinErrors LsaNtStatusToWinError(SECUR32.WinStatusCodes status);
 
     [DllImport("advapi32.dll", SetLastError = true)]
     public static extern bool GetTokenInformation(
-        IntPtr TokenHandle,
+        nint TokenHandle,
         SECUR32.TOKEN_INFORMATION_CLASS TokenInformationClass,
-        IntPtr TokenInformation,
+        nint TokenInformation,
         uint TokenInformationLength,
         out uint ReturnLength);
 
@@ -346,18 +346,18 @@ public static class ADVAPI32
         [MarshalAs(UnmanagedType.LPStr)] string pszPassword,
         int dwLogonType,
         int dwLogonProvider,
-        out IntPtr phToken);
+        out nint phToken);
 
     [DllImport("advapi32", SetLastError = true), SuppressUnmanagedCodeSecurity]
-    public static extern bool OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, ref IntPtr TokenHandle);
+    public static extern bool OpenProcessToken(nint ProcessHandle, int DesiredAccess, ref nint TokenHandle);
     [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     public static extern bool DuplicateTokenEx(
-        IntPtr hExistingToken,
+        nint hExistingToken,
         uint dwDesiredAccess,
         ref SECURITY_ATTRIBUTES lpTokenAttributes,
         SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
         TOKEN_TYPE TokenType,
-        out IntPtr phNewToken);
+        out nint phNewToken);
 
     [DllImport("advapi32.dll", SetLastError = false)]
     public static extern uint LsaNtStatusToWinError(uint status);

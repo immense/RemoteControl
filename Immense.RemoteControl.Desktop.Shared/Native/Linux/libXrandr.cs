@@ -29,7 +29,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Linux;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Linux;
 
 public static class LibXrandr
 {
@@ -37,7 +37,7 @@ public static class LibXrandr
     public struct XRRMonitorInfo
     {
         // Atom
-        public IntPtr name;
+        public nint name;
         public bool primary;
         public bool automatic;
         public int noutput;
@@ -48,15 +48,15 @@ public static class LibXrandr
         public int mwidth;
         public int mheight;
         // RROutput*
-        public IntPtr outputs;
+        public nint outputs;
     }
 
     [DllImport("libXrandr")]
-    public static extern IntPtr XRRGetMonitors(IntPtr display, IntPtr window, bool get_active, out int monitors);
+    public static extern nint XRRGetMonitors(nint display, nint window, bool get_active, out int monitors);
 
     [DllImport("libXrandr")]
-    public static extern void XRRFreeMonitors(IntPtr monitors);
+    public static extern void XRRFreeMonitors(nint monitors);
 
     [DllImport("libXrandr")]
-    public static extern IntPtr XRRAllocateMonitor(IntPtr display, int output);
+    public static extern nint XRRAllocateMonitor(nint display, int output);
 }

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Desktop.Native.Linux;
+namespace Immense.RemoteControl.Desktop.Shared.Native.Linux;
 
 public class Libc
 {

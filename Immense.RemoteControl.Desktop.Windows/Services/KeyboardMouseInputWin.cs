@@ -1,6 +1,6 @@
-﻿using Immense.RemoteControl.Desktop.Native.Windows;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Microsoft.Extensions.Logging;
@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using static Immense.RemoteControl.Desktop.Native.Windows.User32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 
 namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
 

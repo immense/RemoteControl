@@ -1,6 +1,6 @@
-using Immense.RemoteControl.Desktop.Native.Linux;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 
