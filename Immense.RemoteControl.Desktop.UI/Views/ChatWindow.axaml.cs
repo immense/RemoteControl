@@ -13,7 +13,6 @@ public partial class ChatWindow : Window
         Closed += ChatWindow_Closed;
         Opened += ChatWindow_Opened;
 
-        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
         InputTextBox.KeyUp += ChatWindow_KeyUp;
         MessagesListBox.Loaded += MessageListBox_Loaded;
     }
@@ -46,14 +45,5 @@ public partial class ChatWindow : Window
         await Task.Delay(1);
         // TODO: Replace with ScrollToEnd when implemented.
         MessagesScrollViewer.Offset = new Vector(0, MessagesListBox.Bounds.Height);
-    }
-
-
-    private void TitleBanner_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
-        {
-            BeginMoveDrag(e);
-        }
     }
 }

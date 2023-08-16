@@ -144,7 +144,8 @@ internal class UiDispatcher : IUiDispatcher
 
             var waitResult = await WaitHelper.WaitForAsync(
                     () => CurrentApp is not null,
-                    TimeSpan.FromSeconds(10));
+                    TimeSpan.FromSeconds(10))
+                .ConfigureAwait(false);
 
             if (!waitResult)
             {

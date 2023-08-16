@@ -11,9 +11,7 @@ public partial class MainView : UserControl
         DataContext = StaticServiceProvider.Instance?.GetService<IMainViewViewModel>();
 
         InitializeComponent();
-        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
         ViewerListBox.SelectionChanged += ViewerListBox_SelectionChanged;
-
         Loaded += MainView_Loaded;
     }
 
@@ -23,7 +21,7 @@ public partial class MainView : UserControl
             sender is ListBox viewerListBox &&
             viewerListBox.SelectedItems is not null)
         {
-            viewModel.SelectedViewers = viewerListBox.SelectedItems.Cast<IViewer>().ToList();
+            viewModel.SelectedViewers = viewerListBox.SelectedItems.OfType<IViewer>().ToList();
         }
     }
 
@@ -32,19 +30,6 @@ public partial class MainView : UserControl
         if (DataContext is MainViewViewModel viewModel)
         {
             await viewModel.Init();
-        }
-    }
-
-    private void TitleBanner_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        if (Parent is not Window window)
-        {
-            return;
-        }
-
-        if (e.GetCurrentPoint(this).Properties.PointerUpdateKind == Avalonia.Input.PointerUpdateKind.LeftButtonPressed)
-        {
-            window.BeginMoveDrag(e);
         }
     }
 }

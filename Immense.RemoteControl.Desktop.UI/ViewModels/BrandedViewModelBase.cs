@@ -79,7 +79,11 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
         set => Set(value);
     }
 
-    public WindowIcon? WindowIcon { get; set; }
+    public WindowIcon? WindowIcon
+    {
+        get => Get<WindowIcon?>();
+        set => Set(value);
+    }
 
 
     public async Task ApplyBranding()

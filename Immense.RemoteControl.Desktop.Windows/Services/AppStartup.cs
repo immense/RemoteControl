@@ -66,7 +66,7 @@ internal class AppStartup : IAppStartup
         {
             case AppMode.Unattended:
                 {
-                    var result = await _uiDispatcher.StartHeadless();
+                    var result = await _uiDispatcher.StartHeadless().ConfigureAwait(false);
                     if (!result.IsSuccess)
                     {
                         return;
@@ -81,7 +81,7 @@ internal class AppStartup : IAppStartup
                 }
             case AppMode.Chat:
                 {
-                    var result = await _uiDispatcher.StartHeadless();
+                    var result = await _uiDispatcher.StartHeadless().ConfigureAwait(false);
                     if (!result.IsSuccess)
                     {
                         return;

@@ -17,12 +17,10 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 public interface IMainViewViewModel
 {
     AsyncRelayCommand ChangeServerCommand { get; }
-    ICommand CloseCommand { get; }
     AsyncRelayCommand CopyLinkCommand { get; }
     double CopyMessageOpacity { get; set; }
     string Host { get; set; }
     bool IsCopyMessageVisible { get; set; }
-    ICommand MinimizeCommand { get; }
     ICommand OpenOptionsMenu { get; }
     AsyncRelayCommand RemoveViewersCommand { get; }
     IList<IViewer> SelectedViewers { get; }
@@ -44,8 +42,6 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
     private readonly IServiceProvider _serviceProvider;
     private readonly IViewModelFactory _viewModelFactory;
     private IList<IViewer> _selectedViewers = new List<IViewer>();
-    private RelayCommand? _minimizeCommand;
-    private RelayCommand? _closeCommand;
 
     public MainViewViewModel(
       IBrandingProvider brandingProvider,
@@ -76,22 +72,6 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
     public AsyncRelayCommand ChangeServerCommand { get; }
 
-    public ICommand CloseCommand
-    {
-        get
-        {
-            _closeCommand ??= new RelayCommand(() =>
-            {
-                if (_dispatcher?.MainWindow is null)
-                {
-                    return;
-                }
-                _dispatcher.MainWindow.Close();
-            });
-            return _closeCommand;
-        }
-    }
-
     public AsyncRelayCommand CopyLinkCommand { get; }
 
     public double CopyMessageOpacity
@@ -110,22 +90,6 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
     {
         get => Get<bool>();
         set => Set(value);
-    }
-
-    public ICommand MinimizeCommand
-    {
-        get
-        {
-            _minimizeCommand ??= new RelayCommand(() =>
-                {
-                    if (_dispatcher?.MainWindow is null)
-                    {
-                        return;
-                    }
-                    _dispatcher.MainWindow.WindowState = WindowState.Minimized;
-                });
-            return _minimizeCommand;
-        }
     }
 
     public ICommand OpenOptionsMenu { get; } = new RelayCommand<Button>(button =>
