@@ -6,7 +6,7 @@
 		xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels.Fakes"
         mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="275"
         x:Class="Immense.RemoteControl.Desktop.UI.Views.PromptForAccessWindow"
-		x:DataType="vm:PromptForAccessWindowViewModel"
+		x:DataType="vm:IPromptForAccessWindowViewModel"
 		x:Name="PromptForAccessWindowRef"
         BorderBrush="DimGray"
         BorderThickness="1"

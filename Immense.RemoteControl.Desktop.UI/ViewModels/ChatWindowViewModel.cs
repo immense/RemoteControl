@@ -7,10 +7,11 @@ using System.Windows.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface IChatWindowViewModel
+public interface IChatWindowViewModel : IBrandedViewModelBase
 {
     ObservableCollection<ChatMessage> ChatMessages { get; }
     string ChatSessionHeader { get; }
@@ -27,6 +28,7 @@ public class ChatWindowViewModel : BrandedViewModelBase, IChatWindowViewModel
 {
     private readonly StreamWriter? _streamWriter;
 
+    [ActivatorUtilitiesConstructor]
     public ChatWindowViewModel(
         StreamWriter streamWriter,
         string organizationName,

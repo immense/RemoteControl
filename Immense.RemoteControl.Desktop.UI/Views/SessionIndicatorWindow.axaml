@@ -8,7 +8,7 @@
         Width="300"
         Height="100"
         x:Class="Immense.RemoteControl.Desktop.UI.Views.SessionIndicatorWindow"
-		x:DataType="vm:SessionIndicatorWindowViewModel"
+		x:DataType="vm:ISessionIndicatorWindowViewModel"
         Background="#2b2726" 
         Title="{Binding ProductName}"
         Icon="{Binding WindowIcon}"

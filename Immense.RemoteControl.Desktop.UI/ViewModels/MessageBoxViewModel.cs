@@ -7,7 +7,7 @@ using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface IMessageBoxViewModel
+public interface IMessageBoxViewModel : IBrandedViewModelBase
 {
     bool AreYesNoButtonsVisible { get; set; }
     string Caption { get; set; }

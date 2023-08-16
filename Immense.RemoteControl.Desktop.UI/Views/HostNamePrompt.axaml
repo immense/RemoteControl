@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Immense.RemoteControl.Desktop.UI.Views.HostNamePrompt"
-		x:DataType="vm:HostNamePromptViewModel"
+		x:DataType="vm:IHostNamePromptViewModel"
         xmlns:vm="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels"
 		xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels.Fakes"
         Title="Host Name" 

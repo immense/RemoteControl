@@ -8,7 +8,10 @@ public partial class MainView : UserControl
 {
     public MainView()
     {
-        DataContext = StaticServiceProvider.Instance?.GetService<IMainViewViewModel>();
+        if (!Design.IsDesignMode)
+        {
+            DataContext = StaticServiceProvider.Instance?.GetService<IMainViewViewModel>();
+        }
 
         InitializeComponent();
         ViewerListBox.SelectionChanged += ViewerListBox_SelectionChanged;

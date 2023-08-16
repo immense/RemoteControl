@@ -6,7 +6,7 @@
 			 xmlns:fakes="clr-namespace:Immense.RemoteControl.Desktop.UI.ViewModels.Fakes"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="350"
              x:Class="Immense.RemoteControl.Desktop.UI.Views.MainView"
-             x:DataType="vm:MainViewViewModel">
+             x:DataType="vm:IMainViewViewModel">
 
 	<Design.DataContext>
 		<fakes:FakeMainViewViewModel />

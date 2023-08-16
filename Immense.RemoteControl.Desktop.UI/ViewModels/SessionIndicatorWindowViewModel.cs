@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface ISessionIndicatorWindowViewModel
+public interface ISessionIndicatorWindowViewModel : IBrandedViewModelBase
 {
 
 }

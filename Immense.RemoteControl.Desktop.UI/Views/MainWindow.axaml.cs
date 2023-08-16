@@ -9,7 +9,10 @@ public partial class MainWindow : Window
 {
     public MainWindow()
     {
-        DataContext = StaticServiceProvider.Instance?.GetService<IMainWindowViewModel>();
+        if (!Design.IsDesignMode)
+        {
+            DataContext = StaticServiceProvider.Instance?.GetService<IMainWindowViewModel>();
+        }
 
         InitializeComponent();
 

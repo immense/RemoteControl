@@ -6,7 +6,7 @@ using Immense.RemoteControl.Desktop.Shared.Reactive;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface IHostNamePromptViewModel
+public interface IHostNamePromptViewModel : IBrandedViewModelBase
 {
     string Host { get; set; }
     ICommand OKCommand { get; }

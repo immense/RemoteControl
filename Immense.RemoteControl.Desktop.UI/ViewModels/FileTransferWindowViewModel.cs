@@ -10,7 +10,7 @@ using Immense.RemoteControl.Desktop.Shared.Reactive;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface IFileTransferWindowViewModel
+public interface IFileTransferWindowViewModel : IBrandedViewModelBase
 {
     ObservableCollection<FileUpload> FileUploads { get; }
     ICommand OpenFileUploadDialogCommand { get; }

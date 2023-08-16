@@ -12,9 +12,10 @@
         BorderBrush="DimGray"
         BorderThickness="1"
         MinHeight="250"
+		x:CompileBindings="True"
         MinWidth="200"
         Topmost="True"
-		x:DataType="vm:ChatWindowViewModel"
+		x:DataType="vm:IChatWindowViewModel"
 		x:Name="ChatWindowRef"
         Title="Chat Session" Height="450" Width="450">
 

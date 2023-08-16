@@ -10,7 +10,7 @@
         Title="File Transfer"
         Height="300" Width="400" 
         Topmost="True"
-		x:DataType="vm:FileTransferWindowViewModel"
+		x:DataType="vm:IFileTransferWindowViewModel"
 		x:Name="FileTransferWindowRef"
         Icon="{Binding WindowIcon}">
 

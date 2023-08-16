@@ -14,7 +14,7 @@ using Immense.RemoteControl.Desktop.Shared.Native.Linux;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface IMainViewViewModel
+public interface IMainViewViewModel : IBrandedViewModelBase
 {
     AsyncRelayCommand ChangeServerCommand { get; }
     AsyncRelayCommand CopyLinkCommand { get; }

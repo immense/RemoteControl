@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
-public interface IPromptForAccessWindowViewModel
+public interface IPromptForAccessWindowViewModel : IBrandedViewModelBase
 {
     ICommand CloseCommand { get; }
     ICommand MinimizeCommand { get; }
