@@ -5,19 +5,6 @@
     <Application.Styles>
 		<FluentTheme />
 
-
-		<Style Selector="Button.TitlebarButton">
-			<Setter Property="Background" Value="#FF464646"></Setter>
-			<Setter Property="DockPanel.Dock" Value="Right"></Setter>
-			<Setter Property="HorizontalAlignment" Value="Right"></Setter>
-			<Setter Property="BorderBrush" Value="{x:Null}"></Setter>
-			<Setter Property="Foreground" Value="White"></Setter>
-			<Setter Property="FontWeight" Value="Bold"></Setter>
-			<Setter Property="Height" Value="30"></Setter>
-			<Setter Property="Width" Value="30"></Setter>
-			<Setter Property="Cursor" Value="Hand"></Setter>
-			<Setter Property="Margin" Value="5,0,5,0"></Setter>
-		</Style>
 		<Style Selector="TextBlock.SectionHeader">
 			<Setter Property="FontWeight" Value="Bold"></Setter>
 			<Setter Property="FontSize" Value="18"></Setter>

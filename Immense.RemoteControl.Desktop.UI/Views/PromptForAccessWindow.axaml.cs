@@ -8,7 +8,6 @@ public partial class PromptForAccessWindow : Window
     {
         InitializeComponent();
         Opened += Window_Opened;
-        TitleBanner.PointerPressed += TitleBanner_PointerPressed;
     }
 
     private void Window_Opened(object? sender, EventArgs e)
