@@ -163,7 +163,9 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
     public async Task Init()
     {
-        if (!_environment.IsDebug && Libc.geteuid() != 0)
+        if (!_environment.IsDebug && 
+            OperatingSystem.IsLinux() && 
+            !_environment.IsElevated)
         {
             await MessageBox.Show("Please run with sudo.", "Sudo Required", MessageBoxType.OK);
             Environment.Exit(0);
@@ -310,7 +312,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
     private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        var result = await Dispatcher.UIThread.InvokeAsync(async () =>
+        var result = await _dispatcher.InvokeAsync(async () =>
         {
             return await MessageBox.Show(
                 $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?",
