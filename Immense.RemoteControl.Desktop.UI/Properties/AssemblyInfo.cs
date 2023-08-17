@@ -3,4 +3,3 @@
 [assembly: InternalsVisibleTo("Immense.RemoteControl.Desktop.Windows")]
 [assembly: InternalsVisibleTo("Immense.RemoteControl.Desktop.UI")]
 [assembly: InternalsVisibleTo("Immense.RemoteControl.Desktop.Linux")]
-[assembly: InternalsVisibleTo("Immense.RemoteControl.Desktop.UI.WPF")]
