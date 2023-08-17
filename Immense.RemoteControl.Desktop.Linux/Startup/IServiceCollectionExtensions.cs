@@ -31,7 +31,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IAudioCapturer, AudioCapturerLinux>();
         services.AddTransient<IScreenCapturer, ScreenCapturerLinux>();
         services.AddScoped<IFileTransferService, FileTransferServiceLinux>();
-        services.AddSingleton<ISessionIndicator, SessionIndicatorLinux>();
+        services.AddSingleton<ISessionIndicator, SessionIndicator>();
         services.AddSingleton<IShutdownService, ShutdownServiceLinux>();
     }
 }

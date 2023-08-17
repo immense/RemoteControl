@@ -9,7 +9,6 @@
         Height="100"
         x:Class="Immense.RemoteControl.Desktop.UI.Views.SessionIndicatorWindow"
 		x:DataType="vm:ISessionIndicatorWindowViewModel"
-        Background="#2b2726" 
         Title="{Binding ProductName}"
         Icon="{Binding WindowIcon}"
         WindowStartupLocation="Manual"
@@ -20,12 +19,15 @@
 		<fakes:FakeSessionIndicatorWindowViewModel />
 	</Design.DataContext>
 	
-  <StackPanel Margin="15 10 40 15">
-    <TextBlock Classes="SectionHeader" Foreground="White">
-      Remote Control Started
-    </TextBlock>
-    <TextBlock Foreground="LightGray">
-      A remote control session has started.
-    </TextBlock>
-  </StackPanel>
+  <Grid Margin="15 10 40 15" ColumnDefinitions="Auto, *">
+	  <Image Grid.Column="0" Height="50" Width="50" Source="{Binding Icon}" />
+	  <StackPanel Grid.Column="1">
+        <TextBlock Classes="SectionHeader">
+          Remote Control Active
+        </TextBlock>
+        <TextBlock>
+          A remote control session has started.
+        </TextBlock>
+	  </StackPanel>
+  </Grid>
 </Window>

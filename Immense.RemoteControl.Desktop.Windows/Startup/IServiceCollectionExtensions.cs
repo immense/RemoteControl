@@ -25,9 +25,8 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<ICursorIconWatcher, CursorIconWatcherWin>();
         services.AddSingleton<IKeyboardMouseInput, KeyboardMouseInputWin>();
         services.AddSingleton<IAudioCapturer, AudioCapturerWin>();
-        services.AddSingleton<ISessionIndicator, SessionIndicatorWin>();
         services.AddSingleton<IShutdownService, ShutdownServiceWin>();
-        services.AddSingleton<IWinFormsDispatcher, WinFormsDispatcher>();
+        services.AddSingleton<IMessageLoop, MessageLoop>();
         services.AddSingleton<IAppStartup, AppStartup>();
         services.AddTransient<IFileTransferService, FileTransferServiceWin>();
         services.AddTransient<IScreenCapturer, ScreenCapturerWin>();

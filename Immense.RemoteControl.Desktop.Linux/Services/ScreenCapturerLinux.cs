@@ -101,17 +101,20 @@ public class ScreenCapturerLinux : IScreenCapturer
 
     public Rectangle GetVirtualScreenBounds()
     {
-        var width = 0;
-        for (var i = 0; i < GetScreenCount(); i++)
+        var lowestX = 0;
+        var highestX = 0;
+        var lowestY = 0;
+        var highestY = 0;
+
+        foreach (var screen in _x11Screens)
         {
-            width += LibX11.XWidthOfScreen(LibX11.XScreenOfDisplay(Display, i));
+            lowestX = Math.Min(lowestX, screen.Value.x);
+            highestX = Math.Max(highestX, screen.Value.x + screen.Value.width);
+            lowestY = Math.Min(lowestY, screen.Value.y);
+            highestY = Math.Max(highestY, screen.Value.y + screen.Value.height);
         }
-        var height = 0;
-        for (var i = 0; i < GetScreenCount(); i++)
-        {
-            height += LibX11.XHeightOfScreen(LibX11.XScreenOfDisplay(Display, i));
-        }
-        return new Rectangle(0, 0, width, height);
+
+        return new Rectangle(lowestX, lowestY, highestX - lowestX, highestY - lowestY);
     }
 
     public void Init()

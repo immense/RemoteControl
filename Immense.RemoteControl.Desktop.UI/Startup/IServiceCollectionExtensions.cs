@@ -12,6 +12,7 @@ internal static class IServiceCollectionExtensions
         services.AddSingleton<IUiDispatcher, UiDispatcher>();
         services.AddSingleton<IChatUiService, ChatUiService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<ISessionIndicator, SessionIndicator>();
         services.AddScoped<IRemoteControlAccessService, RemoteControlAccessService>();
         services.AddSingleton<IViewModelFactory, ViewModelFactory>();
         services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();

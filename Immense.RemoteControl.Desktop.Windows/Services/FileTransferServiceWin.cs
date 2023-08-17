@@ -1,6 +1,7 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Desktop.UI.Views;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,7 @@ public class FileTransferServiceWin : IFileTransferService
         new();
 
     private static readonly SemaphoreSlim _writeLock = new(1, 1);
-    private static DialogResult? _result;
+    private static MessageBoxResult? _result;
     private readonly IUiDispatcher _dispatcher;
     private readonly ILogger<FileTransferServiceWin> _logger;
     private readonly IViewModelFactory _viewModelFactory;
@@ -120,7 +121,7 @@ public class FileTransferServiceWin : IFileTransferService
             _writeLock.Release();
             if (endOfFile)
             {
-                await Task.Run(ShowTransferComplete);
+                await ShowTransferComplete();
             }
         }
     }
@@ -189,19 +190,16 @@ public class FileTransferServiceWin : IFileTransferService
         }
     }
 
-    private void ShowTransferComplete()
+    private async Task ShowTransferComplete()
     {
         // Prevent multiple dialogs from popping up.
         if (_result is null)
         {
-            _result = MessageBox.Show("File transfer complete.  Show folder?",
+            _result = await MessageBox.Show("File transfer complete.  Show folder?",
                 "Transfer Complete",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button1,
-                MessageBoxOptions.ServiceNotification);
+                MessageBoxType.YesNo);
 
-            if (_result == DialogResult.Yes)
+            if (_result == MessageBoxResult.Yes)
             {
                 Process.Start("explorer.exe", GetBaseDirectory());
             }

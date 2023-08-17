@@ -19,7 +19,7 @@ internal class AppStartup : IAppStartup
     private readonly IClipboardService _clipboardService;
     private readonly IChatHostService _chatHostService;
     private readonly ICursorIconWatcher _cursorIconWatcher;
-    private readonly IWinFormsDispatcher _winFormsDispatcher;
+    private readonly IMessageLoop _messageLoop;
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IIdleTimer _idleTimer;
     private readonly IShutdownService _shutdownService;
@@ -33,7 +33,7 @@ internal class AppStartup : IAppStartup
         IClipboardService clipboardService,
         IChatHostService chatHostService,
         ICursorIconWatcher iconWatcher,
-        IWinFormsDispatcher winFormsDispatcher,
+        IMessageLoop messageLoop,
         IUiDispatcher uiDispatcher,
         IIdleTimer idleTimer,
         IShutdownService shutdownService,
@@ -46,7 +46,7 @@ internal class AppStartup : IAppStartup
         _clipboardService = clipboardService;
         _chatHostService = chatHostService;
         _cursorIconWatcher = iconWatcher;
-        _winFormsDispatcher = winFormsDispatcher;
+        _messageLoop = messageLoop;
         _uiDispatcher = uiDispatcher;
         _idleTimer = idleTimer;
         _shutdownService = shutdownService;
@@ -58,7 +58,7 @@ internal class AppStartup : IAppStartup
     {
         await _brandingProvider.Initialize();
 
-        _winFormsDispatcher.StartWinFormsThread();
+        _messageLoop.StartMessageLoop();
 
         if (_appState.Mode is AppMode.Unattended or AppMode.Attended)
         {
