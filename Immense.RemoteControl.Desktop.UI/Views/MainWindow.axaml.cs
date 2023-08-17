@@ -15,7 +15,6 @@ public partial class MainWindow : Window
         }
 
         InitializeComponent();
-
         Closed += MainWindow_Closed;
     }
 

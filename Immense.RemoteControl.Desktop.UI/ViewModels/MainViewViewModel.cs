@@ -215,8 +215,6 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
             }
 
-            await ApplyBranding();
-
             await GetSessionID();
 
             return;

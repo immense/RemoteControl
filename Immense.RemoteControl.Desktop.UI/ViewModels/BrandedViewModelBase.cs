@@ -18,8 +18,6 @@ public interface IBrandedViewModelBase
     SolidColorBrush? TitleButtonForegroundColor { get; set; }
     SolidColorBrush? TitleForegroundColor { get; set; }
     WindowIcon? WindowIcon { get; set; }
-
-    Task ApplyBranding();
 }
 
 public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
@@ -35,19 +33,11 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
         IUiDispatcher dispatcher,
         ILogger<BrandedViewModelBase> logger)
     {
-
         _brandingProvider = brandingProvider;
         _dispatcher = dispatcher;
         _logger = logger;
 
-        if (_brandingInfo is not null)
-        {
-            ApplyBrandingImpl();
-        }
-        else
-        {
-            _ = Task.Run(ApplyBranding);
-        }
+        ApplyBrandingImpl();
     }
 
     public Bitmap? Icon
@@ -85,30 +75,13 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
         set => Set(value);
     }
 
-
-    public async Task ApplyBranding()
-    {
-        await _dispatcher.InvokeAsync(async () =>
-        {
-            try
-            {
-                _brandingInfo ??= await _brandingProvider.GetBrandingInfo();
-
-                ApplyBrandingImpl();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error applying branding.");
-            }
-        });
-    }
     private void ApplyBrandingImpl()
     {
         _dispatcher.Invoke(() =>
         {
             try
             {
-                _brandingInfo ??= new BrandingInfoBase();
+                _brandingInfo ??= _brandingProvider.CurrentBranding;
 
                 ProductName = _brandingInfo.Product;
 

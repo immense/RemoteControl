@@ -51,7 +51,7 @@ public class SessionIndicatorWin : ISessionIndicator
 
                 Icon icon;
 
-                var brandingInfo = await _brandingProvider.GetBrandingInfo();
+                var brandingInfo = _brandingProvider.CurrentBranding;
                 if (brandingInfo.Icon?.Any() == true)
                 {
                     using var ms = new MemoryStream(brandingInfo.Icon);

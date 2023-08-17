@@ -18,6 +18,7 @@ internal class AppStartup : IAppStartup
     private readonly IUiDispatcher _dispatcher;
     private readonly IIdleTimer _idleTimer;
     private readonly IShutdownService _shutdownService;
+    private readonly IBrandingProvider _brandingProvider;
     private readonly ILogger<AppStartup> _logger;
 
     public AppStartup(
@@ -30,6 +31,7 @@ internal class AppStartup : IAppStartup
         IUiDispatcher dispatcher,
         IIdleTimer idleTimer,
         IShutdownService shutdownService,
+        IBrandingProvider brandingProvider,
         ILogger<AppStartup> logger)
     {
         _appState = appState;
@@ -41,11 +43,14 @@ internal class AppStartup : IAppStartup
         _dispatcher = dispatcher;
         _idleTimer = idleTimer;
         _shutdownService = shutdownService;
+        _brandingProvider = brandingProvider;
         _logger = logger;
     }
 
     public async Task Run()
     {
+        await _brandingProvider.Initialize();
+
         if (_appState.Mode is AppMode.Unattended or AppMode.Attended)
         {
             _clipboardService.BeginWatching();
