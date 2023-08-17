@@ -124,7 +124,7 @@ public class FileTransferWindowViewModel : BrandedViewModelBase, IFileTransferWi
         }
         foreach (var file in result)
         {
-            await UploadFile($"{file.Path}");
+            await UploadFile($"{file.Path.LocalPath}");
         }
     }
 }
