@@ -25,8 +25,8 @@ public partial class SessionIndicatorWindow : Window
 
         if (Screens.Primary is not null)
         {
-            var left = Screens.Primary.WorkingArea.Right - Width;
-            var top = Screens.Primary.WorkingArea.Bottom - Height;
+            var left = Screens.Primary.WorkingArea.Right - FrameSize?.Width ?? Width;
+            var top = Screens.Primary.WorkingArea.Bottom - FrameSize?.Height ?? Height;
             Position = new PixelPoint((int)left, (int)top);
         }
     }
