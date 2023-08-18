@@ -15,6 +15,7 @@
 		x:CompileBindings="True"
         MinWidth="200"
         Topmost="True"
+		ShowActivated="True"
 		x:DataType="vm:IChatWindowViewModel"
 		x:Name="ChatWindowRef"
         Title="Chat Session" Height="450" Width="450">
