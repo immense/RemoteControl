@@ -191,32 +191,17 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         return Connection.SendAsync("DisconnectViewer", viewer.ViewerConnectionId, notifyViewer);
     }
 
-    public async Task GetScreenCast(
+    public Task GetScreenCast(
         string viewerId,
         string requesterName,
         bool notifyUser,
-        bool enforceAttendedAccess,
-        string organizationName,
         Guid streamId)
     {
-        try
+        // We don't want to tie up the invocation from the server, so we'll
+        // start this in a new task.
+        _ = Task.Run(async () =>
         {
-            if (enforceAttendedAccess)
-            {
-                await SendMessageToViewer(viewerId, "Asking user for permission");
-
-                var result = await _remoteControlAccessService.PromptForAccess(requesterName, organizationName);
-
-                if (!result)
-                {
-                    await SendConnectionRequestDenied(viewerId);
-                    return;
-                }
-            }
-
-            // We don't want to tie up the invocation from the server, so we'll
-            // start this in a new task.
-            _ = Task.Run(async () =>
+            try
             {
                 await using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
                 await screenCaster.BeginScreenCasting(
@@ -227,12 +212,14 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
                         RequesterName = requesterName,
                         StreamId = streamId
                     });
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while applying connection handlers.");
-        }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while casting screen.");
+            }
+        });
+
+        return Task.CompletedTask;
     }
 
     public async Task<string> GetSessionID()
@@ -275,6 +262,22 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         return Connection.SendAsync("NotifyViewersRelaunchedScreenCasterReady", viewerIDs);
     }
 
+    public async Task<PromptForAccessResult> PromptForAccess(RemoteControlAccessRequest accessRequest)
+    {
+        try
+        {
+            await SendMessageToViewer(accessRequest.ViewerConnectionId, "Asking user for permission");
+            return await _remoteControlAccessService.PromptForAccess(
+                accessRequest.RequesterDisplayName, 
+                accessRequest.OrganizationName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while applying connection handlers.");
+            return PromptForAccessResult.Error;
+        }
+    }
+
     public Task RequestScreenCast(string viewerId, string requesterName, bool notifyUser, Guid streamId)
     {
         _appState.InvokeScreenCastRequested(new ScreenCastRequest()
@@ -313,7 +316,6 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         {
             return Task.CompletedTask;
         }
-
         return Connection.SendAsync("SendConnectionRequestDenied", viewerID);
     }
 
@@ -382,14 +384,11 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
 
         // TODO: Replace parameters with singular DTOs for both client and server methods.
         connection.On<string>(nameof(Disconnect), Disconnect);
-
-        connection.On<string, string, bool, bool, string, Guid>(nameof(GetScreenCast), GetScreenCast);
-
+        connection.On<string, string, bool, Guid>(nameof(GetScreenCast), GetScreenCast);
         connection.On<string, string, bool, Guid>(nameof(RequestScreenCast), RequestScreenCast);
-
         connection.On<byte[], string>(nameof(SendDtoToClient), SendDtoToClient);
-
         connection.On<string>(nameof(ViewerDisconnected), ViewerDisconnected);
+        connection.On<RemoteControlAccessRequest, PromptForAccessResult>(nameof(PromptForAccess), PromptForAccess);
     }
 
     private Result<HubConnection> BuildConnection()

@@ -325,6 +325,10 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
             await using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
             await screenCaster.BeginScreenCasting(screenCastRequest);
         }
+        else
+        {
+            await _hubConnection.SendConnectionRequestDenied(screenCastRequest.ViewerId);
+        }
     }
 
     private async void ViewerAdded(object? sender, IViewer viewer)

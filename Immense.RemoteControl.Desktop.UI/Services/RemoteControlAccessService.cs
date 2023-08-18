@@ -1,4 +1,5 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Shared.Enums;
 using Microsoft.Extensions.Logging;
 using System.Threading;
 
@@ -23,7 +24,7 @@ public class RemoteControlAccessService : IRemoteControlAccessService
 
     public bool IsPromptOpen => _promptCount > 0;
 
-    public async Task<bool> PromptForAccess(string requesterName, string organizationName)
+    public async Task<PromptForAccessResult> PromptForAccess(string requesterName, string organizationName)
     {
         return await _dispatcher.InvokeAsync(async () =>
         {
@@ -46,20 +47,22 @@ public class RemoteControlAccessService : IRemoteControlAccessService
                 // which is required.
                 promptWindow.Show();
 
-                var result = await closeSignal.WaitAsync(TimeSpan.FromSeconds(45));
+                var result = await closeSignal.WaitAsync(TimeSpan.FromMinutes(1));
 
                 if (!result)
                 {
                     promptWindow.Close();
-                    return false;
+                    return PromptForAccessResult.TimedOut;
                 }
 
-                return viewModel.PromptResult;
+                return viewModel.PromptResult ?
+                    PromptForAccessResult.Accepted :
+                    PromptForAccessResult.Denied;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while prompting for remote control access.");
-                return false;
+                return PromptForAccessResult.Error;
             }
             finally
             {

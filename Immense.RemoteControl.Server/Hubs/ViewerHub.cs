@@ -100,7 +100,7 @@ public class ViewerHub : Hub<IViewerHubClient>
         var sessionResult = await _streamCache.WaitForStreamSession(
             SessionInfo.StreamId,
             Context.ConnectionId,
-            TimeSpan.FromMinutes(1));
+            TimeSpan.FromSeconds(30));
 
         if (!sessionResult.IsSuccess)
         {
@@ -219,14 +219,29 @@ public class ViewerHub : Hub<IViewerHubClient>
 
         if (SessionInfo.Mode == RemoteControlMode.Unattended)
         {
+            if (SessionInfo.RequireConsent)
+            {
+                var request = new RemoteControlAccessRequest(
+                    Context.ConnectionId,
+                    RequesterDisplayName, 
+                    SessionInfo.OrganizationName);
+
+                var result = await _desktopHub.Clients
+                    .Client(SessionInfo.DesktopConnectionId)
+                    .PromptForAccess(request);
+
+                if (result != Shared.Enums.PromptForAccessResult.Accepted)
+                {
+                    return Result.Fail($"Access request failed.  Result: {result}");
+                }
+            }
+
             await _desktopHub.Clients
                 .Client(SessionInfo.DesktopConnectionId)
                 .GetScreenCast(
                     Context.ConnectionId,
                     RequesterDisplayName,
                     SessionInfo.NotifyUserOnStart,
-                    SessionInfo.RequireConsent,
-                    SessionInfo.OrganizationName,
                     SessionInfo.StreamId);
         }
         else
