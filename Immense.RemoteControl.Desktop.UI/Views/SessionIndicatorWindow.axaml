@@ -19,9 +19,9 @@
 		<fakes:FakeSessionIndicatorWindowViewModel />
 	</Design.DataContext>
 	
-  <Grid Margin="15 10 40 15" ColumnDefinitions="Auto, *">
-	  <Image Grid.Column="0" Height="50" Width="50" Source="{Binding Icon}" />
-	  <StackPanel Grid.Column="1">
+  <Grid Margin="15 10 40 15" ColumnDefinitions="Auto, 10, *">
+	  <Image Grid.Column="0" Height="50" Width="50" Source="{Binding Icon}" VerticalAlignment="Center" />
+	  <StackPanel Grid.Column="2" VerticalAlignment="Center">
         <TextBlock Classes="SectionHeader">
           Remote Control Active
         </TextBlock>

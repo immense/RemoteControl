@@ -41,6 +41,12 @@ public partial class SessionIndicatorWindow : Window
 
     private async void SessionIndicatorWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        // This event appears to fire in design mode too.
+        if (Design.IsDesignMode)
+        {
+            return;
+        }
+
         e.Cancel = true;
         var result = await MessageBox.Show("Stop the remote control session?", "Stop Session", MessageBoxType.YesNo);
         if (result == MessageBoxResult.Yes)
