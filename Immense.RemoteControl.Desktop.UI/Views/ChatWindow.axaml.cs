@@ -17,8 +17,6 @@ public partial class ChatWindow : Window
         MessagesListBox.Loaded += MessageListBox_Loaded;
     }
 
-    private ChatWindowViewModel? ViewModel => DataContext as ChatWindowViewModel;
-
     private void ChatWindow_Closed(object? sender, EventArgs e)
     {
         Environment.Exit(0);
@@ -43,7 +41,6 @@ public partial class ChatWindow : Window
     {
         // Allows listbox height to adjust to content before scrolling the scrollviewer.
         await Task.Delay(1);
-        // TODO: Replace with ScrollToEnd when implemented.
-        MessagesScrollViewer.Offset = new Vector(0, MessagesListBox.Bounds.Height);
+        MessagesScrollViewer.ScrollToEnd();
     }
 }
