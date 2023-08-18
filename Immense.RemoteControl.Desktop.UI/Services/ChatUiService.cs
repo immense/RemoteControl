@@ -3,6 +3,7 @@ using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Shared.Models;
 using System.ComponentModel;
 using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
+using CommunityToolkit.Diagnostics;
 
 namespace Immense.RemoteControl.Desktop.UI.Services;
 
@@ -10,7 +11,7 @@ public class ChatUiService : IChatUiService
 {
     private readonly IUiDispatcher _dispatcher;
     private readonly IViewModelFactory _viewModelFactory;
-    private ChatWindowViewModel? _chatViewModel;
+    private IChatWindowViewModel? _chatViewModel;
 
     public ChatUiService(
         IUiDispatcher dispatcher,
@@ -44,10 +45,7 @@ public class ChatUiService : IChatUiService
 
     public void ShowChatWindow(string organizationName, StreamWriter writer)
     {
-        if (_dispatcher.CurrentApp is null)
-        {
-            return;
-        }
+        Guard.IsNotNull(_dispatcher.CurrentApp, nameof(_dispatcher.CurrentApp));
 
         _dispatcher.Post(() =>
         {
