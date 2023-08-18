@@ -10,10 +10,10 @@ namespace Immense.RemoteControl.Desktop.UI.Services;
 // that I thought it more consistent to put them all here.
 public interface IViewModelFactory
 {
-    ChatWindowViewModel CreateChatWindowViewModel(string organizationName, StreamWriter streamWriter);
-    FileTransferWindowViewModel CreateFileTransferWindowViewModel(IViewer viewer);
-    HostNamePromptViewModel CreateHostNamePromptViewModel();
-    PromptForAccessWindowViewModel CreatePromptForAccessViewModel(string requesterName, string organizationName);
+    IChatWindowViewModel CreateChatWindowViewModel(string organizationName, StreamWriter streamWriter);
+    IFileTransferWindowViewModel CreateFileTransferWindowViewModel(IViewer viewer);
+    IHostNamePromptViewModel CreateHostNamePromptViewModel();
+    IPromptForAccessWindowViewModel CreatePromptForAccessViewModel(string requesterName, string organizationName);
 }
 
 internal class ViewModelFactory : IViewModelFactory
@@ -25,7 +25,7 @@ internal class ViewModelFactory : IViewModelFactory
         _serviceProvider = serviceProvider;
     }
 
-    public ChatWindowViewModel CreateChatWindowViewModel(string organizationName, StreamWriter streamWriter)
+    public IChatWindowViewModel CreateChatWindowViewModel(string organizationName, StreamWriter streamWriter)
     {
         var branding = _serviceProvider.GetRequiredService<IBrandingProvider>();
         var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
@@ -33,8 +33,7 @@ internal class ViewModelFactory : IViewModelFactory
         return new ChatWindowViewModel(streamWriter, organizationName, branding, dispatcher, logger);
     }
 
-    public FileTransferWindowViewModel CreateFileTransferWindowViewModel(
-        IViewer viewer)
+    public IFileTransferWindowViewModel CreateFileTransferWindowViewModel(IViewer viewer)
     {
         var brandingProvider = _serviceProvider.GetRequiredService<IBrandingProvider>();
         var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
@@ -43,7 +42,7 @@ internal class ViewModelFactory : IViewModelFactory
         return new FileTransferWindowViewModel(viewer, brandingProvider, dispatcher, fileTransfer, logger);
     }
 
-    public PromptForAccessWindowViewModel CreatePromptForAccessViewModel(string requesterName, string organizationName)
+    public IPromptForAccessWindowViewModel CreatePromptForAccessViewModel(string requesterName, string organizationName)
     {
         var brandingProvider = _serviceProvider.GetRequiredService<IBrandingProvider>();
         var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
@@ -51,7 +50,7 @@ internal class ViewModelFactory : IViewModelFactory
         return new PromptForAccessWindowViewModel(requesterName, organizationName, brandingProvider, dispatcher, logger);
     }
 
-    public HostNamePromptViewModel CreateHostNamePromptViewModel()
+    public IHostNamePromptViewModel CreateHostNamePromptViewModel()
     {
         var brandingProvider = _serviceProvider.GetRequiredService<IBrandingProvider>();
         var dispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
