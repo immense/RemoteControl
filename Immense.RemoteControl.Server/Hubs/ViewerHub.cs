@@ -100,7 +100,7 @@ public class ViewerHub : Hub<IViewerHubClient>
         var sessionResult = await _streamCache.WaitForStreamSession(
             SessionInfo.StreamId,
             Context.ConnectionId,
-            TimeSpan.FromSeconds(30));
+            TimeSpan.FromMinutes(1));
 
         if (!sessionResult.IsSuccess)
         {

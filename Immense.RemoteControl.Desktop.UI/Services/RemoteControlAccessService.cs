@@ -30,40 +30,41 @@ public class RemoteControlAccessService : IRemoteControlAccessService
             try
             {
                 Interlocked.Increment(ref _promptCount);
+                var viewModel = _viewModelFactory.CreatePromptForAccessViewModel(requesterName, organizationName);
+                var promptWindow = new PromptForAccessWindow()
+                {
+                    DataContext = viewModel
+                };
+
+                var closeSignal = new SemaphoreSlim(0, 1);
+                promptWindow.Closed += (sender, arg) =>
+                {
+                    closeSignal.Release();
+                };
+
+                // We can't use ShowDialog here because the MainWindow might not exist,
+                // which is required.
+                promptWindow.Show();
+
+                var result = await closeSignal.WaitAsync(TimeSpan.FromSeconds(45));
+
+                if (!result)
+                {
+                    promptWindow.Close();
+                    return false;
+                }
+
+                return viewModel.PromptResult;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while prompting for remote control access.");
+                return false;
             }
             finally
             {
                 Interlocked.Decrement(ref _promptCount);
             }
-            var viewModel = _viewModelFactory.CreatePromptForAccessViewModel(requesterName, organizationName);
-            var promptWindow = new PromptForAccessWindow()
-            {
-                DataContext = viewModel
-            };
-
-            var closeSignal = new SemaphoreSlim(0, 1);
-            promptWindow.Closed += (sender, arg) =>
-            {
-                closeSignal.Release();
-            };
-
-            // We can't use ShowDialog here because the MainWindow might not exist,
-            // which is required.
-            promptWindow.Show();
-
-            var result = await closeSignal.WaitAsync(TimeSpan.FromMinutes(1));
-
-            if (!result)
-            {
-                promptWindow.Close();
-                return false;
-            }
-
-            return viewModel.PromptResult;
         });
     }
 }
