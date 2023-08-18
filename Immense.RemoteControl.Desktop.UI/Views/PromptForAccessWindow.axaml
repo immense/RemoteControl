@@ -15,6 +15,7 @@
         MinWidth="250"
         Height="275" 
         Width="450"
+	    WindowStartupLocation="CenterScreen"
         Icon="{Binding WindowIcon}">
 
 	<Design.DataContext>
