@@ -35,7 +35,6 @@ internal class UiDispatcher : IUiDispatcher
     private static Application? _currentApp;
     private readonly ILogger<UiDispatcher> _logger;
     private AppBuilder? _appBuilder;
-    private Task? _runHeadlessTask;
 
     public UiDispatcher(ILogger<UiDispatcher> logger)
     {
@@ -133,10 +132,10 @@ internal class UiDispatcher : IUiDispatcher
         try
         {
             var args = Environment.GetCommandLineArgs();
-            var argString = string.Join(", ", args);
+            var argString = string.Join(" ", args);
             _logger.LogInformation("Starting dispatcher in unattended mode with args: [{args}].", argString);
 
-            _runHeadlessTask = Task.Run(() =>
+            _ = Task.Run(() =>
             {
                 _appBuilder = BuildAvaloniaApp();
                 _appBuilder.Start(RunHeadless, args);
