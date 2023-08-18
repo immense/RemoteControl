@@ -9,8 +9,6 @@ namespace Immense.RemoteControl.Desktop.UI.ViewModels;
 
 public interface IPromptForAccessWindowViewModel : IBrandedViewModelBase
 {
-    ICommand CloseCommand { get; }
-    ICommand MinimizeCommand { get; }
     string OrganizationName { get; set; }
     bool PromptResult { get; set; }
     string RequesterName { get; set; }
@@ -39,19 +37,6 @@ public class PromptForAccessWindowViewModel : BrandedViewModelBase, IPromptForAc
             OrganizationName = organizationName;
         }
     }
-
-    public ICommand CloseCommand { get; } = new RelayCommand<Window>(window =>
-    {
-        window?.Close();
-    });
-
-    public ICommand MinimizeCommand { get; } = new RelayCommand<Window>(window =>
-    {
-        if (window is not null)
-        {
-            window.WindowState = WindowState.Minimized;
-        }
-    });
 
     public string OrganizationName
     {
