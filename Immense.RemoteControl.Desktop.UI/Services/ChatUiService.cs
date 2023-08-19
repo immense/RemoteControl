@@ -45,8 +45,6 @@ public class ChatUiService : IChatUiService
 
     public void ShowChatWindow(string organizationName, StreamWriter writer)
     {
-        Guard.IsNotNull(_dispatcher.CurrentApp, nameof(_dispatcher.CurrentApp));
-
         _dispatcher.Post(() =>
         {
             _chatViewModel = _viewModelFactory.CreateChatWindowViewModel(organizationName, writer);
@@ -56,7 +54,7 @@ public class ChatUiService : IChatUiService
             };
 
             chatWindow.Closing += ChatWindow_Closing;
-            _dispatcher.CurrentApp.Run(chatWindow);
+            chatWindow.Show();
         });
     }
 

@@ -232,7 +232,7 @@ public class ViewerHub : Hub<IViewerHubClient>
 
                 if (result != Shared.Enums.PromptForAccessResult.Accepted)
                 {
-                    return Result.Fail($"Access request failed.  Result: {result}");
+                    return Result.Fail($"Access request failed.  Reason: {result}");
                 }
             }
 
