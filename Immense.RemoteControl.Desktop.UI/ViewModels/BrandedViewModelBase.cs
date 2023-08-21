@@ -14,9 +14,6 @@ public interface IBrandedViewModelBase
 {
     Bitmap? Icon { get; set; }
     string ProductName { get; set; }
-    SolidColorBrush? TitleBackgroundColor { get; set; }
-    SolidColorBrush? TitleButtonForegroundColor { get; set; }
-    SolidColorBrush? TitleForegroundColor { get; set; }
     WindowIcon? WindowIcon { get; set; }
 }
 
@@ -51,23 +48,6 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
         get => Get<string?>() ?? "Remote Control";
         set => Set(value ?? "Remote Control");
     }
-    public SolidColorBrush? TitleBackgroundColor
-    {
-        get => Get<SolidColorBrush?>();
-        set => Set(value);
-    }
-
-    public SolidColorBrush? TitleButtonForegroundColor
-    {
-        get => Get<SolidColorBrush?>();
-        set => Set(value);
-    }
-
-    public SolidColorBrush? TitleForegroundColor
-    {
-        get => Get<SolidColorBrush?>();
-        set => Set(value);
-    }
 
     public WindowIcon? WindowIcon
     {
@@ -84,21 +64,6 @@ public class BrandedViewModelBase : ObservableObject, IBrandedViewModelBase
                 _brandingInfo ??= _brandingProvider.CurrentBranding;
 
                 ProductName = _brandingInfo.Product;
-
-                TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
-                    _brandingInfo.TitleBackgroundRed,
-                    _brandingInfo.TitleBackgroundGreen,
-                    _brandingInfo.TitleBackgroundBlue));
-
-                TitleForegroundColor = new SolidColorBrush(Color.FromRgb(
-                   _brandingInfo.TitleForegroundRed,
-                   _brandingInfo.TitleForegroundGreen,
-                   _brandingInfo.TitleForegroundBlue));
-
-                TitleButtonForegroundColor = new SolidColorBrush(Color.FromRgb(
-                   _brandingInfo.ButtonForegroundRed,
-                   _brandingInfo.ButtonForegroundGreen,
-                   _brandingInfo.ButtonForegroundBlue));
 
                 if (_brandingInfo.Icon?.Any() == true)
                 {

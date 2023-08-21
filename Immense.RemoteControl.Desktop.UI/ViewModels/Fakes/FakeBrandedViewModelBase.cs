@@ -17,21 +17,6 @@ public class FakeBrandedViewModelBase : IBrandedViewModelBase
     {
         _brandingInfo = new BrandingInfoBase();
         _icon = GetBitmapImageIcon(_brandingInfo);
-
-        TitleBackgroundColor = new SolidColorBrush(Color.FromRgb(
-            _brandingInfo.TitleBackgroundRed,
-            _brandingInfo.TitleBackgroundGreen,
-            _brandingInfo.TitleBackgroundBlue));
-
-        TitleForegroundColor = new SolidColorBrush(Color.FromRgb(
-           _brandingInfo.TitleForegroundRed,
-           _brandingInfo.TitleForegroundGreen,
-           _brandingInfo.TitleForegroundBlue));
-
-        TitleButtonForegroundColor = new SolidColorBrush(Color.FromRgb(
-           _brandingInfo.ButtonForegroundRed,
-           _brandingInfo.ButtonForegroundGreen,
-           _brandingInfo.ButtonForegroundBlue));
     }
     public Bitmap? Icon
     {
@@ -39,9 +24,6 @@ public class FakeBrandedViewModelBase : IBrandedViewModelBase
         set => _icon = value;
     }
     public string ProductName { get; set; } = "Test Product";
-    public SolidColorBrush? TitleBackgroundColor { get; set; }
-    public SolidColorBrush? TitleButtonForegroundColor { get; set; }
-    public SolidColorBrush? TitleForegroundColor { get; set; }
     public WindowIcon? WindowIcon { get; set; }
 
     public Task ApplyBranding()
