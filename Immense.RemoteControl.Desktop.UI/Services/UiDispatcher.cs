@@ -23,8 +23,9 @@ public interface IUiDispatcher
     Task InvokeAsync(Func<Task> func, DispatcherPriority priority = default);
     Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default);
     void Post(Action action, DispatcherPriority priority = default);
-    Task ShowDialog(Window window);
+    Task<bool> Show(Window window, TimeSpan timeout);
 
+    Task ShowDialog(Window window);
     void ShowMainWindow(Window window);
 
     void ShowWindow(Window window);
@@ -56,7 +57,7 @@ internal class UiDispatcher : IUiDispatcher
             {
                 return desktopApp.MainWindow?.Clipboard;
             }
-
+           
             if (CurrentApp?.ApplicationLifetime is ISingleViewApplicationLifetime svApp)
             {
                 return TopLevel.GetTopLevel(svApp.MainView)?.Clipboard;
@@ -111,13 +112,29 @@ internal class UiDispatcher : IUiDispatcher
         Dispatcher.UIThread.Post(action, priority);
     }
 
+    public async Task<bool> Show(Window window, TimeSpan timeout)
+    {
+        return await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            using var closeSignal = new SemaphoreSlim(0, 1);
+            window.Closed += (sender, arg) =>
+            {
+                closeSignal.Release();
+            };
+
+            window.Show();
+
+            return await closeSignal.WaitAsync(timeout);
+        });
+    }
+
     public async Task ShowDialog(Window window)
     {
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            if (_mainWindow is not null)
+            if (MainWindow is not null)
             {
-                await window.ShowDialog(_mainWindow);
+                await window.ShowDialog(MainWindow);
             }
             else
             {
@@ -132,7 +149,6 @@ internal class UiDispatcher : IUiDispatcher
             }
         });
     }
-
     public void ShowMainWindow(Window window)
     {
         Dispatcher.UIThread.Invoke(() =>

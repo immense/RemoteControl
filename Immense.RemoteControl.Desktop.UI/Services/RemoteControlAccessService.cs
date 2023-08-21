@@ -37,22 +37,13 @@ public class RemoteControlAccessService : IRemoteControlAccessService
                     DataContext = viewModel
                 };
 
-                using var closeSignal = new SemaphoreSlim(0, 1);
-                promptWindow.Closed += (sender, arg) =>
-                {
-                    closeSignal.Release();
-                };
-
-                await _dispatcher.ShowDialog(promptWindow);
-
-                var result = await closeSignal.WaitAsync(TimeSpan.FromMinutes(1));
+                var result = await _dispatcher.Show(promptWindow, TimeSpan.FromMinutes(1));
 
                 if (!result)
                 {
-                    promptWindow.Close();
                     return PromptForAccessResult.TimedOut;
                 }
-
+                
                 return viewModel.PromptResult ?
                     PromptForAccessResult.Accepted :
                     PromptForAccessResult.Denied;
