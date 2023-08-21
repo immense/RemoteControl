@@ -38,6 +38,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 {
     private readonly IAppState _appState;
     private readonly IEnvironmentHelper _environment;
+    private readonly IDialogProvider _dialogProvider;
     private readonly IDesktopHubConnection _hubConnection;
     private readonly IServiceProvider _serviceProvider;
     private readonly IViewModelFactory _viewModelFactory;
@@ -51,6 +52,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
       IServiceProvider serviceProvider,
       IViewModelFactory viewModelFactory,
       IEnvironmentHelper environmentHelper,
+      IDialogProvider dialogProvider,
       ILogger<MainViewViewModel> logger)
       : base(brandingProvider, dispatcher, logger)
     {
@@ -59,6 +61,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
         _serviceProvider = serviceProvider;
         _viewModelFactory = viewModelFactory;
         _environment = environmentHelper;
+        _dialogProvider = dialogProvider;
 
         _appState.ViewerRemoved += ViewerRemoved;
         _appState.ViewerAdded += ViewerAdded;
@@ -167,7 +170,7 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
             OperatingSystem.IsLinux() && 
             !_environment.IsElevated)
         {
-            await MessageBox.Show("Please run with sudo.", "Sudo Required", MessageBoxType.OK);
+            await _dialogProvider.Show("Please run with sudo.", "Sudo Required", MessageBoxType.OK);
             Environment.Exit(0);
         }
 
@@ -228,16 +231,11 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
         // If we got here, something went wrong.
         StatusMessage = "Failed";
-        await MessageBox.Show("Failed to connect to server.", "Connection Failed", MessageBoxType.OK);
+        await _dialogProvider.Show("Failed to connect to server.", "Connection Failed", MessageBoxType.OK);
     }
 
     public async Task PromptForHostName()
     {
-        if (_dispatcher.MainWindow is null)
-        {
-            return;
-        }
-
         var viewModel = _viewModelFactory.CreateHostNamePromptViewModel();
         var prompt = new HostNamePrompt()
         {
@@ -249,14 +247,15 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
             viewModel.Host = Host;
         }
 
-        await prompt.ShowDialog(_dispatcher.MainWindow);
+        await _dispatcher.ShowDialog(prompt);
+
         var result = prompt.ViewModel?.Host?.Trim()?.TrimEnd('/');
 
         if (!Uri.TryCreate(result, UriKind.Absolute, out var serverUri) ||
             serverUri.Scheme != Uri.UriSchemeHttp && serverUri.Scheme != Uri.UriSchemeHttps)
         {
             _logger.LogWarning("Server URL is not valid.");
-            await MessageBox.Show("Server URL must be a valid Uri (e.g. https://example.com).", "Invalid Server URL", MessageBoxType.OK);
+            await _dialogProvider.Show("Server URL must be a valid Uri (e.g. https://example.com).", "Invalid Server URL", MessageBoxType.OK);
             return;
         }
 
@@ -312,13 +311,10 @@ public class MainViewViewModel : BrandedViewModelBase, IMainViewViewModel
 
     private async void ScreenCastRequested(object? sender, ScreenCastRequest screenCastRequest)
     {
-        var result = await _dispatcher.InvokeAsync(async () =>
-        {
-            return await MessageBox.Show(
-                $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?",
-                "Connection Request",
-                MessageBoxType.YesNo);
-        });
+        var result = await _dialogProvider.Show(
+            $"You've received a connection request from {screenCastRequest.RequesterName}.  Accept?",
+            "Connection Request",
+            MessageBoxType.YesNo);
 
         if (result == MessageBoxResult.Yes)
         {

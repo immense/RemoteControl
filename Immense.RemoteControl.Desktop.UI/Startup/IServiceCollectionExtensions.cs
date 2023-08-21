@@ -19,5 +19,6 @@ internal static class IServiceCollectionExtensions
         services.AddSingleton<IMainViewViewModel, MainViewViewModel>();
         services.AddSingleton<ISessionIndicatorWindowViewModel, SessionIndicatorWindowViewModel>();
         services.AddTransient<IMessageBoxViewModel, MessageBoxViewModel>();
+        services.AddSingleton<IDialogProvider, DialogProvider>();
     }
 }

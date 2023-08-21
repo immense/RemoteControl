@@ -9,6 +9,7 @@
         Icon="{Binding WindowIcon}"
         Title="{Binding Caption}"
 		Topmost="True"
+		ShowActivated="True"
         SizeToContent="WidthAndHeight" MinWidth="300" MinHeight="100"
 		x:DataType="vm:MessageBoxViewModel"
 		x:Name="MessageBoxWindow"

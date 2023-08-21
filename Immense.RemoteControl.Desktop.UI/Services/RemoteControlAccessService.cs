@@ -37,15 +37,13 @@ public class RemoteControlAccessService : IRemoteControlAccessService
                     DataContext = viewModel
                 };
 
-                var closeSignal = new SemaphoreSlim(0, 1);
+                using var closeSignal = new SemaphoreSlim(0, 1);
                 promptWindow.Closed += (sender, arg) =>
                 {
                     closeSignal.Release();
                 };
 
-                // We can't use ShowDialog here because the MainWindow might not exist,
-                // which is required.
-                promptWindow.Show();
+                await _dispatcher.ShowDialog(promptWindow);
 
                 var result = await closeSignal.WaitAsync(TimeSpan.FromMinutes(1));
 

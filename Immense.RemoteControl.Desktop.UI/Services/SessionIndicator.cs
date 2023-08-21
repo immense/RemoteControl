@@ -20,7 +20,7 @@ public class SessionIndicator : ISessionIndicator
             {
                 DataContext = StaticServiceProvider.Instance?.GetRequiredService<ISessionIndicatorWindowViewModel>()
             };
-            indicatorWindow.Show();
+            _dispatcher.ShowMainWindow(indicatorWindow);
         });
     }
 }

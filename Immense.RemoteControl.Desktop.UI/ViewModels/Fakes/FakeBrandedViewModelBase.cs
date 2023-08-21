@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
 using Immense.RemoteControl.Shared.Models;
+using System.Diagnostics;
 using System.IO;
 
 namespace Immense.RemoteControl.Desktop.UI.ViewModels.Fakes;
@@ -60,7 +61,7 @@ public class FakeBrandedViewModelBase : IBrandedViewModelBase
         }
         catch (Exception ex)
         {
-            _ = MessageBox.Show(ex.Message, "Design-Time Error", MessageBoxType.OK);
+            Debug.WriteLine(ex.Message);
             return null;
         }
     }

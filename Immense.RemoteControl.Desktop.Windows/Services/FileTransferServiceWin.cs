@@ -7,6 +7,7 @@ using Immense.RemoteControl.Desktop.UI.Views;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
@@ -25,13 +26,17 @@ public class FileTransferServiceWin : IFileTransferService
     private readonly IUiDispatcher _dispatcher;
     private readonly ILogger<FileTransferServiceWin> _logger;
     private readonly IViewModelFactory _viewModelFactory;
+    private readonly IDialogProvider _dialogProvider;
+
     public FileTransferServiceWin(
         IUiDispatcher dispatcher,
         IViewModelFactory viewModelFactory,
+        IDialogProvider dialogProvider,
         ILogger<FileTransferServiceWin> logger)
     {
         _dispatcher = dispatcher;
         _viewModelFactory = viewModelFactory;
+        _dialogProvider = dialogProvider;
         _logger = logger;
     }
 
@@ -66,6 +71,7 @@ public class FileTransferServiceWin : IFileTransferService
         });
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task ReceiveFile(byte[] buffer, string fileName, string messageId, bool endOfFile, bool startOfFile)
     {
         try
@@ -142,6 +148,7 @@ public class FileTransferServiceWin : IFileTransferService
         }
     }
 
+    [SupportedOSPlatform("windows")]
     private static void SetFileOrFolderPermissions(string path)
     {
         FileSystemSecurity ds;
@@ -195,7 +202,7 @@ public class FileTransferServiceWin : IFileTransferService
         // Prevent multiple dialogs from popping up.
         if (_result is null)
         {
-            _result = await MessageBox.Show("File transfer complete.  Show folder?",
+            _result = await _dialogProvider.Show("File transfer complete.  Show folder?",
                 "Transfer Complete",
                 MessageBoxType.YesNo);
 

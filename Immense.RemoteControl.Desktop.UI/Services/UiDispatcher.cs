@@ -23,9 +23,13 @@ public interface IUiDispatcher
     Task InvokeAsync(Func<Task> func, DispatcherPriority priority = default);
     Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default);
     void Post(Action action, DispatcherPriority priority = default);
+    Task ShowDialog(Window window);
+
+    void ShowMainWindow(Window window);
+
+    void ShowWindow(Window window);
     void Shutdown();
     void StartClassicDesktop();
-
     Task<Result> StartHeadless();
 }
 
@@ -35,6 +39,7 @@ internal class UiDispatcher : IUiDispatcher
     private static Application? _currentApp;
     private readonly ILogger<UiDispatcher> _logger;
     private AppBuilder? _appBuilder;
+    private Window? _mainWindow;
 
     public UiDispatcher(ILogger<UiDispatcher> logger)
     {
@@ -71,7 +76,7 @@ internal class UiDispatcher : IUiDispatcher
                 return app.MainWindow;
             }
 
-            return null;
+            return _mainWindow;
         }
     }
     public void Invoke(Action action)
@@ -98,6 +103,52 @@ internal class UiDispatcher : IUiDispatcher
     public void Post(Action action, DispatcherPriority priority = default)
     {
         Dispatcher.UIThread.Post(action, priority);
+    }
+
+    public async Task ShowDialog(Window window)
+    {
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            if (_mainWindow is not null)
+            {
+                await window.ShowDialog(_mainWindow);
+            }
+            else
+            {
+                using var closeSignal = new SemaphoreSlim(0, 1);
+                window.Closed += (sender, arg) =>
+                {
+                    closeSignal.Release();
+                };
+                window.Show();
+
+                await closeSignal.WaitAsync();
+            }
+        });
+    }
+
+    public void ShowMainWindow(Window window)
+    {
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            _mainWindow = window;
+            window.Show();
+        });
+    }
+
+    public void ShowWindow(Window window)
+    {
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            if (_mainWindow is not null)
+            {
+                window.Show(_mainWindow);
+            }
+            else
+            {
+                window.Show();
+            }
+        });
     }
 
     public void Shutdown()

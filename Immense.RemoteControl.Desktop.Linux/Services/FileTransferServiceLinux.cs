@@ -17,15 +17,18 @@ public class FileTransferServiceLinux : IFileTransferService
     private static volatile bool _messageBoxPending;
     private readonly IViewModelFactory _viewModelFactory;
     private readonly IUiDispatcher _dispatcher;
+    private readonly IDialogProvider _dialogProvider;
     private readonly ILogger<FileTransferServiceLinux> _logger;
 
     public FileTransferServiceLinux(
         IViewModelFactory viewModelFactory,
         IUiDispatcher dispatcher,
+        IDialogProvider dialogProvider,
         ILogger<FileTransferServiceLinux> logger)
     {
         _viewModelFactory = viewModelFactory;
         _dispatcher = dispatcher;
+        _dialogProvider = dialogProvider;
         _logger = logger;
     }
 
@@ -145,7 +148,7 @@ public class FileTransferServiceLinux : IFileTransferService
         {
             _messageBoxPending = true;
 
-            await MessageBox.Show($"File tranfer complete.  Files saved to directory:\n\n{GetBaseDirectory()}",
+            await _dialogProvider.Show($"File tranfer complete.  Files saved to directory:\n\n{GetBaseDirectory()}",
                 "Tranfer Complete",
                 MessageBoxType.OK);
 

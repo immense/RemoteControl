@@ -47,16 +47,10 @@ public partial class SessionIndicatorWindow : Window
             return;
         }
 
-        e.Cancel = true;
-        var result = await MessageBox.Show("Stop the remote control session?", "Stop Session", MessageBoxType.YesNo);
-        if (result == MessageBoxResult.Yes)
+        if (DataContext is ISessionIndicatorWindowViewModel viewModel)
         {
-            var shutdownService = StaticServiceProvider.Instance?.GetRequiredService<IShutdownService>();
-            if (shutdownService is null)
-            {
-                return;
-            }
-            await shutdownService.Shutdown();
+            e.Cancel = true;
+            await viewModel.PromptForExit();
         }
     }
 }

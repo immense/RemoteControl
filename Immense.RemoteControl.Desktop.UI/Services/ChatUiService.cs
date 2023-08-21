@@ -10,14 +10,17 @@ namespace Immense.RemoteControl.Desktop.UI.Services;
 public class ChatUiService : IChatUiService
 {
     private readonly IUiDispatcher _dispatcher;
+    private readonly IDialogProvider _dialogProvider;
     private readonly IViewModelFactory _viewModelFactory;
     private IChatWindowViewModel? _chatViewModel;
 
     public ChatUiService(
         IUiDispatcher dispatcher,
+        IDialogProvider dialogProvider,
         IViewModelFactory viewModelFactory)
     {
         _dispatcher = dispatcher;
+        _dialogProvider = dialogProvider;
         _viewModelFactory = viewModelFactory;
     }
 
@@ -29,8 +32,7 @@ public class ChatUiService : IChatUiService
         {
             if (chatMessage.Disconnected)
             {
-                // TODO: IDialogService.
-                await MessageBox.Show("The partner has disconnected from the chat.", "Partner Disconnected", MessageBoxType.OK);
+                await _dialogProvider.Show("Your partner has disconnected from the chat.", "Partner Disconnected", MessageBoxType.OK);
                 Environment.Exit(0);
                 return;
             }
@@ -54,7 +56,7 @@ public class ChatUiService : IChatUiService
             };
 
             chatWindow.Closing += ChatWindow_Closing;
-            chatWindow.Show();
+            _dispatcher.ShowMainWindow(chatWindow);
         });
     }
 
