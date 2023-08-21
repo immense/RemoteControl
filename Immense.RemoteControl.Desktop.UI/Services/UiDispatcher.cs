@@ -61,6 +61,12 @@ internal class UiDispatcher : IUiDispatcher
             {
                 return TopLevel.GetTopLevel(svApp.MainView)?.Clipboard;
             }
+
+            if (_mainWindow is not null)
+            {
+                return _mainWindow.Clipboard;
+            }
+
             return null;
         }
     }
