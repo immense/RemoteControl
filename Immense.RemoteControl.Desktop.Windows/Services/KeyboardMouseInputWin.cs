@@ -10,7 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class KeyboardMouseInputWin : IKeyboardMouseInput
 {

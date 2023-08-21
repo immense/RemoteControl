@@ -35,12 +35,12 @@ using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared;
 using Result = Immense.RemoteControl.Shared.Result;
 using System.Diagnostics.CodeAnalysis;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Models;
+using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using System.Drawing;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Helpers;
+using Immense.RemoteControl.Desktop.Windows.Helpers;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class ScreenCapturerWin : IScreenCapturer
 {

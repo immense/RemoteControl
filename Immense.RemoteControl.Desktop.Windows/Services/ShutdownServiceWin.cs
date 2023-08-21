@@ -4,7 +4,7 @@ using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Shared.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class ShutdownServiceWin : IShutdownService
 {

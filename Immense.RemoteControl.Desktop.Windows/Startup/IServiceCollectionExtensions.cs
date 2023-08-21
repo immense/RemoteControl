@@ -1,10 +1,10 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Immense.RemoteControl.Desktop.Shared.Startup;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.Windows.Services;
 using Immense.RemoteControl.Desktop.UI.Startup;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Startup;
+namespace Immense.RemoteControl.Desktop.Windows.Startup;
 
 public static class IServiceCollectionExtensions
 {

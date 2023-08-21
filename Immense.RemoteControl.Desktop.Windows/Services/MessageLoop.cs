@@ -8,7 +8,7 @@ using Immense.SimpleMessenger;
 using Immense.RemoteControl.Desktop.UI.Services;
 using System.Runtime.InteropServices;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public interface IMessageLoop
 {

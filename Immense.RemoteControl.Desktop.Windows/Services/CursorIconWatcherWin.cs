@@ -8,7 +8,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Timers;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 /// <summary>
 /// A class that can be used to watch for cursor icon changes.

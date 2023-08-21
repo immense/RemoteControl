@@ -3,7 +3,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using System.Drawing;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Models;
+namespace Immense.RemoteControl.Desktop.Windows.Models;
 
 public class DirectXOutput : IDisposable
 {

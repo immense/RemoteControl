@@ -8,7 +8,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Helpers;
+namespace Immense.RemoteControl.Desktop.Windows.Helpers;
+
 internal static class DisplaysEnumerationHelper
 {
     delegate bool EnumMonitorsDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
