@@ -37,6 +37,8 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IAppStartup, AppStartup>();
         services.AddSingleton<IViewModelFactory, ViewModelFactory>();
         services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
+        services.AddSingleton<IMainViewViewModel, MainViewViewModel>();
+        services.AddSingleton<ISessionIndicatorWindowViewModel, SessionIndicatorWindowViewModel>();
         services.AddTransient<IMessageBoxViewModel, MessageBoxViewModel>();
     }
 }

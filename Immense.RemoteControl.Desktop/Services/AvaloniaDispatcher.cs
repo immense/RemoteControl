@@ -1,7 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
+using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -12,26 +15,29 @@ namespace Immense.RemoteControl.Desktop.Services;
 public interface IAvaloniaDispatcher
 {
     CancellationToken AppCancellationToken { get; }
-
+    IClipboard? Clipboard { get; }
     Application? CurrentApp { get; }
 
     Window? MainWindow { get; }
 
-    Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
-    Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal);
-    Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal);
-    void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal);
+    void Invoke(Action action);
+    Task InvokeAsync(Action action, DispatcherPriority priority = default);
+    Task InvokeAsync(Func<Task> func, DispatcherPriority priority = default);
+    Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default);
+    void Post(Action action, DispatcherPriority priority = default);
     void Shutdown();
-    void StartUnattended();
-    void StartAttended();
+    void StartClassicDesktop();
+
+    Task<Result> StartHeadless();
 }
 
 internal class AvaloniaDispatcher : IAvaloniaDispatcher
 {
     private static readonly CancellationTokenSource _appCts = new();
-    private AppBuilder? _appBuilder;
     private static Application? _currentApp;
     private readonly ILogger<AvaloniaDispatcher> _logger;
+    private AppBuilder? _appBuilder;
+    private Task? _runHeadlessTask;
 
     public AvaloniaDispatcher(ILogger<AvaloniaDispatcher> logger)
     {
@@ -39,6 +45,23 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
     }
 
     public CancellationToken AppCancellationToken => _appCts.Token;
+
+    public IClipboard? Clipboard
+    {
+        get
+        {
+            if (CurrentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopApp)
+            {
+                return desktopApp.MainWindow?.Clipboard;
+            }
+
+            if (CurrentApp?.ApplicationLifetime is ISingleViewApplicationLifetime svApp)
+            {
+                return TopLevel.GetTopLevel(svApp.MainView)?.Clipboard;
+            }
+            return null;
+        }
+    }
 
     public Application? CurrentApp => _currentApp ?? _appBuilder?.Instance;
 
@@ -50,27 +73,32 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
             {
                 return app.MainWindow;
             }
+
             return null;
         }
     }
+    public void Invoke(Action action)
+    {
+        Dispatcher.UIThread.Invoke(action);
+    }
 
-    public Task InvokeAsync(Func<Task> func, DispatcherPriority priority = DispatcherPriority.Normal)
+    public Task InvokeAsync(Func<Task> func, DispatcherPriority priority = default)
     {
 
         return Dispatcher.UIThread.InvokeAsync(func, priority);
     }
 
-    public Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = DispatcherPriority.Normal)
+    public Task<T> InvokeAsync<T>(Func<Task<T>> func, DispatcherPriority priority = default)
     {
         return Dispatcher.UIThread.InvokeAsync(func, priority);
     }
 
-    public Task InvokeAsync(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
+    public async Task InvokeAsync(Action action, DispatcherPriority priority = default)
     {
-        return Dispatcher.UIThread.InvokeAsync(action, priority);
+        await Dispatcher.UIThread.InvokeAsync(action, priority);
     }
 
-    public void Post(Action action, DispatcherPriority priority = DispatcherPriority.Normal)
+    public void Post(Action action, DispatcherPriority priority = default)
     {
         Dispatcher.UIThread.Post(action, priority);
     }
@@ -87,24 +115,7 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
         }
     }
 
-    public void StartUnattended()
-    {
-        try
-        {
-            var args = Environment.GetCommandLineArgs();
-            var argString = string.Join(", ", args);
-            _logger.LogInformation("Starting dispatcher in unattended mode with args: [{args}].", argString);
-            _appBuilder = BuildAvaloniaApp();
-            _appBuilder.Start(MainImpl, args);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while starting background app.");
-            throw;
-        }
-    }
-
-    public void StartAttended()
+    public void StartClassicDesktop()
     {
         try
         {
@@ -119,14 +130,48 @@ internal class AvaloniaDispatcher : IAvaloniaDispatcher
         }
     }
 
+    public async Task<Result> StartHeadless()
+    {
+        try
+        {
+            var args = Environment.GetCommandLineArgs();
+            var argString = string.Join(", ", args);
+            _logger.LogInformation("Starting dispatcher in unattended mode with args: [{args}].", argString);
 
+            _runHeadlessTask = Task.Run(() =>
+            {
+                _appBuilder = BuildAvaloniaApp();
+                _appBuilder.Start(RunHeadless, args);
+            }, _appCts.Token);
+
+            var waitResult = await WaitHelper.WaitForAsync(
+                    () => CurrentApp is not null,
+                    TimeSpan.FromSeconds(10));
+
+            if (!waitResult)
+            {
+                const string err = "Unattended dispatcher failed to start in time.";
+                _logger.LogError(err);
+                Shutdown();
+                return Result.Fail(err);
+            }
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while starting background app.");
+            return Result.Fail(ex);
+        }
+    }
     // Avalonia configuration, don't remove; also used by visual designer.
     private static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .WithInterFont()
             .LogToTrace();
 
-    private static void MainImpl(Application app, string[] args)
+    private static void RunHeadless(Application app, string[] args)
     {
         _currentApp = app;
         app.Run(_appCts.Token);

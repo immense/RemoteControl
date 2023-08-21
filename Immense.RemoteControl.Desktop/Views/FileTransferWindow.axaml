@@ -10,6 +10,8 @@
         Title="File Transfer"
         Height="300" Width="400" 
         Topmost="True"
+		x:DataType="vm:FileTransferWindowViewModel"
+		x:Name="FileTransferWindowRef"
         Icon="{Binding WindowIcon}">
 
 	<Design.DataContext>
@@ -35,7 +37,7 @@
 
     <Border Grid.Row="2" Margin="0,5,0,0" BorderBrush="LightGray" BorderThickness="1">
       <ScrollViewer >
-        <ItemsControl Items="{Binding FileUploads}">
+        <ItemsControl ItemsSource="{Binding FileUploads}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <StackPanel HorizontalAlignment="Stretch" Margin="0,0,5,0">
@@ -48,7 +50,7 @@
                   <ProgressBar Value="{Binding PercentProgress}" Maximum="1" LargeChange="0.01" Height="18"></ProgressBar>
                   <Button Grid.Column="1"
                           VerticalAlignment="Top"
-                          Command="{Binding DataContext.RemoveFileUploadCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:FileTransferWindow}}}"
+                          Command="{Binding #FileTransferWindowRef.ViewModel.RemoveFileUploadCommand}"
                           CommandParameter="{Binding}"
                           Content="x"
                           Classes="NormalButton"
@@ -68,7 +70,7 @@
 			HorizontalContentAlignment="Center"
 			VerticalContentAlignment="Center"
             Command="{Binding OpenFileUploadDialogCommand}"
-            CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:FileTransferWindow}}}">
+            CommandParameter="{Binding #FileTransferWindowRef}">
       Click here to upload files.
     </Button>
   </Grid>

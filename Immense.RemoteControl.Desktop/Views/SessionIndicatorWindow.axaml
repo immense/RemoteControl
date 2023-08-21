@@ -8,14 +8,18 @@
         Width="300"
         Height="100"
         x:Class="Immense.RemoteControl.Desktop.Views.SessionIndicatorWindow"
+		x:DataType="vm:SessionIndicatorWindowViewModel"
         Background="#2b2726" 
-        Title="{Binding ProductName}p"
+        Title="{Binding ProductName}"
         Icon="{Binding WindowIcon}"
         WindowStartupLocation="Manual"
         Topmost="True"
         SizeToContent="WidthAndHeight">
 
-
+	<Design.DataContext>
+		<fakes:FakeSessionIndicatorWindowViewModel />
+	</Design.DataContext>
+	
   <StackPanel Margin="15 10 40 15">
     <TextBlock Classes="SectionHeader" Foreground="White">
       Remote Control Started

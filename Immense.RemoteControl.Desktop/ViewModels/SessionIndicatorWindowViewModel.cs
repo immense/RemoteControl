@@ -1,18 +1,16 @@
-﻿
-
-using Immense.RemoteControl.Desktop.Services;
+﻿using Immense.RemoteControl.Desktop.Services;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 
-public interface IMainWindowViewModel : IBrandedViewModelBase
+public interface ISessionIndicatorWindowViewModel
 {
-}
 
-public class MainWindowViewModel : BrandedViewModelBase, IMainWindowViewModel
+}
+public class SessionIndicatorWindowViewModel : BrandedViewModelBase, ISessionIndicatorWindowViewModel
 {
-    public MainWindowViewModel(
+    public SessionIndicatorWindowViewModel(
         IBrandingProvider brandingProvider, 
         IAvaloniaDispatcher dispatcher, 
         ILogger<BrandedViewModelBase> logger) 

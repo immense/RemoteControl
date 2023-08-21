@@ -9,6 +9,8 @@ using System.Windows.Input;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Shared.Reactive;
+using System;
+using Immense.RemoteControl.Desktop.Controls.Dialogs;
 
 namespace Immense.RemoteControl.Desktop.ViewModels;
 
@@ -85,12 +87,19 @@ public class ChatWindowViewModel : BrandedViewModelBase, IChatWindowViewModel
             return;
         }
 
-        var chatMessage = new ChatMessage(string.Empty, InputText);
-        InputText = string.Empty;
-        await _streamWriter.WriteLineAsync(JsonSerializer.Serialize(chatMessage));
-        await _streamWriter.FlushAsync();
-        chatMessage.SenderName = "You";
-        ChatMessages.Add(chatMessage);
+        try
+        {
+            var chatMessage = new ChatMessage(string.Empty, InputText);
+            InputText = string.Empty;
+            await _streamWriter.WriteLineAsync(JsonSerializer.Serialize(chatMessage));
+            await _streamWriter.FlushAsync();
+            chatMessage.SenderName = "You";
+            ChatMessages.Add(chatMessage);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending chat message");
+        }
     }
 
     private void CloseWindow(Window? obj)

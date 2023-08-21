@@ -31,17 +31,19 @@ public class ChatHostService : IChatHostService
         _writer = new StreamWriter(_namedPipeStream);
         _reader = new StreamReader(_namedPipeStream);
 
-        var cts = new CancellationTokenSource(10000);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         try
         {
+            _logger.LogInformation("Waiting for chat client to connect via pipe {name}.", pipeName);
             await _namedPipeStream.WaitForConnectionAsync(cts.Token);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException)
         {
             _logger.LogWarning("A chat session was attempted, but the client failed to connect in time.");
             Environment.Exit(0);
         }
 
+        _logger.LogInformation("Chat client connected.");
         _chatUiService.ChatWindowClosed += OnChatWindowClosed;
 
         _chatUiService.ShowChatWindow(organizationName, _writer);

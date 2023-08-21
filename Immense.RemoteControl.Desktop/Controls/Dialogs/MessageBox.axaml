@@ -8,7 +8,9 @@
         x:Class="Immense.RemoteControl.Desktop.Controls.Dialogs.MessageBox"
         Icon="{Binding WindowIcon}"
         Title="{Binding Caption}" 
-        SizeToContent="WidthAndHeight" MinWidth="300" MinHeight="100" 
+        SizeToContent="WidthAndHeight" MinWidth="300" MinHeight="100"
+		x:DataType="vm:MessageBoxViewModel"
+		x:Name="MessageBoxWindow"
         WindowStartupLocation="CenterScreen">
 
 	<Design.DataContext>
@@ -21,18 +23,18 @@
     <Grid Margin="0,20,0,0">
       <Button Classes="NormalButton" HorizontalAlignment="Right" IsVisible="{Binding IsOkButtonVisible}"
               Command="{Binding OKCommand}"
-              CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+              CommandParameter="{Binding #MessageBoxWindow}"
               Content="OK">
       </Button>
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
         <Button Classes="NormalButton" HorizontalAlignment="Right" IsVisible="{Binding AreYesNoButtonsVisible}" Margin="5,0,5,0"
                 Command="{Binding YesCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                CommandParameter="{Binding #MessageBoxWindow}"
                 Content="Yes">
         </Button>
         <Button Classes="NormalButton" HorizontalAlignment="Right" IsVisible="{Binding AreYesNoButtonsVisible}" Margin="5,0,5,0"
                 Command="{Binding NoCommand}"
-                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                CommandParameter="{Binding #MessageBoxWindow}"
                 Content="No">
         </Button>
       </StackPanel>
