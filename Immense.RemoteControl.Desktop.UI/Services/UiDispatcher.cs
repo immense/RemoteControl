@@ -40,7 +40,7 @@ internal class UiDispatcher : IUiDispatcher
     private static Application? _currentApp;
     private readonly ILogger<UiDispatcher> _logger;
     private AppBuilder? _appBuilder;
-    private Window? _mainWindow;
+    private Window? _headlessMainWindow;
 
     public UiDispatcher(ILogger<UiDispatcher> logger)
     {
@@ -63,9 +63,9 @@ internal class UiDispatcher : IUiDispatcher
                 return TopLevel.GetTopLevel(svApp.MainView)?.Clipboard;
             }
 
-            if (_mainWindow is not null)
+            if (_headlessMainWindow is not null)
             {
-                return _mainWindow.Clipboard;
+                return _headlessMainWindow.Clipboard;
             }
 
             return null;
@@ -83,7 +83,7 @@ internal class UiDispatcher : IUiDispatcher
                 return app.MainWindow;
             }
 
-            return _mainWindow;
+            return _headlessMainWindow;
         }
     }
     public void Invoke(Action action)
@@ -153,7 +153,7 @@ internal class UiDispatcher : IUiDispatcher
     {
         Dispatcher.UIThread.Invoke(() =>
         {
-            _mainWindow = window;
+            _headlessMainWindow = window;
             window.Show();
         });
     }
@@ -162,9 +162,9 @@ internal class UiDispatcher : IUiDispatcher
     {
         Dispatcher.UIThread.Invoke(() =>
         {
-            if (_mainWindow is not null)
+            if (MainWindow is not null)
             {
-                window.Show(_mainWindow);
+                window.Show(MainWindow);
             }
             else
             {
