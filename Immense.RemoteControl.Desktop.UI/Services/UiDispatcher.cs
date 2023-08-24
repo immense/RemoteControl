@@ -176,7 +176,7 @@ internal class UiDispatcher : IUiDispatcher
     public void Shutdown()
     {
         _appCts.Cancel();
-        if (_currentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime &&
+        if (CurrentApp?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime &&
             lifetime.TryShutdown())
         {
             return;
