@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Immense.RemoteControl.Desktop.UI\Immense.RemoteControl.Desktop.UI.csproj" />
     <ProjectReference Include="..\..\Immense.RemoteControl.Desktop.Windows\Immense.RemoteControl.Desktop.Windows.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,7 @@
 ﻿using Immense.RemoteControl.Shared.Helpers;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
+using System.Drawing;
 
 namespace Immense.RemoteControl.Desktop.Windows.Models;
 

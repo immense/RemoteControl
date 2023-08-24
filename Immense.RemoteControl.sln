@@ -17,9 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Deskt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Examples.WindowsDesktopExample", "Examples\Immense.RemoteControl.Examples.WindowsDesktopExample\Immense.RemoteControl.Examples.WindowsDesktopExample.csproj", "{93B89B66-C226-4BB3-B36B-53FEA1E79C39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop", "Immense.RemoteControl.Desktop\Immense.RemoteControl.Desktop.csproj", "{43647AE1-DE71-47FF-9420-C4DB0841CC4E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.UI.WPF", "Immense.RemoteControl.Desktop.UI.WPF\Immense.RemoteControl.Desktop.UI.WPF.csproj", "{FD1BBB51-9114-4A70-92EE-11C75E808B5F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.UI", "Immense.RemoteControl.Desktop.UI\Immense.RemoteControl.Desktop.UI.csproj", "{43647AE1-DE71-47FF-9420-C4DB0841CC4E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Examples.LinuxDesktopExample", "Examples\Immense.RemoteControl.Examples.LinuxDesktopExample\Immense.RemoteControl.Examples.LinuxDesktopExample.csproj", "{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}"
 EndProject
@@ -38,13 +36,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{CE8FF8
 		.build\Pre-Build.ps1 = .build\Pre-Build.ps1
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.Native", "Immense.RemoteControl.Desktop.Native\Immense.RemoteControl.Desktop.Native.csproj", "{2483EFAC-826E-4529-ABF0-863C91418E29}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{23EA60E0-9118-4932-80E5-07C7950720F1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Server.Tests", "Tests\Immense.RemoteControl.Server.Tests\Immense.RemoteControl.Server.Tests.csproj", "{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Immense.RemoteControl.Desktop.WIndows.Tests", "Tests\Immense.RemoteControl.Desktop.WIndows.Tests\Immense.RemoteControl.Desktop.WIndows.Tests.csproj", "{89DDE049-5AB8-4847-9439-A1DAC6BDB590}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Immense.RemoteControl.Desktop.WIndows.Tests", "Tests\Immense.RemoteControl.Desktop.WIndows.Tests\Immense.RemoteControl.Desktop.WIndows.Tests.csproj", "{89DDE049-5AB8-4847-9439-A1DAC6BDB590}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Immense.RemoteControl.Desktop.Linux", "Immense.RemoteControl.Desktop.Linux\Immense.RemoteControl.Desktop.Linux.csproj", "{9858A2BF-0F56-490E-A736-3EEB42854A4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -80,18 +78,10 @@ Global
 		{43647AE1-DE71-47FF-9420-C4DB0841CC4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43647AE1-DE71-47FF-9420-C4DB0841CC4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43647AE1-DE71-47FF-9420-C4DB0841CC4E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FD1BBB51-9114-4A70-92EE-11C75E808B5F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EACF89B-0E6F-480F-BB8F-0EB1E53F9019}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2483EFAC-826E-4529-ABF0-863C91418E29}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C2534BA-07C8-4AE1-9E2D-DC19E2F7F8CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -100,6 +90,10 @@ Global
 		{89DDE049-5AB8-4847-9439-A1DAC6BDB590}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89DDE049-5AB8-4847-9439-A1DAC6BDB590}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89DDE049-5AB8-4847-9439-A1DAC6BDB590}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9858A2BF-0F56-490E-A736-3EEB42854A4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9858A2BF-0F56-490E-A736-3EEB42854A4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9858A2BF-0F56-490E-A736-3EEB42854A4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9858A2BF-0F56-490E-A736-3EEB42854A4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

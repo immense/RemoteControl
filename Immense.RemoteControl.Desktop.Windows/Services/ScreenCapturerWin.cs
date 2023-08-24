@@ -34,9 +34,11 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Shared;
 using Result = Immense.RemoteControl.Shared.Result;
-using Immense.RemoteControl.Desktop.Windows.Models;
-using Immense.RemoteControl.Desktop.Native.Windows;
 using System.Diagnostics.CodeAnalysis;
+using Immense.RemoteControl.Desktop.Windows.Models;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
+using System.Drawing;
+using Immense.RemoteControl.Desktop.Windows.Helpers;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
@@ -58,16 +60,16 @@ public class ScreenCapturerWin : IScreenCapturer
         _logger = logger;
 
         Init();
-        
+
         SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
     }
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
     public bool CaptureFullscreen { get; set; } = true;
-    public Rectangle CurrentScreenBounds { get; private set; } = Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+    public Rectangle CurrentScreenBounds { get; private set; }
     public bool IsGpuAccelerated { get; private set; }
-    public string SelectedScreen { get; private set; } = Screen.PrimaryScreen?.DeviceName ?? string.Empty;
+    public string SelectedScreen { get; private set; } = string.Empty;
     public void Dispose()
     {
         try
@@ -80,7 +82,9 @@ public class ScreenCapturerWin : IScreenCapturer
     }
     public IEnumerable<string> GetDisplayNames()
     {
-        return Screen.AllScreens.Select(x => x.DeviceName);
+        return DisplaysEnumerationHelper
+            .GetDisplays()
+            .Select(x => x.DeviceName);
     }
 
     public SKRect GetFrameDiffArea()
@@ -95,7 +99,7 @@ public class ScreenCapturerWin : IScreenCapturer
 
     public Result<SKBitmap> GetImageDiff()
     {
-        
+
         if (CurrentFrame is null)
         {
             return Result.Fail<SKBitmap>("Current frame cannot be empty.");
@@ -162,7 +166,7 @@ public class ScreenCapturerWin : IScreenCapturer
 
     public int GetScreenCount()
     {
-        return Screen.AllScreens.Length;
+        return DisplaysEnumerationHelper.GetDisplays().Count();
     }
 
     public int GetSelectedScreenIndex()
@@ -176,7 +180,21 @@ public class ScreenCapturerWin : IScreenCapturer
 
     public Rectangle GetVirtualScreenBounds()
     {
-        return SystemInformation.VirtualScreen;
+        var displays = DisplaysEnumerationHelper.GetDisplays();
+        var lowestX = 0;
+        var highestX = 0;
+        var lowestY = 0;
+        var highestY = 0;
+
+        foreach (var display in displays)
+        {
+            lowestX = Math.Min(display.MonitorArea.Left, lowestX);
+            highestX = Math.Max(display.MonitorArea.Right, highestX);
+            lowestY = Math.Min(display.MonitorArea.Top, lowestY);
+            highestY = Math.Max(display.MonitorArea.Bottom, highestY);
+        }
+
+        return new Rectangle(lowestX, lowestY, highestX - lowestX, highestY - lowestY);
     }
 
     public void Init()
@@ -247,12 +265,12 @@ public class ScreenCapturerWin : IScreenCapturer
             var bounds = dxOutput.Bounds;
 
             var result = outputDuplication.TryAcquireNextFrame(timeoutInMilliseconds: 25, out var duplicateFrameInfo, out var screenResource);
-            
+
             if (!result.Success)
             {
                 return DxCaptureResult.TryAcquireFailed(result);
             }
-            
+
             if (duplicateFrameInfo.AccumulatedFrames == 0)
             {
                 try
@@ -273,8 +291,8 @@ public class ScreenCapturerWin : IScreenCapturer
             for (var y = 0; y < bounds.Height; y++)
             {
                 Utilities.CopyMemory(bitmapDataPointer, dataBoxPointer, bounds.Width * 4);
-                dataBoxPointer = IntPtr.Add(dataBoxPointer, dataBox.RowPitch);
-                bitmapDataPointer = IntPtr.Add(bitmapDataPointer, bitmapData.Stride);
+                dataBoxPointer = nint.Add(dataBoxPointer, dataBox.RowPitch);
+                bitmapDataPointer = nint.Add(bitmapDataPointer, bitmapData.Stride);
             }
             bitmap.UnlockBits(bitmapData);
             device.ImmediateContext.UnmapSubresource(texture2D, 0);
@@ -333,10 +351,16 @@ public class ScreenCapturerWin : IScreenCapturer
     private void InitBitBlt()
     {
         _bitBltScreens.Clear();
-        for (var i = 0; i < Screen.AllScreens.Length; i++)
+        var displays = DisplaysEnumerationHelper.GetDisplays().ToArray();
+
+        for (var i = 0; i < displays.Length; i++)
         {
-            _bitBltScreens.Add(Screen.AllScreens[i].DeviceName, i);
+            _bitBltScreens.Add(displays[i].DeviceName, i);
         }
+
+        var primary = displays.FirstOrDefault(x => x.IsPrimary) ?? displays.First();
+        SelectedScreen = primary.DeviceName;
+        CurrentScreenBounds = primary.MonitorArea;
     }
 
     private void InitDirectX()
@@ -443,7 +467,8 @@ public class ScreenCapturerWin : IScreenCapturer
 
     private void RefreshCurrentScreenBounds()
     {
-        CurrentScreenBounds = Screen.AllScreens[_bitBltScreens[SelectedScreen]].Bounds;
+        var displays = DisplaysEnumerationHelper.GetDisplays().ToArray();
+        CurrentScreenBounds = displays[_bitBltScreens[SelectedScreen]].MonitorArea;
         CaptureFullscreen = true;
         _needsInit = true;
         ScreenChanged?.Invoke(this, CurrentScreenBounds);

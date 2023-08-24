@@ -1,27 +1,27 @@
-﻿using Immense.RemoteControl.Desktop.Native.Windows;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using static Immense.RemoteControl.Desktop.Native.Windows.User32;
+using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class KeyboardMouseInputWin : IKeyboardMouseInput
 {
-    private readonly IWindowsUiDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly ConcurrentQueue<Action> _inputActions = new();
     private readonly ILogger<KeyboardMouseInputWin> _logger;
     private volatile bool _inputBlocked;
     private Thread? _inputProcessingThread;
 
     public KeyboardMouseInputWin(
-        IWindowsUiDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         ILogger<KeyboardMouseInputWin> logger)
     {
         _dispatcher = dispatcher;
@@ -68,7 +68,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
                 if (key.Length == 1)
                 {
                     var character = Convert.ToChar(key);
-                    
+
                     // If a modifier key is pressed, we need to send the virtual key
                     // so the command will execute.  For example, without this,
                     // Ctrl+A would result in simply typing "a".
@@ -472,7 +472,7 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
     {
         var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
         var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
-        
+
         // I'm not sure we'll be able to get these to work with a browser front-end.
         //var (lwinPressed, _) = GetKeyPressState(VirtualKey.LWIN);
         //var (rwinPressed, _) = GetKeyPressState(VirtualKey.RWIN);
@@ -531,11 +531,11 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
             Value = value;
         }
 
-        [FieldOffset(0)] 
+        [FieldOffset(0)]
         public short Value;
-        [FieldOffset(0)] 
+        [FieldOffset(0)]
         public byte Low;
-        [FieldOffset(1)] 
+        [FieldOffset(1)]
         public byte High;
     }
 }

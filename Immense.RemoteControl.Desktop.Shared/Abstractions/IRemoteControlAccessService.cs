@@ -1,8 +1,10 @@
-﻿namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Shared.Enums;
+
+namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
 
 public interface IRemoteControlAccessService
 {
     bool IsPromptOpen { get; }
 
-    Task<bool> PromptForAccess(string requesterName, string organizationName);
+    Task<PromptForAccessResult> PromptForAccess(string requesterName, string organizationName);
 }

@@ -1,4 +1,7 @@
-﻿namespace Immense.RemoteControl.Shared.Interfaces;
+﻿using Immense.RemoteControl.Shared.Enums;
+using Immense.RemoteControl.Shared.Models;
+
+namespace Immense.RemoteControl.Shared.Interfaces;
 
 public interface IDesktopHubClient
 {
@@ -8,9 +11,9 @@ public interface IDesktopHubClient
         string viewerId,
         string requesterName,
         bool notifyUser,
-        bool enforceAttendedAccess,
-        string organizationName,
         Guid streamId);
+
+    Task<PromptForAccessResult> PromptForAccess(RemoteControlAccessRequest accessRequest);
 
     Task RequestScreenCast(
         string viewerId,

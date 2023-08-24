@@ -1,16 +1,16 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Immense.RemoteControl.Desktop.Startup;
-using Immense.RemoteControl.Desktop.Services;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.Linux.Startup;
 using Avalonia;
-using Immense.RemoteControl.Desktop;
+using Immense.RemoteControl.Desktop.UI;
+using Immense.RemoteControl.Desktop.UI.Services;
 
 namespace Immense.RemoteControl.Examples.LinuxDesktopExample;
 
-class Program
+public class Program
 {
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
@@ -58,10 +58,10 @@ class Program
         Console.WriteLine($"https://localhost:7024/RemoteControl/Viewer?mode=Unattended&sessionId={appState.SessionId}&accessKey={appState.AccessKey}");
 
         Console.WriteLine("Press Ctrl + C to exit.");
-        var dispatcher = provider.GetRequiredService<IAvaloniaDispatcher>();
+        var dispatcher = provider.GetRequiredService<IUiDispatcher>();
         try
         {
-            await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.AppCancellationToken);
+            await Task.Delay(Timeout.InfiniteTimeSpan, dispatcher.ApplicationExitingToken);
         }
         catch (TaskCanceledException)
         {

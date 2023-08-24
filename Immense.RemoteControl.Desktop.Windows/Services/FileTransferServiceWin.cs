@@ -1,40 +1,42 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Shared.ViewModels;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Views;
+using Immense.RemoteControl.Desktop.UI.Controls.Dialogs;
+using Immense.RemoteControl.Desktop.UI.Services;
+using Immense.RemoteControl.Desktop.UI.Views;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Windows;
-using MessageBoxOptions = System.Windows.MessageBoxOptions;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 public class FileTransferServiceWin : IFileTransferService
 {
-    private static readonly ConcurrentDictionary<string, FileStream> _partialTransfers =
+    private static readonly ConcurrentDictionary<string, FileTransferWindow> _fileTransferWindows =
         new();
 
-    private static readonly ConcurrentDictionary<string, FileTransferWindow> _fileTransferWindows =
+    private static readonly ConcurrentDictionary<string, FileStream> _partialTransfers =
         new();
 
     private static readonly SemaphoreSlim _writeLock = new(1, 1);
     private static MessageBoxResult? _result;
-    private readonly IWindowsUiDispatcher _dispatcher;
-    private readonly IViewModelFactory _viewModelFactory;
+    private readonly IUiDispatcher _dispatcher;
     private readonly ILogger<FileTransferServiceWin> _logger;
+    private readonly IViewModelFactory _viewModelFactory;
+    private readonly IDialogProvider _dialogProvider;
 
     public FileTransferServiceWin(
-        IWindowsUiDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         IViewModelFactory viewModelFactory,
+        IDialogProvider dialogProvider,
         ILogger<FileTransferServiceWin> logger)
     {
         _dispatcher = dispatcher;
         _viewModelFactory = viewModelFactory;
+        _dialogProvider = dialogProvider;
         _logger = logger;
     }
 
@@ -46,7 +48,7 @@ public class FileTransferServiceWin : IFileTransferService
 
     public void OpenFileTransferWindow(IViewer viewer)
     {
-        _dispatcher.InvokeWpf(() =>
+        _dispatcher.Invoke(() =>
         {
             if (_fileTransferWindows.TryGetValue(viewer.ViewerConnectionId, out var window))
             {
@@ -55,7 +57,10 @@ public class FileTransferServiceWin : IFileTransferService
             else
             {
                 var viewModel = _viewModelFactory.CreateFileTransferWindowViewModel(viewer);
-                window = new FileTransferWindow(viewModel);
+                window = new FileTransferWindow()
+                {
+                    DataContext = viewModel
+                };
                 window.Closed += (sender, arg) =>
                 {
                     _fileTransferWindows.Remove(viewer.ViewerConnectionId, out _);
@@ -66,6 +71,7 @@ public class FileTransferServiceWin : IFileTransferService
         });
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task ReceiveFile(byte[] buffer, string fileName, string messageId, bool endOfFile, bool startOfFile)
     {
         try
@@ -121,7 +127,7 @@ public class FileTransferServiceWin : IFileTransferService
             _writeLock.Release();
             if (endOfFile)
             {
-                await Task.Run(ShowTransferComplete);
+                await ShowTransferComplete();
             }
         }
     }
@@ -142,7 +148,8 @@ public class FileTransferServiceWin : IFileTransferService
         }
     }
 
-    private void SetFileOrFolderPermissions(string path)
+    [SupportedOSPlatform("windows")]
+    private static void SetFileOrFolderPermissions(string path)
     {
         FileSystemSecurity ds;
 
@@ -190,17 +197,14 @@ public class FileTransferServiceWin : IFileTransferService
         }
     }
 
-    private void ShowTransferComplete()
+    private async Task ShowTransferComplete()
     {
         // Prevent multiple dialogs from popping up.
         if (_result is null)
         {
-            _result = System.Windows.MessageBox.Show("File transfer complete.  Show folder?",
+            _result = await _dialogProvider.Show("File transfer complete.  Show folder?",
                 "Transfer Complete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question,
-                MessageBoxResult.Yes,
-                MessageBoxOptions.ServiceNotification);
+                MessageBoxType.YesNo);
 
             if (_result == MessageBoxResult.Yes)
             {

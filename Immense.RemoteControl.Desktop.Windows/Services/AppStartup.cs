@@ -1,10 +1,10 @@
-using Immense.RemoteControl.Desktop.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Enums;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.ViewModels;
-using Immense.RemoteControl.Desktop.UI.WPF.Views;
+using Immense.RemoteControl.Desktop.UI.Services;
+using Immense.RemoteControl.Desktop.UI.ViewModels;
+using Immense.RemoteControl.Desktop.UI.Views;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System.Windows;
@@ -19,24 +19,25 @@ internal class AppStartup : IAppStartup
     private readonly IClipboardService _clipboardService;
     private readonly IChatHostService _chatHostService;
     private readonly ICursorIconWatcher _cursorIconWatcher;
-    private readonly IWindowsUiDispatcher _dispatcher;
-    private readonly IMainWindowViewModel _mainWindowVm;
+    private readonly IMessageLoop _messageLoop;
+    private readonly IUiDispatcher _uiDispatcher;
     private readonly IIdleTimer _idleTimer;
     private readonly IShutdownService _shutdownService;
+    private readonly IBrandingProvider _brandingProvider;
     private readonly ILogger<AppStartup> _logger;
-    private MainWindow? _mainWindow;
 
     public AppStartup(
-        IMainWindowViewModel mainWindowVm,
         IAppState appState,
         IKeyboardMouseInput inputService,
         IDesktopHubConnection desktopHub,
         IClipboardService clipboardService,
         IChatHostService chatHostService,
         ICursorIconWatcher iconWatcher,
-        IWindowsUiDispatcher dispatcher,
+        IMessageLoop messageLoop,
+        IUiDispatcher uiDispatcher,
         IIdleTimer idleTimer,
         IShutdownService shutdownService,
+        IBrandingProvider brandingProvider,
         ILogger<AppStartup> logger)
     {
         _appState = appState;
@@ -45,25 +46,19 @@ internal class AppStartup : IAppStartup
         _clipboardService = clipboardService;
         _chatHostService = chatHostService;
         _cursorIconWatcher = iconWatcher;
-        _dispatcher = dispatcher;
-        _mainWindowVm = mainWindowVm;
+        _messageLoop = messageLoop;
+        _uiDispatcher = uiDispatcher;
         _idleTimer = idleTimer;
         _shutdownService = shutdownService;
+        _brandingProvider = brandingProvider;
         _logger = logger;
     }
 
     public async Task Run()
     {
-        _dispatcher.StartWinFormsThread();
+        await _brandingProvider.Initialize();
 
-        var wpfStarted = await _dispatcher.StartWpfThread().ConfigureAwait(false);
-
-        if (!wpfStarted)
-        {
-            throw new Exception("WPF app thread failed to start.");
-        }
-
-        _logger.LogInformation("Background WPF thread started.");
+        _messageLoop.StartMessageLoop();
 
         if (_appState.Mode is AppMode.Unattended or AppMode.Attended)
         {
@@ -75,24 +70,32 @@ internal class AppStartup : IAppStartup
         switch (_appState.Mode)
         {
             case AppMode.Unattended:
-                _dispatcher.InvokeWpf(() =>
                 {
-                    System.Windows.Application.Current!.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-                });
-                await StartScreenCasting().ConfigureAwait(false);
-                break;
+                    var result = await _uiDispatcher.StartHeadless().ConfigureAwait(false);
+                    if (!result.IsSuccess)
+                    {
+                        return;
+                    }
+                    await StartScreenCasting().ConfigureAwait(false);
+                    break;
+                }
             case AppMode.Attended:
-                _dispatcher.InvokeWpf(() =>
                 {
-                    _mainWindow = new MainWindow(_mainWindowVm);
-                    _mainWindow.Show();
-                });
-                break;
+                    _uiDispatcher.StartClassicDesktop();
+                    break;
+                }
             case AppMode.Chat:
-                await _chatHostService
-                    .StartChat(_appState.PipeName, _appState.OrganizationName)
-                    .ConfigureAwait(false);
-                break;
+                {
+                    var result = await _uiDispatcher.StartHeadless().ConfigureAwait(false);
+                    if (!result.IsSuccess)
+                    {
+                        return;
+                    }
+                    await _chatHostService
+                        .StartChat(_appState.PipeName, _appState.OrganizationName)
+                        .ConfigureAwait(false);
+                    break;
+                }
             default:
                 break;
         }
@@ -101,7 +104,7 @@ internal class AppStartup : IAppStartup
 
     private async Task StartScreenCasting()
     {
-        if (!await _desktopHub.Connect(TimeSpan.FromSeconds(30), _dispatcher.ApplicationExitingToken))
+        if (!await _desktopHub.Connect(TimeSpan.FromSeconds(30), _uiDispatcher.ApplicationExitingToken))
         {
             await _shutdownService.Shutdown();
             return;

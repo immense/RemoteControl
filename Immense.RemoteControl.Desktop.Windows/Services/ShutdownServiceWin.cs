@@ -1,6 +1,6 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Desktop.UI.WPF.Services;
+using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Shared.Extensions;
 using Microsoft.Extensions.Logging;
 
@@ -9,14 +9,14 @@ namespace Immense.RemoteControl.Desktop.Windows.Services;
 public class ShutdownServiceWin : IShutdownService
 {
     private readonly IDesktopHubConnection _hubConnection;
-    private readonly IWindowsUiDispatcher _dispatcher;
+    private readonly IUiDispatcher _dispatcher;
     private readonly IAppState _appState;
     private readonly ILogger<ShutdownServiceWin> _logger;
     private readonly SemaphoreSlim _shutdownLock = new(1, 1);
 
     public ShutdownServiceWin(
         IDesktopHubConnection hubConnection,
-        IWindowsUiDispatcher dispatcher,
+        IUiDispatcher dispatcher,
         IAppState appState,
         ILogger<ShutdownServiceWin> logger)
     {
@@ -48,7 +48,7 @@ public class ShutdownServiceWin : IShutdownService
             await TryDisconnectViewers();
 
             _logger.LogInformation("Shutting down UI dispatchers.");
-            await _dispatcher.Shutdown();
+            _dispatcher.Shutdown();
 
             Environment.Exit(0);
         }

@@ -4,6 +4,7 @@ namespace Immense.RemoteControl.Desktop.Shared.Abstractions;
 
 public interface IBrandingProvider
 {
-    Task<BrandingInfoBase> GetBrandingInfo();
+    BrandingInfoBase CurrentBranding { get; }
+    Task Initialize();
     void SetBrandingInfo(BrandingInfoBase brandingInfo);
 }

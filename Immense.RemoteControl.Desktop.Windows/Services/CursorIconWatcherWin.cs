@@ -1,6 +1,8 @@
-﻿using Immense.RemoteControl.Desktop.Native.Windows;
+﻿using Avalonia.Controls;
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Shared.Models;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -13,11 +15,13 @@ namespace Immense.RemoteControl.Desktop.Windows.Services;
 /// </summary>
 public class CursorIconWatcherWin : ICursorIconWatcher
 {
+    private const int IBeamHandle = 65541;
+
     private readonly System.Timers.Timer _changeTimer;
 
     private User32.CursorInfo _cursorInfo;
 
-    private string _previousCursorHandle = string.Empty;
+    private int _previousCursorHandle;
 
     public CursorIconWatcherWin()
     {
@@ -37,15 +41,20 @@ public class CursorIconWatcherWin : ICursorIconWatcher
             User32.GetCursorInfo(out ci);
             if (ci.flags == User32.CURSOR_SHOWING)
             {
-                if (ci.hCursor.ToString() == Cursors.IBeam.Handle.ToString())
+                if (ci.hCursor.ToInt32() == IBeamHandle)
                 {
                     return new CursorInfo(Array.Empty<byte>(), Point.Empty, "text");
                 }
 
+                var hotspot = Point.Empty;
+
+                if (User32.GetIconInfo(ci.hCursor, out var iconInfo))
+                {
+                    hotspot = new Point(iconInfo.xHotspot, iconInfo.yHotspot);
+                }
+
                 using var icon = Icon.FromHandle(ci.hCursor);
                 using var ms = new MemoryStream();
-                using var cursor = new Cursor(ci.hCursor);
-                var hotspot = cursor.HotSpot;
                 icon.ToBitmap().Save(ms, ImageFormat.Png);
                 return new CursorInfo(ms.ToArray(), hotspot);
             }
@@ -73,10 +82,10 @@ public class CursorIconWatcherWin : ICursorIconWatcher
             User32.GetCursorInfo(out _cursorInfo);
             if (_cursorInfo.flags == User32.CURSOR_SHOWING)
             {
-                var currentCursor = _cursorInfo.hCursor.ToString();
+                var currentCursor = _cursorInfo.hCursor.ToInt32();
                 if (currentCursor != _previousCursorHandle)
                 {
-                    if (currentCursor == Cursors.IBeam.Handle.ToString())
+                    if (currentCursor == IBeamHandle)
                     {
                         OnChange?.Invoke(this, new CursorInfo(Array.Empty<byte>(), Point.Empty, "text"));
                     }
@@ -84,17 +93,21 @@ public class CursorIconWatcherWin : ICursorIconWatcher
                     {
                         using var icon = Icon.FromHandle(_cursorInfo.hCursor);
                         using var ms = new MemoryStream();
-                        using var cursor = new Cursor(_cursorInfo.hCursor);
-                        var hotspot = cursor.HotSpot;
+                        var hotspot = Point.Empty;
+
+                        if (User32.GetIconInfo(_cursorInfo.hCursor, out var iconInfo))
+                        {
+                            hotspot = new Point(iconInfo.xHotspot, iconInfo.yHotspot);
+                        }
                         icon.ToBitmap().Save(ms, ImageFormat.Png);
                         OnChange?.Invoke(this, new CursorInfo(ms.ToArray(), hotspot));
                     }
                     _previousCursorHandle = currentCursor;
                 }
             }
-            else if (_previousCursorHandle != "0")
+            else if (_previousCursorHandle != 0)
             {
-                _previousCursorHandle = "0";
+                _previousCursorHandle = 0;
                 OnChange?.Invoke(this, new CursorInfo(Array.Empty<byte>(), Point.Empty, "default"));
             }
         }

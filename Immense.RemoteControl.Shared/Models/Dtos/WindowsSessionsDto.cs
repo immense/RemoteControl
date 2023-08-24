@@ -1,5 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Native.DataStructures;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace Immense.RemoteControl.Shared.Models.Dtos;
 

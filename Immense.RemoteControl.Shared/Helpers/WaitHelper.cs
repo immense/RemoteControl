@@ -19,7 +19,7 @@ public static class WaitHelper
         var sw = Stopwatch.StartNew();
         while (!condition() && sw.Elapsed < timeout)
         {
-            await Task.Delay(pollingMs);
+            await Task.Delay(pollingMs).ConfigureAwait(false);
         }
         return condition();
     }
