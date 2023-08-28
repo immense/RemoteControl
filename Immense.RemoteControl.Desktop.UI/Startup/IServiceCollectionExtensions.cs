@@ -1,4 +1,4 @@
-﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +13,7 @@ internal static class IServiceCollectionExtensions
         services.AddSingleton<IChatUiService, ChatUiService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
         services.AddSingleton<ISessionIndicator, SessionIndicator>();
-        services.AddScoped<IRemoteControlAccessService, RemoteControlAccessService>();
+        services.AddSingleton<IRemoteControlAccessService, RemoteControlAccessService>();
         services.AddSingleton<IViewModelFactory, ViewModelFactory>();
         services.AddSingleton<IMainWindowViewModel, MainWindowViewModel>();
         services.AddSingleton<IMainViewViewModel, MainViewViewModel>();
