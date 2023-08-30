@@ -10,18 +10,21 @@ internal class BrandingProvider : IBrandingProvider
         Product = "Immy Remote"
     };
 
-    public BrandingProvider()
-    {
-        using var mrs = typeof(BrandingProvider).Assembly.GetManifestResourceStream("Immense.RemoteControl.Examples.LinuxDesktopExample.ImmyBot.png");
-        using var ms = new MemoryStream();
-        mrs!.CopyTo(ms);
 
-        _brandingInfo.Icon = ms.ToArray();
-    }
+    public BrandingInfoBase CurrentBranding => _brandingInfo;
 
     public Task<BrandingInfoBase> GetBrandingInfo()
     {
         return Task.FromResult(_brandingInfo);
+    }
+
+    public async Task Initialize()
+    {
+        using var mrs = typeof(BrandingProvider).Assembly.GetManifestResourceStream("Immense.RemoteControl.Examples.LinuxDesktopExample.ImmyBot.png");
+        using var ms = new MemoryStream();
+        await mrs!.CopyToAsync(ms);
+
+        _brandingInfo.Icon = ms.ToArray();
     }
 
     public void SetBrandingInfo(BrandingInfoBase brandingInfo)
