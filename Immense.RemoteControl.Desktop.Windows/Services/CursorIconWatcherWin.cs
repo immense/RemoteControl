@@ -1,11 +1,10 @@
-﻿using Avalonia.Controls;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
+﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Shared.Models;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Timers;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
@@ -13,6 +12,7 @@ namespace Immense.RemoteControl.Desktop.Windows.Services;
 /// <summary>
 /// A class that can be used to watch for cursor icon changes.
 /// </summary>
+[SupportedOSPlatform("windows")]
 public class CursorIconWatcherWin : ICursorIconWatcher
 {
     private const int IBeamHandle = 65541;

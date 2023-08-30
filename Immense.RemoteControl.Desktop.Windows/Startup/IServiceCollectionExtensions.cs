@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.Windows.Services;
 using Immense.RemoteControl.Desktop.UI.Startup;
+using System.Runtime.Versioning;
 
 namespace Immense.RemoteControl.Desktop.Windows.Startup;
 
@@ -15,6 +16,7 @@ public static class IServiceCollectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="clientConfig"></param>
+    [SupportedOSPlatform("windows")]
     public static void AddRemoteControlWindows(
         this IServiceCollection services,
         Action<IRemoteControlClientBuilder> clientConfig)
