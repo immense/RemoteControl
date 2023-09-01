@@ -8,10 +8,12 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
+[SupportedOSPlatform("windows")]
 public class KeyboardMouseInputWin : IKeyboardMouseInput
 {
     private readonly IUiDispatcher _dispatcher;

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using Immense.SimpleMessenger;
 using Immense.RemoteControl.Desktop.UI.Services;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
@@ -15,6 +16,7 @@ public interface IMessageLoop
     void StartMessageLoop();
 }
 
+[SupportedOSPlatform("windows")]
 public class MessageLoop : IMessageLoop
 {
     private readonly ILogger<MessageLoop> _logger;

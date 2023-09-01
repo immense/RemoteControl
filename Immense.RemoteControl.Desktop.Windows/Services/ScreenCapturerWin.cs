@@ -39,9 +39,11 @@ using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using System.Drawing;
 using Immense.RemoteControl.Desktop.Windows.Helpers;
+using System.Runtime.Versioning;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
+[SupportedOSPlatform("windows")]
 public class ScreenCapturerWin : IScreenCapturer
 {
     private readonly Dictionary<string, int> _bitBltScreens = new();

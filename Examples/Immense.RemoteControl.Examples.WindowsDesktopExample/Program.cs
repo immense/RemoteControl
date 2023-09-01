@@ -1,15 +1,16 @@
 using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Examples.WindowsDesktopExample;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Immense.RemoteControl.Desktop.Shared.Startup;
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Startup;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
-using System.Windows.Forms;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Avalonia;
 using Immense.RemoteControl.Desktop.UI;
+using Immense.RemoteControl.Desktop.Windows.Startup;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
+using System.Runtime.Versioning;
+using System.Text;
+using System.Runtime.InteropServices;
 
 namespace Immense.RemoteControl.Examples.WindowsDesktopExample;
 
@@ -58,13 +59,18 @@ public class Program
         var appState = provider.GetRequiredService<IAppState>();
         Console.WriteLine("Unattended session ready at (copied to clipboard): ");
         var url = $"https://localhost:7024/RemoteControl/Viewer?mode=Unattended&sessionId={appState.SessionId}&accessKey={appState.AccessKey}";
-        Console.WriteLine(url);
-        var thread = new Thread(() =>
-        {
-            Clipboard.SetDataObject(url);
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
+        Console.WriteLine($"\n{url}\n");
+
+        var terminatedUrl = $"{url}\0";
+        var urlBytes = Encoding.Unicode.GetBytes(terminatedUrl);
+        var handle = Marshal.AllocHGlobal(urlBytes.Length);
+        Marshal.Copy(urlBytes, 0, handle, urlBytes.Length);
+
+        User32.OpenClipboard(nint.Zero);
+        User32.EmptyClipboard();
+        User32.SetClipboardData(13, handle);
+        User32.CloseClipboard();
+        Marshal.FreeHGlobal(handle);
 
         Console.WriteLine("Press Ctrl + C to exit.");
         var dispatcher = provider.GetRequiredService<IUiDispatcher>();

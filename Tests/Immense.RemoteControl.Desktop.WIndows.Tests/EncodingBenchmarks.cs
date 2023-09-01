@@ -1,11 +1,9 @@
 using Immense.RemoteControl.Desktop.Shared.Services;
-using Immense.RemoteControl.Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.RemoteControl.Desktop.Windows.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SkiaSharp;
 using System.Diagnostics;
-using System.Drawing;
-using System.Text.RegularExpressions;
 
 namespace Immense.RemoteControl.Desktop.WIndows.Tests;
 
