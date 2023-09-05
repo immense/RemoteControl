@@ -57,7 +57,7 @@ internal class UiDispatcher : IUiDispatcher
             {
                 return desktopApp.MainWindow?.Clipboard;
             }
-           
+
             if (CurrentApp?.ApplicationLifetime is ISingleViewApplicationLifetime svApp)
             {
                 return TopLevel.GetTopLevel(svApp.MainView)?.Clipboard;
@@ -123,8 +123,13 @@ internal class UiDispatcher : IUiDispatcher
             };
 
             window.Show();
+            var result = await closeSignal.WaitAsync(timeout);
+            if (!result)
+            {
+                window.Close();
+            }
 
-            return await closeSignal.WaitAsync(timeout);
+            return result;
         });
     }
 
