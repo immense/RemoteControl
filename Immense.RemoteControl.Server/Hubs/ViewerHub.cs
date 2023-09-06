@@ -218,7 +218,7 @@ public class ViewerHub : Hub<IViewerHubClient>
             {
                 var request = new RemoteControlAccessRequest(
                     Context.ConnectionId,
-                    RequesterDisplayName, 
+                    RequesterDisplayName,
                     SessionInfo.OrganizationName);
 
                 var result = await _desktopHub.Clients
@@ -247,7 +247,7 @@ public class ViewerHub : Hub<IViewerHubClient>
             await _desktopHub.Clients
                 .Client(SessionInfo.DesktopConnectionId)
                 .RequestScreenCast(
-                    Context.ConnectionId, 
+                    Context.ConnectionId,
                     RequesterDisplayName,
                     SessionInfo.NotifyUserOnStart,
                     SessionInfo.StreamId);

@@ -124,13 +124,15 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public async Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
     {
-        await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Changing sessions");
         ShutdownExpected = true;
+        await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Changing sessions");
         await _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
     }
 
     public async Task NotifySessionEnding(SessionEndReasonsEx reason)
     {
+        ShutdownExpected = true;
+
         switch (reason)
         {
             case SessionEndReasonsEx.Logoff:
@@ -138,13 +140,11 @@ public class DesktopHub : Hub<IDesktopHubClient>
                 await _hubEvents.NotifySessionChanged(SessionInfo, SessionSwitchReasonEx.SessionLogoff, -1);
                 break;
             case SessionEndReasonsEx.SystemShutdown:
-                await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Windows shutting down");
+                await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Waiting for device to restart");
                 break;
             default:
                 break;
         }
-
-        ShutdownExpected = true;
     }
 
     public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
@@ -168,6 +168,9 @@ public class DesktopHub : Hub<IDesktopHubClient>
             ShutdownExpected,
             ViewerList.Count);
 
+        SessionInfo.StreamerConnected = false;
+        SessionInfo.SetSessionReadyState(false);
+
         if (SessionInfo.Mode == RemoteControlMode.Attended)
         {
             _ = _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
@@ -178,7 +181,7 @@ public class DesktopHub : Hub<IDesktopHubClient>
             if (ViewerList.Count > 0)
             {
                 await _viewerHub.Clients.Clients(ViewerList).Reconnecting();
-                await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
+                await _hubEvents.RestartScreenCaster(SessionInfo);
             }
             else
             {
@@ -228,6 +231,7 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
         SessionInfo = _sessionCache.GetOrAdd($"{unattendedSessionId}", (key) => SessionInfo);
 
+        SessionInfo.StreamerConnected = true;
         SessionInfo.Mode = RemoteControlMode.Unattended;
         SessionInfo.DesktopConnectionId = Context.ConnectionId;
         SessionInfo.StartTime = DateTimeOffset.Now;

@@ -1,5 +1,5 @@
-using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Server.Services;
+using Immense.RemoteControl.Shared.Helpers;
 
 namespace Immense.RemoteControl.Server.Models;
 
@@ -43,6 +43,12 @@ public class RemoteControlSession : IDisposable
     public bool RequireConsent { get; set; }
 
     public DateTimeOffset StartTime { get; internal set; }
+
+    /// <summary>
+    /// Whether the streamer (desktop process) is connected to the hub.
+    /// </summary>
+    public bool StreamerConnected { get; internal set; }
+
     public Guid StreamId { get; internal set; }
     public Guid UnattendedSessionId { get; set; }
     public string UserConnectionId { get; set; } = string.Empty;

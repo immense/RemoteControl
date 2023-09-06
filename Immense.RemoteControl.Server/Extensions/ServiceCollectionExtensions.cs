@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
     /// <param name="configure">Provides methods for adding required service implementations.</param>
     /// <returns></returns>
     public static IServiceCollection AddRemoteControlServer(
-        this IServiceCollection services, 
+        this IServiceCollection services,
         Action<IRemoteControlServerBuilder> configure)
     {
         var builder = new RemoteControlServerBuilder(services);
@@ -24,7 +24,8 @@ public static class ServiceCollectionExtensions
         builder.Validate();
 
         services
-            .AddSignalR(options => {
+            .AddSignalR(options =>
+            {
                 options.MaximumReceiveMessageSize = 64_000;
                 options.MaximumParallelInvocationsPerClient = 5;
             })
