@@ -21,32 +21,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using Microsoft.Win32;
+using Immense.RemoteControl.Desktop.Shared.Abstractions;
+using Immense.RemoteControl.Desktop.Shared.Messages;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
+using Immense.RemoteControl.Desktop.Shared.Services;
+using Immense.RemoteControl.Desktop.Windows.Helpers;
+using Immense.RemoteControl.Desktop.Windows.Models;
+using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Models;
+using Immense.SimpleMessenger;
+using Microsoft.Extensions.Logging;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using System.Drawing.Imaging;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
-using System.Runtime.InteropServices;
-using Immense.RemoteControl.Desktop.Shared.Abstractions;
-using Immense.RemoteControl.Desktop.Shared.Services;
-using Microsoft.Extensions.Logging;
-using Immense.RemoteControl.Shared;
-using Result = Immense.RemoteControl.Shared.Result;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using Immense.RemoteControl.Desktop.Windows.Models;
-using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using System.Drawing;
-using Immense.RemoteControl.Desktop.Windows.Helpers;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Result = Immense.RemoteControl.Shared.Result;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 [SupportedOSPlatform("windows")]
 public class ScreenCapturerWin : IScreenCapturer
 {
-    private readonly Dictionary<string, int> _bitBltScreens = new();
+    private readonly ConcurrentDictionary<string, DisplayInfo> _displays = new();
     private readonly Dictionary<string, DirectXOutput> _directxScreens = new();
     private readonly IImageHelper _imageHelper;
     private readonly ILogger<ScreenCapturerWin> _logger;
@@ -54,8 +57,10 @@ public class ScreenCapturerWin : IScreenCapturer
     private SKBitmap? _currentFrame;
     private bool _needsInit;
     private SKBitmap? _previousFrame;
+
     public ScreenCapturerWin(
         IImageHelper imageHelper,
+        IMessenger messenger,
         ILogger<ScreenCapturerWin> logger)
     {
         _imageHelper = imageHelper;
@@ -63,25 +68,44 @@ public class ScreenCapturerWin : IScreenCapturer
 
         Init();
 
-        SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+        // Registration is automatically removed when subscriber is disposed.
+        _ = messenger.Register<DisplaySettingsChangedMessage>(this, HandleDisplaySettingsChanged);
     }
 
     public event EventHandler<Rectangle>? ScreenChanged;
 
     public bool CaptureFullscreen { get; set; } = true;
+
     public Rectangle CurrentScreenBounds { get; private set; }
+
     public bool IsGpuAccelerated { get; private set; }
+
     public string SelectedScreen { get; private set; } = string.Empty;
+
+    private SKBitmap? CurrentFrame
+    {
+        get => _currentFrame;
+        set
+        {
+            if (_currentFrame != null)
+            {
+                _previousFrame?.Dispose();
+                _previousFrame = _currentFrame;
+            }
+            _currentFrame = value;
+        }
+    }
+
     public void Dispose()
     {
         try
         {
-            SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
             ClearDirectXOutputs();
             GC.SuppressFinalize(this);
         }
         catch { }
     }
+
     public IEnumerable<string> GetDisplayNames()
     {
         return DisplaysEnumerationHelper
@@ -97,7 +121,6 @@ public class ScreenCapturerWin : IScreenCapturer
         }
         return _imageHelper.GetDiffArea(CurrentFrame, _previousFrame, CaptureFullscreen);
     }
-
 
     public Result<SKBitmap> GetImageDiff()
     {
@@ -171,15 +194,6 @@ public class ScreenCapturerWin : IScreenCapturer
         return DisplaysEnumerationHelper.GetDisplays().Count();
     }
 
-    public int GetSelectedScreenIndex()
-    {
-        if (_bitBltScreens.TryGetValue(SelectedScreen, out var index))
-        {
-            return index;
-        }
-        return 0;
-    }
-
     public Rectangle GetVirtualScreenBounds()
     {
         var displays = DisplaysEnumerationHelper.GetDisplays();
@@ -204,7 +218,7 @@ public class ScreenCapturerWin : IScreenCapturer
         Win32Interop.SwitchToInputDesktop();
 
         CaptureFullscreen = true;
-        InitBitBlt();
+        InitDisplays();
         InitDirectX();
 
         ScreenChanged?.Invoke(this, CurrentScreenBounds);
@@ -221,15 +235,15 @@ public class ScreenCapturerWin : IScreenCapturer
                 return;
             }
 
-            if (_bitBltScreens.ContainsKey(displayName))
+            if (!_displays.TryGetValue(displayName, out var display))
             {
-                SelectedScreen = displayName;
+                display = _displays.First().Value;
             }
-            else
-            {
-                SelectedScreen = _bitBltScreens.Keys.First();
-            }
-            RefreshCurrentScreenBounds();
+
+            SelectedScreen = displayName;
+            CurrentScreenBounds = display.MonitorArea;
+            CaptureFullscreen = true;
+            ScreenChanged?.Invoke(this, CurrentScreenBounds);
         }
     }
 
@@ -250,6 +264,19 @@ public class ScreenCapturerWin : IScreenCapturer
             _needsInit = true;
             return Result.Fail<SKBitmap>("Error while capturing BitBlt frame.");
         }
+    }
+
+    private void ClearDirectXOutputs()
+    {
+        foreach (var screen in _directxScreens.Values)
+        {
+            try
+            {
+                screen.Dispose();
+            }
+            catch { }
+        }
+        _directxScreens.Clear();
     }
 
     private DxCaptureResult GetDirectXFrame()
@@ -337,27 +364,20 @@ public class ScreenCapturerWin : IScreenCapturer
         return DxCaptureResult.Fail("Failed to get DirectX frame.");
     }
 
-    private void ClearDirectXOutputs()
+    private Task HandleDisplaySettingsChanged(DisplaySettingsChangedMessage message)
     {
-        foreach (var screen in _directxScreens.Values)
-        {
-            try
-            {
-                screen.Dispose();
-            }
-            catch { }
-        }
-        _directxScreens.Clear();
+        _needsInit = true;
+        return Task.CompletedTask;
     }
 
-    private void InitBitBlt()
+    private void InitDisplays()
     {
-        _bitBltScreens.Clear();
-        var displays = DisplaysEnumerationHelper.GetDisplays().ToArray();
+        _displays.Clear();
 
-        for (var i = 0; i < displays.Length; i++)
+        var displays = DisplaysEnumerationHelper.GetDisplays().ToArray();
+        foreach (var display in displays)
         {
-            _bitBltScreens.Add(displays[i].DeviceName, i);
+            _displays.AddOrUpdate(display.DeviceName, display, (k, v) => display);
         }
 
         var primary = displays.FirstOrDefault(x => x.IsPrimary) ?? displays.First();
@@ -465,34 +485,6 @@ public class ScreenCapturerWin : IScreenCapturer
         {
             return true;
         }
-    }
-
-    private void RefreshCurrentScreenBounds()
-    {
-        var displays = DisplaysEnumerationHelper.GetDisplays().ToArray();
-        CurrentScreenBounds = displays[_bitBltScreens[SelectedScreen]].MonitorArea;
-        CaptureFullscreen = true;
-        _needsInit = true;
-        ScreenChanged?.Invoke(this, CurrentScreenBounds);
-    }
-
-    private SKBitmap? CurrentFrame
-    {
-        get => _currentFrame;
-        set
-        {
-            if (_currentFrame != null)
-            {
-                _previousFrame?.Dispose();
-                _previousFrame = _currentFrame;
-            }
-            _currentFrame = value;
-        }
-    }
-
-    private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
-    {
-        RefreshCurrentScreenBounds();
     }
 
     private class DxCaptureResult

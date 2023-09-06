@@ -2,13 +2,13 @@
 using Immense.RemoteControl.Desktop.Shared.Messages;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
+using Immense.RemoteControl.Shared.Interfaces;
 using Immense.RemoteControl.Shared.Models;
+using Immense.SimpleMessenger;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Immense.SimpleMessenger;
 using System.Diagnostics;
-using Immense.RemoteControl.Shared.Interfaces;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
@@ -25,7 +25,6 @@ public interface IDesktopHubConnection
     Task DisconnectViewer(IViewer viewer, bool notifyViewer);
     Task<string> GetSessionID();
     Task NotifyRequesterUnattendedReady();
-    Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId);
     Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs);
     Task SendAttendedSessionInfo(string machineName);
 
@@ -242,15 +241,6 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         return Connection.SendAsync("NotifyRequesterUnattendedReady");
     }
 
-    public Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
-    {
-        if (Connection is null)
-        {
-            return Task.CompletedTask;
-        }
-
-        return Connection.SendAsync("NotifySessionChanged", reason, currentSessionId);
-    }
 
     public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
     {
@@ -268,7 +258,7 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         {
             await SendMessageToViewer(accessRequest.ViewerConnectionId, "Asking user for permission");
             return await _remoteControlAccessService.PromptForAccess(
-                accessRequest.RequesterDisplayName, 
+                accessRequest.RequesterDisplayName,
                 accessRequest.OrganizationName);
         }
         catch (Exception ex)
@@ -417,12 +407,38 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
 
     private async Task HandleWindowsSessionChanged(WindowsSessionSwitchedMessage message)
     {
-        await NotifySessionChanged(message.Reason, message.SessionId);
+        try
+        {
+            if (Connection is null)
+            {
+                return;
+            }
+
+            await Connection.SendAsync("NotifySessionChanged", message.Reason, message.SessionId);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while notifying of session change.");
+        }
     }
 
     private async Task HandleWindowsSessionEnding(WindowsSessionEndingMessage message)
     {
-        await DisconnectAllViewers();
+        try
+        {
+            if (Connection is null)
+            {
+                return;
+            }
+
+            await Connection.SendAsync("NotifySessionEnding", message.Reason);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while notifying of session ending.");
+        }
     }
     private class RetryPolicy : IRetryPolicy
     {

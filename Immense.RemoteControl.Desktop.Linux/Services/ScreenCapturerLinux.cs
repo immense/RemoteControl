@@ -94,11 +94,6 @@ public class ScreenCapturerLinux : IScreenCapturer
         return _x11Screens.Count;
     }
 
-    public int GetSelectedScreenIndex()
-    {
-        return int.Parse(SelectedScreen ?? "0");
-    }
-
     public Rectangle GetVirtualScreenBounds()
     {
         var lowestX = 0;

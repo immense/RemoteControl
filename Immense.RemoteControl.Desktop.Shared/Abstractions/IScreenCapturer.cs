@@ -21,7 +21,6 @@ public interface IScreenCapturer : IDisposable
 
     int GetScreenCount();
 
-    int GetSelectedScreenIndex();
     Rectangle GetVirtualScreenBounds();
 
     void Init();
