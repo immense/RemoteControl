@@ -1,4 +1,5 @@
 using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Enums;
 using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
@@ -116,6 +117,8 @@ public class ViewerHub : Hub<IViewerHubClient>
             _logger.LogError("Stream was null.");
             yield break;
         }
+
+        SessionInfo.StreamerState = StreamerState.Connected;
 
         try
         {

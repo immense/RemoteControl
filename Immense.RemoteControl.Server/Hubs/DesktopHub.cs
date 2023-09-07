@@ -1,4 +1,5 @@
 using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Enums;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
@@ -50,22 +51,6 @@ public class DesktopHub : Hub<IDesktopHubClient>
             Context.Items[nameof(SessionInfo)] = value;
         }
     }
-
-    /// <summary>
-    /// Used to signal that the desktop process is expected to shut down
-    /// and viewers should not be notified.
-    /// </summary>
-    private bool ShutdownExpected
-    {
-        get
-        {
-            return Context.Items.TryGetValue(nameof(ShutdownExpected), out var result) &&
-                result is bool typedResult &&
-                typedResult;
-        }
-        set => Context.Items[nameof(ShutdownExpected)] = value;
-    }
-
 
     private HashSet<string> ViewerList => SessionInfo.ViewerList;
 
@@ -124,22 +109,22 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public async Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
     {
-        ShutdownExpected = true;
+        SessionInfo.StreamerState = StreamerState.ChangingSessions | StreamerState.DisconnectExpected;
         await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Changing sessions");
         await _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
     }
 
     public async Task NotifySessionEnding(SessionEndReasonsEx reason)
     {
-        ShutdownExpected = true;
-
         switch (reason)
         {
             case SessionEndReasonsEx.Logoff:
+                SessionInfo.StreamerState = StreamerState.WindowsLoggingOff | StreamerState.DisconnectExpected;
                 await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Windows session ending");
                 await _hubEvents.NotifySessionChanged(SessionInfo, SessionSwitchReasonEx.SessionLogoff, -1);
                 break;
             case SessionEndReasonsEx.SystemShutdown:
+                SessionInfo.StreamerState = StreamerState.WindowsShuttingDown | StreamerState.DisconnectExpected;
                 await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Waiting for device to restart");
                 break;
             default:
@@ -164,22 +149,25 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogDebug("Desktop app disconnected. Shutdown Expected: {expected}.  Viewer Count: {count}",
-            ShutdownExpected,
+        _logger.LogDebug("Desktop app disconnected. Streamer State: {state}.  Viewer Count: {count}",
+            SessionInfo.StreamerState,
             ViewerList.Count);
 
-        SessionInfo.StreamerConnected = false;
         SessionInfo.SetSessionReadyState(false);
 
         if (SessionInfo.Mode == RemoteControlMode.Attended)
         {
+            SessionInfo.StreamerState = StreamerState.Disconnected;
             _ = _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
             await _viewerHub.Clients.Clients(ViewerList).ScreenCasterDisconnected();
         }
-        else if (SessionInfo.Mode == RemoteControlMode.Unattended && !ShutdownExpected)
+        else if (
+            SessionInfo.Mode == RemoteControlMode.Unattended &&
+            !SessionInfo.StreamerState.HasFlag(StreamerState.DisconnectExpected))
         {
             if (ViewerList.Count > 0)
             {
+                SessionInfo.StreamerState = StreamerState.Reconnecting;
                 await _viewerHub.Clients.Clients(ViewerList).Reconnecting();
                 await _hubEvents.RestartScreenCaster(SessionInfo);
             }
@@ -231,7 +219,6 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
         SessionInfo = _sessionCache.GetOrAdd($"{unattendedSessionId}", (key) => SessionInfo);
 
-        SessionInfo.StreamerConnected = true;
         SessionInfo.Mode = RemoteControlMode.Unattended;
         SessionInfo.DesktopConnectionId = Context.ConnectionId;
         SessionInfo.StartTime = DateTimeOffset.Now;

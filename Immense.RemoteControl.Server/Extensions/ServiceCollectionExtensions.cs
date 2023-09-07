@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
             .AddMessagePackProtocol();
 
         services.AddHostedService<RemoteControlSessionCleaner>();
+        services.AddHostedService<RemoteControlSessionReconnector>();
         services.AddSingleton<IDesktopStreamCache, DesktopStreamCache>();
         services.AddSingleton<IRemoteControlSessionCache, RemoteControlSessionCache>();
         services.AddSingleton<ISystemTime, SystemTime>();
