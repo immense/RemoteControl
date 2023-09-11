@@ -1,5 +1,6 @@
 ﻿using Immense.RemoteControl.Desktop.Shared.Abstractions;
 using Immense.RemoteControl.Desktop.Shared.Messages;
+using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Enums;
 using Immense.RemoteControl.Shared.Interfaces;
@@ -256,6 +257,16 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
     {
         try
         {
+            // TODO: Add this to Win32Interop service/interface when it's
+            // extracted from current static class.
+            if (OperatingSystem.IsWindows() &&
+                Shlwapi.IsOS(OsType.OS_ANYSERVER) &&
+                Process.GetCurrentProcess().SessionId == Kernel32.WTSGetActiveConsoleSessionId())
+            {
+                // Bypass "consent prompt" if we're targeting the console session
+                // on a Windows Server OS.
+                return PromptForAccessResult.Accepted;
+            }
             await SendMessageToViewer(accessRequest.ViewerConnectionId, "Asking user for permission");
             return await _remoteControlAccessService.PromptForAccess(
                 accessRequest.RequesterDisplayName,
