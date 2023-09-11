@@ -67,8 +67,8 @@ internal class RemoteControlSessionReconnector : BackgroundService
                             await _hubEvents.RestartScreenCaster(session);
                         },
                         TimeSpan.FromSeconds(10),
-                        cancellationToken: stoppingToken,
-                        key: $"{session.UnattendedSessionId}");
+                        key: $"{session.UnattendedSessionId}",
+                        cancellationToken: stoppingToken);
                 }
                 catch (Exception ex)
                 {
