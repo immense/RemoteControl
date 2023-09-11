@@ -43,6 +43,11 @@ internal class RemoteControlSessionReconnector : BackgroundService
                         break;
                     }
 
+                    if (session.Mode != Models.RemoteControlMode.Unattended)
+                    {
+                        continue;
+                    }
+
                     // Skip sessions that are either:
                     //   - Already connected
                     //   - In the process of shutting down
@@ -62,7 +67,8 @@ internal class RemoteControlSessionReconnector : BackgroundService
                             await _hubEvents.RestartScreenCaster(session);
                         },
                         TimeSpan.FromSeconds(10),
-                        cancellationToken: stoppingToken);
+                        cancellationToken: stoppingToken,
+                        key: $"{session.UnattendedSessionId}");
                 }
                 catch (Exception ex)
                 {
