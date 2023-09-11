@@ -1,5 +1,5 @@
-using System;
 using System.Runtime.InteropServices;
+using static Immense.RemoteControl.Desktop.Shared.Native.Windows.ADVAPI32;
 
 namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
@@ -7,6 +7,19 @@ public static class Kernel32
 {
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool CloseHandle(nint hSnapshot);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern bool CreateProcess(
+       string? lpApplicationName,
+       string lpCommandLine,
+       nint lpProcessAttributes, // Pointer to SECURITY_ATTRIBUTES structure
+       nint lpThreadAttributes,  // Pointer to SECURITY_ATTRIBUTES structure
+       bool bInheritHandles,
+       uint dwCreationFlags,
+       IntPtr lpEnvironment,
+       string? lpCurrentDirectory,
+       [In] ref STARTUPINFO lpStartupInfo,
+       out PROCESS_INFORMATION lpProcessInformation);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
     public static extern nint GetCommandLine();

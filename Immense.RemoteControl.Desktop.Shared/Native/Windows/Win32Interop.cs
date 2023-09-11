@@ -1,8 +1,7 @@
+using Immense.RemoteControl.Shared;
 using Immense.RemoteControl.Shared.Models;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using static Immense.RemoteControl.Desktop.Shared.Native.Windows.ADVAPI32;
@@ -261,5 +260,92 @@ public class Win32Interop
         }
 
         Kernel32.CloseHandle(handle);
+    }
+
+    public static Result<BackstageSession> StartProcessInBackstage<T>(
+        string commandLine,
+        string windowStationName,
+        ILogger<T> logger,
+        out PROCESS_INFORMATION procInfo)
+    {
+        using var logScope = logger.BeginScope(nameof(StartProcessInBackstage));
+
+        procInfo = new();
+
+        var winstaEnumResult = User32.EnumWindowStations((string windowStation, nint lParam) =>
+        {
+            logger.LogInformation("Found window station {windowStation}.", windowStation);
+            return true;
+        },
+        nint.Zero);
+
+        if (!winstaEnumResult)
+        {
+            logger.LogError("Enum winsta failed.");
+        }
+
+        var createWinstaResult = CreateWindowStation(windowStationName, 0, ACCESS_MASK.MAXIMUM_ALLOWED, nint.Zero);
+
+        if (createWinstaResult == nint.Zero)
+        {
+            logger.LogError("Create winsta failed.");
+            return Result.Fail<BackstageSession>("Create winsta failed.");
+        }
+
+        // When calling CreateDesktop, the calling process must be associated with
+        // the target Window station.
+        var setProcessWinstaResult = SetProcessWindowStation(createWinstaResult);
+
+        if (!setProcessWinstaResult)
+        {
+            logger.LogError("Set process winsta failed.");
+            return Result.Fail<BackstageSession>("Set process winsta failed.");
+        }
+
+        var createDesktopResult = CreateDesktop(
+            "default",
+            null,
+            null,
+            0,
+            ACCESS_MASK.MAXIMUM_ALLOWED | ACCESS_MASK.DESKTOP_CREATEWINDOW,
+            nint.Zero);
+
+        if (createDesktopResult == nint.Zero)
+        {
+            logger.LogError("Create desktop failed.");
+            return Result.Fail<BackstageSession>("Create desktop failed.");
+        }
+
+        var si = new STARTUPINFO();
+        si.cb = Marshal.SizeOf(si);
+        si.lpDesktop = @$"{windowStationName}\default";
+
+
+        var createProcessResult = Kernel32.CreateProcess(
+                null,
+                commandLine,
+                nint.Zero,
+                nint.Zero,
+                false,
+                NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE,
+                nint.Zero,
+                null,
+                ref si,
+                out procInfo);
+
+        if (!createProcessResult)
+        {
+            logger.LogError("Create process failed.");
+            return Result.Fail<BackstageSession>("Create process failed.");
+        }
+
+        var session = new BackstageSession(createWinstaResult, createDesktopResult, procInfo);
+        return Result.Ok(session);
+    }
+
+    private static bool EnumWinstaFunc()
+    {
+
+        return true;
     }
 }

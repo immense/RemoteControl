@@ -1,5 +1,4 @@
 using Microsoft.Win32.SafeHandles;
-using System;
 using System.Runtime.InteropServices;
 
 namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
@@ -1273,6 +1272,19 @@ public static class User32
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool SetProcessWindowStation(nint hWinSta);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr CreateWindowStation(string name, int flags, ACCESS_MASK desiredAccess, nint securityAttrs);
+
+    // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.WIN32COM.v10.en/dllproc/base/createdesktop.htm
+    [DllImport("user32.dll", EntryPoint = "CreateDesktop", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr CreateDesktop(
+                    [MarshalAs(UnmanagedType.LPWStr)] string desktopName,
+                    [MarshalAs(UnmanagedType.LPWStr)] string? device, // must be null.
+                    [MarshalAs(UnmanagedType.LPWStr)] string? deviceMode, // must be null,
+                    [MarshalAs(UnmanagedType.U4)] int flags,  // use 0
+                    [MarshalAs(UnmanagedType.U4)] ACCESS_MASK accessMask,
+                    nint attributes);
 
     [DllImport("user32.dll")]
     public static extern nint GetWindowDC(nint hWnd);
