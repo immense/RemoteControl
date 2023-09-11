@@ -1,5 +1,3 @@
-using Immense.RemoteControl.Server.Hubs;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

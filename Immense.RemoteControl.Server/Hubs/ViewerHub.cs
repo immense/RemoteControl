@@ -1,4 +1,5 @@
 using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Enums;
 using Immense.RemoteControl.Server.Filters;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
@@ -117,6 +118,8 @@ public class ViewerHub : Hub<IViewerHubClient>
             yield break;
         }
 
+        SessionInfo.StreamerState = StreamerState.Connected;
+
         try
         {
             await foreach (var chunk in signaler.Stream)
@@ -218,7 +221,7 @@ public class ViewerHub : Hub<IViewerHubClient>
             {
                 var request = new RemoteControlAccessRequest(
                     Context.ConnectionId,
-                    RequesterDisplayName, 
+                    RequesterDisplayName,
                     SessionInfo.OrganizationName);
 
                 var result = await _desktopHub.Clients
@@ -247,7 +250,7 @@ public class ViewerHub : Hub<IViewerHubClient>
             await _desktopHub.Clients
                 .Client(SessionInfo.DesktopConnectionId)
                 .RequestScreenCast(
-                    Context.ConnectionId, 
+                    Context.ConnectionId,
                     RequesterDisplayName,
                     SessionInfo.NotifyUserOnStart,
                     SessionInfo.StreamId);

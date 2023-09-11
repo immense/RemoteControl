@@ -1,11 +1,10 @@
 using Immense.RemoteControl.Desktop.Shared.Messages;
-using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Desktop.UI.Services;
 using Immense.RemoteControl.Shared.Enums;
+using Immense.SimpleMessenger;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System.Diagnostics;
-using Immense.SimpleMessenger;
-using Immense.RemoteControl.Desktop.UI.Services;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
@@ -19,8 +18,8 @@ public interface IMessageLoop
 [SupportedOSPlatform("windows")]
 public class MessageLoop : IMessageLoop
 {
-    private readonly ILogger<MessageLoop> _logger;
     private readonly CancellationToken _exitToken;
+    private readonly ILogger<MessageLoop> _logger;
     private readonly IMessenger _messenger;
     private Thread? _messageLoopThread;
 
@@ -46,6 +45,8 @@ public class MessageLoop : IMessageLoop
         {
             SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+            SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
+
             while (!_exitToken.IsCancellationRequested)
             {
                 try
@@ -63,9 +64,22 @@ public class MessageLoop : IMessageLoop
 
             SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
             SystemEvents.SessionEnding -= SystemEvents_SessionEnding;
+            SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
         });
         _messageLoopThread.SetApartmentState(ApartmentState.STA);
         _messageLoopThread.Start();
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool DispatchMessage([In] ref MSG lpmsg);
+
+    [DllImport("user32.dll")]
+    private static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+
+
+    private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)
+    {
+        _messenger.Send(new DisplaySettingsChangedMessage());
     }
 
     private void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
@@ -83,13 +97,6 @@ public class MessageLoop : IMessageLoop
         var reason = (SessionSwitchReasonEx)(int)e.Reason;
         _messenger.Send(new WindowsSessionSwitchedMessage(reason, Process.GetCurrentProcess().SessionId));
     }
-
-    [DllImport("user32.dll")]
-    private static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
-
-    [DllImport("user32.dll")]
-    private static extern bool DispatchMessage([In] ref MSG lpmsg);
-
     [StructLayout(LayoutKind.Sequential)]
     private struct MSG
     {

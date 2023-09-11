@@ -1,4 +1,5 @@
 using Immense.RemoteControl.Server.Abstractions;
+using Immense.RemoteControl.Server.Enums;
 using Immense.RemoteControl.Server.Models;
 using Immense.RemoteControl.Server.Services;
 using Immense.RemoteControl.Shared;
@@ -31,8 +32,6 @@ public class DesktopHub : Hub<IDesktopHubClient>
         _logger = logger;
     }
 
-  
-
     private RemoteControlSession SessionInfo
     {
         get
@@ -52,22 +51,6 @@ public class DesktopHub : Hub<IDesktopHubClient>
             Context.Items[nameof(SessionInfo)] = value;
         }
     }
-
-    /// <summary>
-    /// Used to signal that the desktop process is expected to shut down
-    /// and viewers should not be notified.
-    /// </summary>
-    private bool ShutdownExpected
-    {
-        get
-        {
-            return Context.Items.TryGetValue(nameof(ShutdownExpected), out var result) &&
-                result is bool typedResult &&
-                typedResult;
-        }
-        set => Context.Items[nameof(ShutdownExpected)] = value;
-    }
-
 
     private HashSet<string> ViewerList => SessionInfo.ViewerList;
 
@@ -126,9 +109,27 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
     public async Task NotifySessionChanged(SessionSwitchReasonEx reason, int currentSessionId)
     {
+        SessionInfo.StreamerState = StreamerState.ChangingSessions | StreamerState.DisconnectExpected;
         await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Changing sessions");
-        ShutdownExpected = true;
         await _hubEvents.NotifySessionChanged(SessionInfo, reason, currentSessionId);
+    }
+
+    public async Task NotifySessionEnding(SessionEndReasonsEx reason)
+    {
+        switch (reason)
+        {
+            case SessionEndReasonsEx.Logoff:
+                SessionInfo.StreamerState = StreamerState.WindowsLoggingOff | StreamerState.DisconnectExpected;
+                await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Windows session ending");
+                await _hubEvents.NotifySessionChanged(SessionInfo, SessionSwitchReasonEx.SessionLogoff, -1);
+                break;
+            case SessionEndReasonsEx.SystemShutdown:
+                SessionInfo.StreamerState = StreamerState.WindowsShuttingDown | StreamerState.DisconnectExpected;
+                await _viewerHub.Clients.Clients(ViewerList).ShowMessage("Waiting for device to restart");
+                break;
+            default:
+                break;
+        }
     }
 
     public Task NotifyViewersRelaunchedScreenCasterReady(string[] viewerIDs)
@@ -137,40 +138,45 @@ public class DesktopHub : Hub<IDesktopHubClient>
         return _viewerHub.Clients
             .Clients(viewerIDs)
             .RelaunchedScreenCasterReady(
-                SessionInfo.UnattendedSessionId, 
+                SessionInfo.UnattendedSessionId,
                 SessionInfo.AccessKey);
     }
 
     public override async Task OnConnectedAsync()
     {
-       
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogDebug("Desktop app disconnected. Shutdown Expected: {expected}.  Viewer Count: {count}", 
-            ShutdownExpected, 
+        _logger.LogDebug("Desktop app disconnected. Streamer State: {state}.  Viewer Count: {count}",
+            SessionInfo.StreamerState,
             ViewerList.Count);
+
+        SessionInfo.SetSessionReadyState(false);
 
         if (SessionInfo.Mode == RemoteControlMode.Attended)
         {
+            SessionInfo.StreamerState = StreamerState.Disconnected;
             _ = _sessionCache.TryRemove(SessionInfo.AttendedSessionId, out _);
             await _viewerHub.Clients.Clients(ViewerList).ScreenCasterDisconnected();
         }
-        else if (SessionInfo.Mode == RemoteControlMode.Unattended && !ShutdownExpected)
+        else if (
+            SessionInfo.Mode == RemoteControlMode.Unattended &&
+            !SessionInfo.StreamerState.HasFlag(StreamerState.DisconnectExpected))
         {
             if (ViewerList.Count > 0)
             {
+                SessionInfo.StreamerState = StreamerState.Reconnecting;
                 await _viewerHub.Clients.Clients(ViewerList).Reconnecting();
-                await _hubEvents.RestartScreenCaster(SessionInfo, ViewerList);
+                await _hubEvents.RestartScreenCaster(SessionInfo);
             }
             else
             {
                 _ = _sessionCache.TryRemove($"{SessionInfo.UnattendedSessionId}", out _);
             }
         }
-        
+
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -187,6 +193,15 @@ public class DesktopHub : Hub<IDesktopHubClient>
             _logger.LogWarning(ex, "Failed to ping viewer with connection ID {connectionId}.", viewerConnectionId);
             return Result.Fail<string>("Failed to ping viewer.");
         }
+    }
+
+    public Task ReceiveAttendedSessionInfo(string machineName)
+    {
+        SessionInfo.DesktopConnectionId = Context.ConnectionId;
+        SessionInfo.StartTime = DateTimeOffset.Now;
+        SessionInfo.MachineName = machineName;
+
+        return Task.CompletedTask;
     }
 
     public Task<Result> ReceiveUnattendedSessionInfo(Guid unattendedSessionId, string accessKey, string machineName, string requesterName, string organizationName)
@@ -215,16 +230,6 @@ public class DesktopHub : Hub<IDesktopHubClient>
 
         return Task.FromResult(Result.Ok());
     }
-
-    public Task ReceiveAttendedSessionInfo(string machineName)
-    {
-        SessionInfo.DesktopConnectionId = Context.ConnectionId;
-        SessionInfo.StartTime = DateTimeOffset.Now;
-        SessionInfo.MachineName = machineName;
-
-        return Task.CompletedTask;
-    }
-
     public Task SendConnectionFailedToViewers(List<string> viewerIDs)
     {
         return _viewerHub.Clients.Clients(viewerIDs).ConnectionFailed();
@@ -234,17 +239,6 @@ public class DesktopHub : Hub<IDesktopHubClient>
     {
         return _viewerHub.Clients.Client(viewerID).ConnectionRequestDenied();
     }
-
-    public Task SendDtoToViewer(byte[] dto, string viewerId)
-    {
-        return _viewerHub.Clients.Client(viewerId).SendDtoToViewer(dto);
-    }
-
-    public Task SendMessageToViewer(string viewerId, string message)
-    {
-        return _viewerHub.Clients.Client(viewerId).ShowMessage(message);
-    }
-
 
     public async Task SendDesktopStream(IAsyncEnumerable<byte[]> stream, Guid streamId)
     {
@@ -266,5 +260,15 @@ public class DesktopHub : Hub<IDesktopHubClient>
         {
             _ = _streamCache.TryRemove(signaler.StreamId, out _);
         }
+    }
+
+    public Task SendDtoToViewer(byte[] dto, string viewerId)
+    {
+        return _viewerHub.Clients.Client(viewerId).SendDtoToViewer(dto);
+    }
+
+    public Task SendMessageToViewer(string viewerId, string message)
+    {
+        return _viewerHub.Clients.Client(viewerId).ShowMessage(message);
     }
 }
