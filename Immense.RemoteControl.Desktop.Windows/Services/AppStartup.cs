@@ -76,11 +76,6 @@ internal class AppStartup : IAppStartup
                         return;
                     }
 
-                    //if (Process.GetCurrentProcess().SessionId == 0)
-                    //{
-                    //    Process.Start(@"C:\Windows\system32\cmd.exe");
-                    //}
-
                     await StartScreenCasting().ConfigureAwait(false);
                     break;
                 }
