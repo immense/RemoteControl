@@ -11,7 +11,7 @@ public static class Kernel32
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     public static extern bool CreateProcess(
        string? lpApplicationName,
-       string lpCommandLine,
+       string? lpCommandLine,
        nint lpProcessAttributes, // Pointer to SECURITY_ATTRIBUTES structure
        nint lpThreadAttributes,  // Pointer to SECURITY_ATTRIBUTES structure
        bool bInheritHandles,
@@ -26,6 +26,9 @@ public static class Kernel32
 
     [DllImport("kernel32.dll")]
     public static extern nint GetConsoleWindow();
+
+    [DllImport("kernel32.dll")]
+    public static extern uint GetCurrentThreadId();
 
     [return: MarshalAs(UnmanagedType.Bool)]
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]

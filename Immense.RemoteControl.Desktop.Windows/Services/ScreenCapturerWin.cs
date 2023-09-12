@@ -28,6 +28,7 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Windows.Helpers;
 using Immense.RemoteControl.Desktop.Windows.Models;
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Helpers;
 using Immense.RemoteControl.Shared.Models;
 using Immense.SimpleMessenger;
 using Microsoft.Extensions.Logging;
@@ -37,11 +38,13 @@ using SharpDX.DXGI;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text.Json;
 using Result = Immense.RemoteControl.Shared.Result;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
@@ -149,34 +152,51 @@ public class ScreenCapturerWin : IScreenCapturer
                     return Result.Fail<SKBitmap>($"Failed to switch to input desktop. Last Win32 error code: {errCode}");
                 }
 
+                _ = RateLimiter.Throttle(
+                    () =>
+                    {
+                        if (!Win32Interop.GetCurrentDesktopName(out var desktopName))
+                        {
+                            _logger.LogError("Failed to get current desktop.");
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Current Desktop: {desktopName}", desktopName);
+                        }
+                        return Task.CompletedTask;
+                    },
+                    TimeSpan.FromSeconds(5));
+
                 if (_needsInit)
                 {
                     _logger.LogWarning("Init needed in GetNextFrame.");
                     Init();
                 }
 
-                var result = GetDirectXFrame();
+                if (Process.GetCurrentProcess().SessionId != 0)
+                {
+                    var result = GetDirectXFrame();
 
-                if (result.IsSuccess && !result.HadChanges)
-                {
-                    return Result.Fail<SKBitmap>("No screen changes occurred.");
-                }
-
-                if (result.HadChanges && !IsEmpty(result.Bitmap))
-                {
-                    CurrentFrame = result.Bitmap;
-                }
-                else
-                {
-                    var bitBltResult = GetBitBltFrame();
-                    if (!bitBltResult.IsSuccess)
+                    if (result.IsSuccess && !result.HadChanges)
                     {
-                        var ex = bitBltResult.Exception ?? new("Unknown error.");
-                        _logger.LogError(ex, "Error while getting next frame.");
-                        return Result.Fail<SKBitmap>(ex);
+                        return Result.Fail<SKBitmap>("No screen changes occurred.");
                     }
-                    CurrentFrame = bitBltResult.Value;
+
+                    if (result.HadChanges && !IsEmpty(result.Bitmap))
+                    {
+                        CurrentFrame = result.Bitmap;
+                        return Result.Ok(CurrentFrame);
+                    }
                 }
+
+                var bitBltResult = GetBitBltFrame();
+                if (!bitBltResult.IsSuccess)
+                {
+                    var ex = bitBltResult.Exception ?? new("Unknown error.");
+                    _logger.LogError(ex, "Error while getting next frame.");
+                    return Result.Fail<SKBitmap>(ex);
+                }
+                CurrentFrame = bitBltResult.Value;
 
                 return Result.Ok(CurrentFrame);
             }
@@ -383,6 +403,9 @@ public class ScreenCapturerWin : IScreenCapturer
         var primary = displays.FirstOrDefault(x => x.IsPrimary) ?? displays.First();
         SelectedScreen = primary.DeviceName;
         CurrentScreenBounds = primary.MonitorArea;
+
+        _logger.LogInformation("Found {count} displays.", displays.Length);
+        _logger.LogInformation("Current bounds: {bounds}", JsonSerializer.Serialize(CurrentScreenBounds));
     }
 
     private void InitDirectX()

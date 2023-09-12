@@ -1,8 +1,11 @@
 using Immense.RemoteControl.Shared;
+using Immense.RemoteControl.Shared.Extensions;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using static Immense.RemoteControl.Desktop.Shared.Native.Windows.ADVAPI32;
 using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
@@ -10,9 +13,94 @@ using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 
 // TODO: Use https://github.com/microsoft/CsWin32 for all p/invokes.
+[SupportedOSPlatform("windows")]
 public class Win32Interop
 {
     private static nint _lastInputDesktop;
+
+
+    public static bool CreateInteractiveSystemProcess(
+    string commandLine,
+    int targetSessionId,
+    bool forceConsoleSession,
+    string desktopName,
+    bool hiddenWindow,
+    out PROCESS_INFORMATION procInfo)
+    {
+        // If not force console, find target session.  If not present,
+        // use last active session.
+        var dwSessionId = Kernel32.WTSGetActiveConsoleSessionId();
+        if (!forceConsoleSession)
+        {
+            var activeSessions = GetActiveSessions();
+            if (activeSessions.Any(x => x.Id == targetSessionId))
+            {
+                dwSessionId = (uint)targetSessionId;
+            }
+            else
+            {
+                dwSessionId = activeSessions.Last().Id;
+            }
+        }
+
+        var dupResult = TryDuplicateProcessToken(
+            "winlogon",
+            dwSessionId,
+            out var sa,
+            out var sourceToken,
+            out var processHandle,
+            out var duplicateToken);
+
+        if (!dupResult)
+        {
+            Kernel32.CloseHandle(processHandle);
+            Kernel32.CloseHandle(sourceToken);
+            procInfo = default;
+            return false;
+        }
+
+        // By default, CreateProcessAsUser creates a process on a non-interactive window station, meaning
+        // the window station has a desktop that is invisible and the process is incapable of receiving
+        // user input. To remedy this we set the lpDesktop parameter to indicate we want to enable user 
+        // interaction with the new process.
+        var si = new STARTUPINFO();
+        si.cb = Marshal.SizeOf(si);
+        si.lpDesktop = @"winsta0\" + desktopName;
+
+        // Flags that specify the priority and creation method of the process.
+        uint dwCreationFlags;
+        if (hiddenWindow)
+        {
+            dwCreationFlags = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW;
+            si.dwFlags = STARTF_USESHOWWINDOW;
+            si.wShowWindow = 0;
+        }
+        else
+        {
+            dwCreationFlags = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE;
+        }
+
+        // Create a new process in the current user's logon session.
+        var result = CreateProcessAsUser(
+            duplicateToken,
+            null,
+            commandLine,
+            ref sa,
+            ref sa,
+            false,
+            dwCreationFlags,
+            nint.Zero,
+            null,
+            ref si,
+            out procInfo);
+
+        // Invalidate the handles.
+        Kernel32.CloseHandle(processHandle);
+        Kernel32.CloseHandle(sourceToken);
+        Kernel32.CloseHandle(duplicateToken);
+
+        return result;
+    }
 
     public static List<WindowsSession> GetActiveSessions()
     {
@@ -66,20 +154,25 @@ public class Win32Interop
         return Marshal.PtrToStringAuto(commandLinePtr) ?? string.Empty;
     }
 
-    public static bool GetCurrentDesktop(out string desktopName)
+    public static bool GetCurrentDesktopName([NotNullWhen(true)] out string? desktopName)
+    {
+        desktopName = null;
+        var threadId = Kernel32.GetCurrentThreadId();
+        var desktop = User32.GetThreadDesktop(threadId);
+        if (desktop == nint.Zero)
+        {
+            return false;
+        }
+
+        return GetDesktopName(desktop, out desktopName);
+    }
+
+    public static bool GetInputDesktopName([NotNullWhen(true)] out string? desktopName)
     {
         var inputDesktop = OpenInputDesktop();
         try
         {
-            byte[] deskBytes = new byte[256];
-            if (!GetUserObjectInformationW(inputDesktop, UOI_NAME, deskBytes, 256, out uint lenNeeded))
-            {
-                desktopName = string.Empty;
-                return false;
-            }
-
-            desktopName = Encoding.Unicode.GetString(deskBytes.Take((int)lenNeeded).ToArray()).Replace("\0", "");
-            return true;
+            return GetDesktopName(inputDesktop, out desktopName);
         }
         finally
         {
@@ -105,110 +198,20 @@ public class Win32Interop
         return User32.OpenInputDesktop(0, true, ACCESS_MASK.GENERIC_ALL);
     }
 
-    public static bool CreateInteractiveSystemProcess(
-        string commandLine,
-         int targetSessionId,
-         bool forceConsoleSession,
-         string desktopName,
-         bool hiddenWindow,
-         out PROCESS_INFORMATION procInfo)
+    public static void SetConsoleWindowVisibility(bool isVisible)
     {
-        uint winlogonPid = 0;
-        var hUserTokenDup = nint.Zero;
-        var hPToken = nint.Zero;
-        var hProcess = nint.Zero;
+        var handle = Kernel32.GetConsoleWindow();
 
-        procInfo = new PROCESS_INFORMATION();
-
-        // If not force console, find target session.  If not present,
-        // use last active session.
-        var dwSessionId = Kernel32.WTSGetActiveConsoleSessionId();
-        if (!forceConsoleSession)
+        if (isVisible)
         {
-            var activeSessions = GetActiveSessions();
-            if (activeSessions.Any(x => x.Id == targetSessionId))
-            {
-                dwSessionId = (uint)targetSessionId;
-            }
-            else
-            {
-                dwSessionId = activeSessions.Last().Id;
-            }
-        }
-
-        // Obtain the process ID of the winlogon process that is running within the currently active session.
-        var processes = Process.GetProcessesByName("winlogon");
-        foreach (Process p in processes)
-        {
-            if ((uint)p.SessionId == dwSessionId)
-            {
-                winlogonPid = (uint)p.Id;
-            }
-        }
-
-        // Obtain a handle to the winlogon process.
-        hProcess = Kernel32.OpenProcess(MAXIMUM_ALLOWED, false, winlogonPid);
-
-        // Obtain a handle to the access token of the winlogon process.
-        if (!OpenProcessToken(hProcess, TOKEN_DUPLICATE, ref hPToken))
-        {
-            Kernel32.CloseHandle(hProcess);
-            return false;
-        }
-
-        // Security attibute structure used in DuplicateTokenEx and CreateProcessAsUser.
-        var sa = new SECURITY_ATTRIBUTES();
-        sa.Length = Marshal.SizeOf(sa);
-
-        // Copy the access token of the winlogon process; the newly created token will be a primary token.
-        if (!DuplicateTokenEx(hPToken, MAXIMUM_ALLOWED, ref sa, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup))
-        {
-            Kernel32.CloseHandle(hProcess);
-            Kernel32.CloseHandle(hPToken);
-            return false;
-        }
-
-        // By default, CreateProcessAsUser creates a process on a non-interactive window station, meaning
-        // the window station has a desktop that is invisible and the process is incapable of receiving
-        // user input. To remedy this we set the lpDesktop parameter to indicate we want to enable user 
-        // interaction with the new process.
-        var si = new STARTUPINFO();
-        si.cb = Marshal.SizeOf(si);
-        si.lpDesktop = @"winsta0\" + desktopName;
-
-        // Flags that specify the priority and creation method of the process.
-        uint dwCreationFlags;
-        if (hiddenWindow)
-        {
-            dwCreationFlags = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW;
-            si.dwFlags = STARTF_USESHOWWINDOW;
-            si.wShowWindow = 0;
+            ShowWindow(handle, (int)SW.SW_SHOW);
         }
         else
         {
-            dwCreationFlags = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE;
+            ShowWindow(handle, (int)SW.SW_HIDE);
         }
 
-        // Create a new process in the current user's logon session.
-        var result = CreateProcessAsUser(
-            hUserTokenDup,
-            null,
-            commandLine,
-            ref sa,
-            ref sa,
-            false,
-            dwCreationFlags,
-            nint.Zero,
-            null,
-            ref si,
-            out procInfo);
-
-        // Invalidate the handles.
-        Kernel32.CloseHandle(hProcess);
-        Kernel32.CloseHandle(hPToken);
-        Kernel32.CloseHandle(hUserTokenDup);
-
-        return result;
+        Kernel32.CloseHandle(handle);
     }
 
     public static void SetMonitorState(MonitorState state)
@@ -222,6 +225,137 @@ public class Win32Interop
         MessageBoxType messageBoxType)
     {
         return (MessageBoxResult)MessageBox(owner, message, caption, (long)messageBoxType);
+    }
+
+    public static Result<BackstageSession> StartProcessInBackstage<T>(
+        string commandLine,
+        string windowStationName,
+        string desktopName,
+        ILogger<T> logger,
+        out PROCESS_INFORMATION procInfo)
+    {
+        using var logScope = logger.BeginScope(nameof(StartProcessInBackstage));
+
+        procInfo = new();
+
+        var winstaEnumResult = EnumWindowStations(
+            (string windowStation, nint lParam) =>
+            {
+                logger.LogInformation("Found window station {windowStation}.", windowStation);
+                return true;
+            },
+            nint.Zero);
+
+        if (!winstaEnumResult)
+        {
+            var err = Marshal.GetLastWin32Error();
+            logger.LogError("Enum winsta failed. Last Error: {err}", err);
+        }
+
+        var sa = new SECURITY_ATTRIBUTES()
+        {
+            bInheritHandle = false,
+        };
+        sa.Length = Marshal.SizeOf(sa);
+        var saPtr = Marshal.AllocHGlobal(sa.Length);
+        Marshal.StructureToPtr(sa, saPtr, false);
+
+        var createWinstaResult = CreateWindowStation(
+            windowStationName,
+            0,
+            ACCESS_MASK.GENERIC_ALL | ACCESS_MASK.MAXIMUM_ALLOWED,
+            saPtr);
+
+        if (createWinstaResult == nint.Zero)
+        {
+            return LogWin32Result(
+                Result.Fail<BackstageSession>("Create winsta failed."),
+                logger);
+        }
+
+        // When calling CreateDesktop, the calling process must be associated with
+        // the target Window station.
+        var setProcessWinstaResult = SetProcessWindowStation(createWinstaResult);
+
+        var enumDesktopsResult = EnumDesktopsA(createWinstaResult,
+            (string desktop, nint lParam) =>
+            {
+                logger.LogInformation("Found desktop {desktop}.", desktop);
+                return true;
+            },
+            nint.Zero);
+
+        if (!enumDesktopsResult)
+        {
+            var err = Marshal.GetLastWin32Error();
+            logger.LogError("Enum desktops failed. Last Error: {err}", err);
+        }
+
+        if (!setProcessWinstaResult)
+        {
+            var backstageResult = Result.Fail<BackstageSession>("Set process winsta failed.");
+            logger.LogResult(backstageResult);
+            return backstageResult;
+        }
+
+        var createDesktopResult = CreateDesktop(
+            desktopName,
+            null,
+            null,
+            0,
+            ACCESS_MASK.GENERIC_ALL | ACCESS_MASK.MAXIMUM_ALLOWED,
+            saPtr);
+
+        if (createDesktopResult == nint.Zero)
+        {
+            return LogWin32Result(
+                Result.Fail<BackstageSession>("Create desktop failed."),
+                logger);
+        }
+
+        // This fails if I try to create a new window station/desktop.  Probably missing
+        // some attributes I need to set on it or something.
+        // See remarks: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-switchdesktop#remarks
+        if (!SwitchDesktop(createDesktopResult))
+        {
+            return LogWin32Result(
+                Result.Fail<BackstageSession>("Switch desktop failed."),
+                logger);
+        }
+
+        if (!SetThreadDesktop(createDesktopResult))
+        {
+            return LogWin32Result(
+                Result.Fail<BackstageSession>("Set thread desktop failed."),
+                logger);
+        }
+
+        var si = new STARTUPINFO
+        {
+            lpDesktop = @$"{windowStationName}\{desktopName}"
+        };
+        si.cb = Marshal.SizeOf(si);
+
+        var createProcessResult = Kernel32.CreateProcess(
+                null,
+                commandLine,
+                saPtr,
+                saPtr,
+                true,
+                NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE,
+                nint.Zero,
+                null,
+                ref si,
+                out procInfo);
+
+        if (!createProcessResult)
+        {
+            logger.LogError("Create process failed.");
+            return Result.Fail<BackstageSession>("Create process failed.");
+        }
+
+        var session = new BackstageSession(createWinstaResult, createDesktopResult, procInfo);
+        return Result.Ok(session);
     }
 
     public static bool SwitchToInputDesktop()
@@ -246,106 +380,79 @@ public class Win32Interop
         }
     }
 
-    public static void SetConsoleWindowVisibility(bool isVisible)
+    private static bool GetDesktopName(nint desktopHandle, [NotNullWhen(true)] out string? desktopName)
     {
-        var handle = Kernel32.GetConsoleWindow();
-
-        if (isVisible)
+        byte[] deskBytes = new byte[256];
+        if (!GetUserObjectInformationW(desktopHandle, UOI_NAME, deskBytes, 256, out uint lenNeeded))
         {
-            ShowWindow(handle, (int)SW.SW_SHOW);
-        }
-        else
-        {
-            ShowWindow(handle, (int)SW.SW_HIDE);
+            desktopName = string.Empty;
+            return false;
         }
 
-        Kernel32.CloseHandle(handle);
-    }
-
-    public static Result<BackstageSession> StartProcessInBackstage<T>(
-        string commandLine,
-        string windowStationName,
-        ILogger<T> logger,
-        out PROCESS_INFORMATION procInfo)
-    {
-        using var logScope = logger.BeginScope(nameof(StartProcessInBackstage));
-
-        procInfo = new();
-
-        var winstaEnumResult = User32.EnumWindowStations((string windowStation, nint lParam) =>
-        {
-            logger.LogInformation("Found window station {windowStation}.", windowStation);
-            return true;
-        },
-        nint.Zero);
-
-        if (!winstaEnumResult)
-        {
-            logger.LogError("Enum winsta failed.");
-        }
-
-        var createWinstaResult = CreateWindowStation(windowStationName, 0, ACCESS_MASK.MAXIMUM_ALLOWED, nint.Zero);
-
-        if (createWinstaResult == nint.Zero)
-        {
-            logger.LogError("Create winsta failed.");
-            return Result.Fail<BackstageSession>("Create winsta failed.");
-        }
-
-        // When calling CreateDesktop, the calling process must be associated with
-        // the target Window station.
-        var setProcessWinstaResult = SetProcessWindowStation(createWinstaResult);
-
-        if (!setProcessWinstaResult)
-        {
-            logger.LogError("Set process winsta failed.");
-            return Result.Fail<BackstageSession>("Set process winsta failed.");
-        }
-
-        var createDesktopResult = CreateDesktop(
-            "default",
-            null,
-            null,
-            0,
-            ACCESS_MASK.MAXIMUM_ALLOWED | ACCESS_MASK.DESKTOP_CREATEWINDOW,
-            nint.Zero);
-
-        if (createDesktopResult == nint.Zero)
-        {
-            logger.LogError("Create desktop failed.");
-            return Result.Fail<BackstageSession>("Create desktop failed.");
-        }
-
-        var si = new STARTUPINFO();
-        si.cb = Marshal.SizeOf(si);
-        si.lpDesktop = @$"{windowStationName}\default";
-
-
-        var createProcessResult = Kernel32.CreateProcess(
-                null,
-                commandLine,
-                nint.Zero,
-                nint.Zero,
-                false,
-                NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE,
-                nint.Zero,
-                null,
-                ref si,
-                out procInfo);
-
-        if (!createProcessResult)
-        {
-            logger.LogError("Create process failed.");
-            return Result.Fail<BackstageSession>("Create process failed.");
-        }
-
-        var session = new BackstageSession(createWinstaResult, createDesktopResult, procInfo);
-        return Result.Ok(session);
-    }
-
-    private static bool EnumWinstaFunc()
-    {
-
+        desktopName = Encoding.Unicode.GetString(deskBytes.Take((int)lenNeeded).ToArray()).Replace("\0", "");
         return true;
+    }
+
+    private static Result<ResultT> LogWin32Result<ResultT, LoggerT>(
+        Result<ResultT> result,
+        ILogger<LoggerT> logger)
+    {
+        // This must be here.  It will return 0 if called after logging.
+        var lastError = Marshal.GetLastWin32Error();
+
+        logger.LogResult(result);
+
+        if (!result.IsSuccess)
+        {
+            logger.LogError("Last Win32 error: {lastError}", lastError);
+        }
+
+        return result;
+    }
+
+    private static bool TryDuplicateProcessToken(
+        string processName,
+        uint targetSessionId,
+        out SECURITY_ATTRIBUTES sa,
+        out nint sourceToken,
+        out nint processHandle,
+        out nint dupToken)
+    {
+        sourceToken = nint.Zero;
+        processHandle = nint.Zero;
+        dupToken = nint.Zero;
+
+        // Security attibute structure used in DuplicateTokenEx and CreateProcessAsUser.
+        sa = new SECURITY_ATTRIBUTES();
+        sa.Length = Marshal.SizeOf(sa);
+
+        var processId = Process
+            .GetProcessesByName(processName)
+            .FirstOrDefault(x => x.SessionId == targetSessionId)
+            ?.Id;
+
+        if (!processId.HasValue)
+        {
+            return false;
+        }
+
+        // Obtain a handle to the winlogon process.
+        processHandle = Kernel32.OpenProcess(MAXIMUM_ALLOWED, false, (uint)processId);
+
+        // Obtain a handle to the access token of the winlogon process.
+        if (!OpenProcessToken(processHandle, TOKEN_DUPLICATE, ref sourceToken))
+        {
+            Kernel32.CloseHandle(processHandle);
+            return false;
+        }
+
+        // Copy the access token of the winlogon process; the newly created token will be a primary token.
+        return DuplicateTokenEx(
+            sourceToken,
+            MAXIMUM_ALLOWED,
+            ref sa,
+            SECURITY_IMPERSONATION_LEVEL.SecurityIdentification,
+            TOKEN_TYPE.TokenPrimary,
+            out dupToken);
     }
 }

@@ -1199,6 +1199,10 @@ public static class User32
     [DllImport("user32.dll")]
     public static extern bool GetIconInfo(nint hIcon, out ICONINFO piconinfo);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr GetThreadDesktop(uint dwThreadId);
+
+
     [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
     public static extern void Mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, nuint dwExtraInfo);
 
@@ -1284,7 +1288,7 @@ public static class User32
                     [MarshalAs(UnmanagedType.LPWStr)] string? deviceMode, // must be null,
                     [MarshalAs(UnmanagedType.U4)] int flags,  // use 0
                     [MarshalAs(UnmanagedType.U4)] ACCESS_MASK accessMask,
-                    nint attributes);
+                    nint securityAttributes);
 
     [DllImport("user32.dll")]
     public static extern nint GetWindowDC(nint hWnd);

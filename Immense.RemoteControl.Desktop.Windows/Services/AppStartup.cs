@@ -3,14 +3,13 @@ using Immense.RemoteControl.Desktop.Shared.Enums;
 using Immense.RemoteControl.Desktop.Shared.Native.Windows;
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.Services;
-using Immense.RemoteControl.Desktop.UI.ViewModels;
-using Immense.RemoteControl.Desktop.UI.Views;
 using Immense.RemoteControl.Shared.Models;
 using Microsoft.Extensions.Logging;
-using System.Windows;
+using System.Runtime.Versioning;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
+[SupportedOSPlatform("windows")]
 internal class AppStartup : IAppStartup
 {
     private readonly IAppState _appState;
@@ -76,6 +75,12 @@ internal class AppStartup : IAppStartup
                     {
                         return;
                     }
+
+                    //if (Process.GetCurrentProcess().SessionId == 0)
+                    //{
+                    //    Process.Start(@"C:\Windows\system32\cmd.exe");
+                    //}
+
                     await StartScreenCasting().ConfigureAwait(false);
                     break;
                 }
@@ -126,7 +131,8 @@ internal class AppStartup : IAppStartup
 
         try
         {
-            if (Win32Interop.GetCurrentDesktop(out var currentDesktopName))
+
+            if (Win32Interop.GetInputDesktopName(out var currentDesktopName))
             {
                 _logger.LogInformation("Setting initial desktop to {currentDesktopName}.", currentDesktopName);
             }
