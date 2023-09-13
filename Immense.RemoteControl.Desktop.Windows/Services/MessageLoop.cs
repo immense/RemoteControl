@@ -53,6 +53,7 @@ public class MessageLoop : IMessageLoop
                 {
                     while (GetMessage(out var msg, IntPtr.Zero, 0, 0) > 0)
                     {
+                        TranslateMessage(ref msg);
                         DispatchMessage(ref msg);
                     }
                 }
@@ -75,6 +76,9 @@ public class MessageLoop : IMessageLoop
 
     [DllImport("user32.dll")]
     private static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+
+    [DllImport("user32.dll")]
+    private static extern bool TranslateMessage([In] ref MSG lpMsg);
 
 
     private void SystemEvents_DisplaySettingsChanged(object? sender, EventArgs e)

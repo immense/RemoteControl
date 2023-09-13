@@ -229,7 +229,6 @@ public class Win32Interop
 
     public static Result<BackstageSession> StartProcessInBackstage<T>(
         string commandLine,
-        string windowStationName,
         string desktopName,
         ILogger<T> logger,
         out PROCESS_INFORMATION procInfo)
@@ -238,38 +237,32 @@ public class Win32Interop
 
         procInfo = new();
 
-        var winstaEnumResult = EnumWindowStations(
-            (string windowStation, nint lParam) =>
-            {
-                logger.LogInformation("Found window station {windowStation}.", windowStation);
-                return true;
-            },
-            nint.Zero);
-
-        if (!winstaEnumResult)
-        {
-            var err = Marshal.GetLastWin32Error();
-            logger.LogError("Enum winsta failed. Last Error: {err}", err);
-        }
 
         var sa = new SECURITY_ATTRIBUTES()
         {
-            bInheritHandle = false,
+            bInheritHandle = true,
         };
         sa.Length = Marshal.SizeOf(sa);
         var saPtr = Marshal.AllocHGlobal(sa.Length);
         Marshal.StructureToPtr(sa, saPtr, false);
 
-        var createWinstaResult = CreateWindowStation(
-            windowStationName,
-            0,
-            ACCESS_MASK.GENERIC_ALL | ACCESS_MASK.MAXIMUM_ALLOWED,
-            saPtr);
+
+        // By default, the following window stations exist in session 0:
+        // - WinSta0 (default)
+        // - Service-0x0-3e7$
+        // - Service-0x0-3e4$
+        // - Service-0x0-3e5$
+        // - msswindowstation
+
+        var createWinstaResult = OpenWindowStationW(
+            "WinSta0",
+            true,
+            ACCESS_MASK.GENERIC_ALL);
 
         if (createWinstaResult == nint.Zero)
         {
             return LogWin32Result(
-                Result.Fail<BackstageSession>("Create winsta failed."),
+                Result.Fail<BackstageSession>("Open winsta failed."),
                 logger);
         }
 
@@ -303,7 +296,7 @@ public class Win32Interop
             null,
             null,
             0,
-            ACCESS_MASK.GENERIC_ALL | ACCESS_MASK.MAXIMUM_ALLOWED,
+            ACCESS_MASK.GENERIC_ALL,
             saPtr);
 
         if (createDesktopResult == nint.Zero)
@@ -313,9 +306,6 @@ public class Win32Interop
                 logger);
         }
 
-        // This fails if I try to create a new window station/desktop.  Probably missing
-        // some attributes I need to set on it or something.
-        // See remarks: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-switchdesktop#remarks
         if (!SwitchDesktop(createDesktopResult))
         {
             return LogWin32Result(
@@ -332,7 +322,7 @@ public class Win32Interop
 
         var si = new STARTUPINFO
         {
-            lpDesktop = @$"{windowStationName}\{desktopName}"
+            lpDesktop = @$"WinSta0\{desktopName}"
         };
         si.cb = Marshal.SizeOf(si);
 
@@ -342,7 +332,7 @@ public class Win32Interop
                 saPtr,
                 saPtr,
                 true,
-                NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE,
+                NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE,
                 nint.Zero,
                 null,
                 ref si,
