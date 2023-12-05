@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
@@ -19,5 +19,5 @@
     <ProjectReference Include="..\Immense.RemoteControl.Desktop.Shared\Immense.RemoteControl.Desktop.Shared.csproj" />
     <ProjectReference Include="..\Immense.RemoteControl.Desktop.UI\Immense.RemoteControl.Desktop.UI.csproj" />
   </ItemGroup>
-	
+
 </Project>
