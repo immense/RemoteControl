@@ -1,5 +1,6 @@
 using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.Windows.Services;
+using Immense.SimpleMessenger;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SkiaSharp;
@@ -15,7 +16,8 @@ public class EncodingBenchmarks
     public async Task CaptureDiff()
     {
         var imageHelper = new ImageHelper(Mock.Of<ILogger<ImageHelper>>());
-        var capturer = new ScreenCapturerWin(imageHelper, Mock.Of<ILogger<ScreenCapturerWin>>());
+        var messenger = new Mock<IMessenger>();
+        var capturer = new ScreenCapturerWin(imageHelper, messenger.Object, Mock.Of<ILogger<ScreenCapturerWin>>());
 
         var totalFrames = 0;
 
@@ -48,7 +50,8 @@ public class EncodingBenchmarks
     public async Task CaptureDiffCropEncode()
     {
         var imageHelper = new ImageHelper(Mock.Of<ILogger<ImageHelper>>());
-        var capturer = new ScreenCapturerWin(imageHelper, Mock.Of<ILogger<ScreenCapturerWin>>());
+        var messenger = new Mock<IMessenger>();
+        var capturer = new ScreenCapturerWin(imageHelper, messenger.Object, Mock.Of<ILogger<ScreenCapturerWin>>());
 
         var totalBytesSent = 0;
         var totalFrames = 0;
