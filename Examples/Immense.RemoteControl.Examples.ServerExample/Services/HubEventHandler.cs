@@ -97,4 +97,9 @@ internal class HubEventHandler : IHubEventHandler
     {
         return Task.CompletedTask;
     }
+
+    public Task RestartScreenCaster(RemoteControlSession session)
+    {
+        return Task.CompletedTask;
+    }
 }
