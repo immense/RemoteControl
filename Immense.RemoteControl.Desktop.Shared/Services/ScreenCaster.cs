@@ -15,7 +15,7 @@ using Immense.RemoteControl.Desktop.Shared.Messages;
 
 namespace Immense.RemoteControl.Desktop.Shared.Services;
 
-public interface IScreenCaster : IAsyncDisposable
+public interface IScreenCaster : IDisposable
 {
     Task BeginScreenCasting(ScreenCastRequest screenCastRequest);
 }
@@ -32,7 +32,7 @@ internal class ScreenCaster : IScreenCaster
     private readonly IShutdownService _shutdownService;
     private readonly ISystemTime _systemTime;
     private readonly IViewerFactory _viewerFactory;
-    private readonly List<Task<IAsyncDisposable>> _messengerRegistrations = new();
+    private readonly IDisposable[] _messengerRegistrations;
     private bool _isWindowsSessionEnding;
 
     public ScreenCaster(
@@ -55,11 +55,11 @@ internal class ScreenCaster : IScreenCaster
         _viewerFactory = viewerFactory;
         _logger = logger;
 
-        _messengerRegistrations.AddRange(new[]
-        {
+        _messengerRegistrations =
+        [
             messenger.Register<WindowsSessionSwitchedMessage>(this, HandleWindowsSessionSwitchedMessage),
             messenger.Register<WindowsSessionEndingMessage>(this, HandleWindowsSessionEndingMessage)
-        });
+        ];
     }
 
     public async Task BeginScreenCasting(ScreenCastRequest screenCastRequest)
@@ -67,14 +67,13 @@ internal class ScreenCaster : IScreenCaster
         await BeginScreenCastingImpl(screenCastRequest).ConfigureAwait(false);
     }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
-        foreach (var task in _messengerRegistrations)
+        foreach (var registration in _messengerRegistrations)
         {
             try
             {
-                var registration = await task;
-                await registration.DisposeAsync();
+                registration.Dispose();
             }
             catch { }
         }
@@ -240,14 +239,14 @@ internal class ScreenCaster : IScreenCaster
 
     }
 
-    private Task HandleWindowsSessionEndingMessage(WindowsSessionEndingMessage arg)
+    private Task HandleWindowsSessionEndingMessage(object subscriber, WindowsSessionEndingMessage arg)
     {
         _logger.LogInformation("Windows session ending.  Stopping screen cast.");
         _isWindowsSessionEnding = true;
         return Task.CompletedTask;
     }
 
-    private Task HandleWindowsSessionSwitchedMessage(WindowsSessionSwitchedMessage arg)
+    private Task HandleWindowsSessionSwitchedMessage(object subscriber, WindowsSessionSwitchedMessage arg)
     {
         _logger.LogInformation("Windows session switched.  Stopping screen cast.");
         _isWindowsSessionEnding = true;
