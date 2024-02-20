@@ -60,6 +60,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\lib\fontawesome\" />
+    <Folder Include="wwwroot\lib\microsoft\signalr-protocol-msgpack\dist\" />
     <Folder Include="wwwroot\lib\msgpack\" />
   </ItemGroup>
 </Project>
