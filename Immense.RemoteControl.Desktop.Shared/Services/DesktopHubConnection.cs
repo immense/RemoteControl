@@ -203,7 +203,7 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         {
             try
             {
-                await using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
+                using var screenCaster = _serviceProvider.GetRequiredService<IScreenCaster>();
                 await screenCaster.BeginScreenCasting(
                     new ScreenCastRequest()
                     {
@@ -416,7 +416,7 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         }
     }
 
-    private async Task HandleWindowsSessionChanged(WindowsSessionSwitchedMessage message)
+    private async Task HandleWindowsSessionChanged(object subscriber, WindowsSessionSwitchedMessage message)
     {
         try
         {
@@ -434,7 +434,7 @@ public class DesktopHubConnection : IDesktopHubConnection, IDesktopHubClient
         }
     }
 
-    private async Task HandleWindowsSessionEnding(WindowsSessionEndingMessage message)
+    private async Task HandleWindowsSessionEnding(object subscriber, WindowsSessionEndingMessage message)
     {
         try
         {

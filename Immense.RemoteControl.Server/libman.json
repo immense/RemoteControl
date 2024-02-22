@@ -3,7 +3,7 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "microsoft-signalr@7.0.5",
+      "library": "microsoft-signalr@8.0.0",
       "destination": "wwwroot/lib/microsoft-signalr/"
     },
     {
@@ -19,7 +19,7 @@
     },
     {
       "provider": "unpkg",
-      "library": "@microsoft/signalr-protocol-msgpack@7.0.5",
+      "library": "@microsoft/signalr-protocol-msgpack@8.0.0",
       "destination": "wwwroot/lib/microsoft/signalr-protocol-msgpack/",
       "files": [
         "dist/browser/signalr-protocol-msgpack.js",
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "library": "font-awesome@6.4.0",
+      "library": "font-awesome@6.5.1",
       "destination": "wwwroot/lib/fontawesome/"
     }
   ]
