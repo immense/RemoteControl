@@ -232,6 +232,11 @@ public class Win32Interop
 
             try
             {
+                if (inputDesktop == nint.Zero)
+                {
+                    return false;
+                }
+
                 return SetThreadDesktop(inputDesktop);
             }
             finally
@@ -263,14 +268,17 @@ public class Win32Interop
 
     public static bool TryGetDesktopName(nint desktopHandle, [NotNullWhen(true)] out string? desktopName)
     {
-        byte[] deskBytes = new byte[256];
+        var deskBytes = new byte[256];
         if (!GetUserObjectInformationW(desktopHandle, UOI_NAME, deskBytes, 256, out uint lenNeeded))
         {
             desktopName = string.Empty;
             return false;
         }
 
-        desktopName = Encoding.Unicode.GetString(deskBytes.Take((int)lenNeeded).ToArray()).Replace("\0", "");
+        desktopName = Encoding.Unicode
+            .GetString(deskBytes.Take((int)lenNeeded).ToArray())
+            .Replace("\0", "");
+
         return true;
     }
 }
