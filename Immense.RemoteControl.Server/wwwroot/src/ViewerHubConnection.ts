@@ -56,9 +56,9 @@ export class ViewerHubConnection {
         ViewerApp.ClipboardWatcher.WatchClipboard();
     }
 
-    ChangeWindowsSession(sessionID: number) {
+    async ChangeWindowsSession(sessionID: number) {
         if (ViewerApp.Mode == RemoteControlMode.Unattended) {
-            this.Connection.invoke("ChangeWindowsSession", sessionID);
+            await this.Connection.invoke("ChangeWindowsSession", sessionID);
         }
     }
 
@@ -76,15 +76,15 @@ export class ViewerHubConnection {
         }
     }
 
-    InvokeCtrlAltDel() {
+    async InvokeCtrlAltDel() {
         if (this.Connection?.state != HubConnectionState.Connected) {
             return;
         }
 
-        this.Connection.invoke("InvokeCtrlAltDel");
+        await this.Connection.invoke("InvokeCtrlAltDel");
     }
 
-    async SendDtoToClient<T>(dto: T, type: DtoType): Promise<any> {
+    async SendDtoToClient<T>(dto: T, type: DtoType): Promise<void> {
 
         if (this.Connection?.state != HubConnectionState.Connected) {
             return;
@@ -107,13 +107,13 @@ export class ViewerHubConnection {
     }
 
     async SendScreenCastRequestToDevice() {
-      const viewerOptions = await this.GetRemoteControlViewerOptions();
+        const viewerOptions = await this.GetRemoteControlViewerOptions();
 
-      const result = await this.Connection.invoke<Result>(
-        "SendScreenCastRequestToDevice",
-        ViewerApp.SessionId,
-        ViewerApp.AccessKey,
-        ViewerApp.RequesterName);
+        const result = await this.Connection.invoke<Result>(
+            "SendScreenCastRequestToDevice",
+            ViewerApp.SessionId,
+            ViewerApp.AccessKey,
+            ViewerApp.RequesterName);
 
         if (!result.IsSuccess) {
             this.Connection.stop();

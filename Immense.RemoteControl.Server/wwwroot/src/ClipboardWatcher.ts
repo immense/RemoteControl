@@ -39,7 +39,7 @@ export class ClipboardWatcher {
             navigator.clipboard.readText().then(newText => {
                 if (this.LastClipboardText != newText) {
                     this.LastClipboardText = newText;
-                    ViewerApp.MessageSender.SendClipboardTransfer(newText, false);
+                    ViewerApp.MessageSender.SendTextTransfer(newText, false);
                 }
             })
         }, 500);

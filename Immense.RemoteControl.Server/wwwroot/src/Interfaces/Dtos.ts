@@ -24,7 +24,7 @@ export interface ClipboardTextDto {
 }
 
 
-export class ClipboardTransferDto {
+export class TextTransferDto {
     constructor(text: string, typeText:boolean) {
         this.Text = text;
         this.TypeText = typeText;

@@ -38,7 +38,7 @@ public enum DtoType
     [EnumMember]
     ToggleBlockInput = 18,
     [EnumMember]
-    ClipboardTransfer = 19,
+    TextTransfer = 19,
     [EnumMember]
     KeyPress = 20,
     [EnumMember]

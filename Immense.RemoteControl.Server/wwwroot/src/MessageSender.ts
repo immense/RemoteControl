@@ -12,88 +12,88 @@ import {
     TapDto,
     ToggleAudioDto,
     ToggleBlockInputDto,
-    ClipboardTransferDto,
+    TextTransferDto,
     FileDto,
     WindowsSessionsDto,
     DtoWrapper,
     EmptyDto,
     FrameReceivedDto
 } from "./Interfaces/Dtos.js";
-import { CreateGUID, When } from "./Utilities.js";
+import { CreateGUID } from "./Utilities.js";
 import { FileTransferProgress } from "./UI.js";
 import { DtoType } from "./Enums/DtoType.js";
 import { RemoteControlMode } from "./Enums/RemoteControlMode.js";
 
 export class MessageSender {
-    GetWindowsSessions() {
+    async GetWindowsSessions() {
         if (ViewerApp.Mode == RemoteControlMode.Unattended) {
             var dto = new WindowsSessionsDto();
-            ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.WindowsSessions);
+            await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.WindowsSessions);
         }
     }
-    ChangeWindowsSession(sessionId: number) {
-        ViewerApp.ViewerHubConnection.ChangeWindowsSession(sessionId);
+    async ChangeWindowsSession(sessionId: number) {
+        await ViewerApp.ViewerHubConnection.ChangeWindowsSession(sessionId);
     }
-    SendFrameReceived(timestamp: number) {
+    async SendFrameReceived(timestamp: number) {
         var dto = new FrameReceivedDto(timestamp);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.FrameReceived);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.FrameReceived);
     }
-    SendSelectScreen(displayName: string) {
+    async SendSelectScreen(displayName: string) {
         var dto = new SelectScreenDto(displayName);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.SelectScreen);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.SelectScreen);
     }
-    SendMouseMove(percentX: number, percentY: number) {
+    async SendMouseMove(percentX: number, percentY: number) {
         var dto = new MouseMoveDto(percentX, percentY);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseMove);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseMove);
     }
-    SendMouseDown(button: number, percentX: number, percentY: number) {
+    async SendMouseDown(button: number, percentX: number, percentY: number) {
         var dto = new MouseDownDto(button, percentX, percentY);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseDown);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseDown);
     }
-    SendMouseUp(button: number, percentX: number, percentY: number) {
+    async SendMouseUp(button: number, percentX: number, percentY: number) {
         var dto = new MouseUpDto(button, percentX, percentY);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseUp);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseUp);
     }
-    SendTap(percentX: number, percentY: number) {
+    async SendTap(percentX: number, percentY: number) {
         var dto = new TapDto(percentX, percentY);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.Tap);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.Tap);
     }
-    SendMouseWheel(deltaX: number, deltaY: number) {
+    async SendMouseWheel(deltaX: number, deltaY: number) {
         var dto = new MouseWheelDto(deltaX, deltaY);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseWheel);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.MouseWheel);
     }
-    SendKeyDown(key: string) {
+    async SendKeyDown(key: string) {
         var dto = new KeyDownDto(key);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.KeyDown);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.KeyDown);
     }
-    SendKeyUp(key: string) {
+    async SendKeyUp(key: string) {
         var dto = new KeyUpDto(key);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.KeyUp);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.KeyUp);
     }
-    SendKeyPress(key: string) {
+    async SendKeyPress(key: string) {
         var dto = new KeyPressDto(key);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.KeyPress);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.KeyPress);
     }
-    SendSetKeyStatesUp() {
+    async SendSetKeyStatesUp() {
         var dto = new EmptyDto();
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.SetKeyStatesUp);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.SetKeyStatesUp);
     }
-    SendCtrlAltDel() {
+    async SendCtrlAltDel() {
         var dto = new CtrlAltDelDto();
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.CtrlAltDel);
-        ViewerApp.ViewerHubConnection.InvokeCtrlAltDel();
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.CtrlAltDel);
+        await ViewerApp.ViewerHubConnection.InvokeCtrlAltDel();
     }
 
-    SendOpenFileTransferWindow() {
+    async SendOpenFileTransferWindow() {
         var dto = new EmptyDto();
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.OpenFileTransferWindow);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.OpenFileTransferWindow);
     }
 
     async SendFile(buffer: Uint8Array, fileName: string) {
         var messageId = CreateGUID();
         let dto = new FileDto(null, fileName, messageId, false, true);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.File);
-            
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.File);
+
 
         for (var i = 0; i < buffer.byteLength; i += 50_000) {
 
@@ -108,24 +108,24 @@ export class MessageSender {
 
         dto = new FileDto(null, fileName, messageId, true, false);
 
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.File);
-            
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.File);
+
     }
 
-    SendToggleAudio(toggleOn: boolean) {
+    async SendToggleAudio(toggleOn: boolean) {
         var dto = new ToggleAudioDto(toggleOn);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.ToggleAudio);
-            
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.ToggleAudio);
+
     };
-    SendToggleBlockInput(toggleOn: boolean) {
+    async SendToggleBlockInput(toggleOn: boolean) {
         var dto = new ToggleBlockInputDto(toggleOn);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.ToggleBlockInput);
-            
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.ToggleBlockInput);
+
     }
 
-    SendClipboardTransfer(text: string, typeText: boolean) {
-        var dto = new ClipboardTransferDto(text, typeText);
-        ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.ClipboardTransfer);
-            
+    async SendTextTransfer(text: string, typeText: boolean) {
+        var dto = new TextTransferDto(text, typeText);
+        await ViewerApp.ViewerHubConnection.SendDtoToClient(dto, DtoType.TextTransfer);
+
     }
 }

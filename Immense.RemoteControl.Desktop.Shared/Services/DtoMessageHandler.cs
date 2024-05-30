@@ -56,7 +56,7 @@ public class DtoMessageHandler : IDtoMessageHandler
                 case DtoType.KeyUp:
                 case DtoType.CtrlAltDel:
                 case DtoType.ToggleBlockInput:
-                case DtoType.ClipboardTransfer:
+                case DtoType.TextTransfer:
                 case DtoType.KeyPress:
                 case DtoType.SetKeyStatesUp:
                     {
@@ -105,8 +105,8 @@ public class DtoMessageHandler : IDtoMessageHandler
                 case DtoType.ToggleBlockInput:
                     ToggleBlockInput(wrapper);
                     break;
-                case DtoType.ClipboardTransfer:
-                    await ClipboardTransfer(wrapper);
+                case DtoType.TextTransfer:
+                    await TransferText(wrapper);
                     break;
                 case DtoType.KeyPress:
                     await KeyPress(wrapper);
@@ -136,9 +136,9 @@ public class DtoMessageHandler : IDtoMessageHandler
         }
     }
 
-    private async Task ClipboardTransfer(DtoWrapper wrapper)
+    private async Task TransferText(DtoWrapper wrapper)
     {
-        if (!DtoChunker.TryComplete<ClipboardTransferDto>(wrapper, out var dto))
+        if (!DtoChunker.TryComplete<TextTransferDto>(wrapper, out var dto))
         {
             return;
         }

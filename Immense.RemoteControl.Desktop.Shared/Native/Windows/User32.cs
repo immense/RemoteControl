@@ -1,5 +1,4 @@
 using Microsoft.Win32.SafeHandles;
-using System;
 using System.Runtime.InteropServices;
 
 namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
@@ -1110,17 +1109,6 @@ public static class User32
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct InputEx
-    {
-        public InputType type;
-        public InputUnionEx U;
-        public static int Size
-        {
-            get { return Marshal.SizeOf(typeof(InputEx)); }
-        }
-    }
-
     [StructLayout(LayoutKind.Explicit)]
     public struct InputUnion
     {
@@ -1132,16 +1120,7 @@ public static class User32
         public HARDWAREINPUT hi;
     }
 
-    [StructLayout(LayoutKind.Explicit)]
-    public struct InputUnionEx
-    {
-        [FieldOffset(0)]
-        public MOUSEINPUT mi;
-        [FieldOffset(0)]
-        public KeybdInputEx ki;
-        [FieldOffset(0)]
-        public HARDWAREINPUT hi;
-    }
+
 
     [StructLayout(LayoutKind.Sequential)]
     public struct MOUSEINPUT
@@ -1157,21 +1136,12 @@ public static class User32
     public struct KEYBDINPUT
     {
         public VirtualKey wVk;
-        public ScanCodeShort wScan;
-        public KEYEVENTF dwFlags;
-        public int time;
-        public nuint dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct KeybdInputEx
-    {
-        public ushort wVk;
         public ushort wScan;
         public KEYEVENTF dwFlags;
         public int time;
         public nuint dwExtraInfo;
     }
+
 
     [StructLayout(LayoutKind.Sequential)]
     public struct HARDWAREINPUT
@@ -1290,6 +1260,9 @@ public static class User32
     public static extern nint GetProcessWindowStation();
 
     [DllImport("user32.dll", SetLastError = true)]
+    public static extern nint GetThreadDesktop(uint threadId);
+
+    [DllImport("user32.dll", SetLastError = true)]
     public static extern bool SetThreadDesktop(nint hDesktop);
 
     [DllImport("user32.dll")]
@@ -1314,8 +1287,6 @@ public static class User32
 
     [DllImport("user32.dll")]
     public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs, int cbSize);
-    [DllImport("user32.dll")]
-    public static extern uint SendInput(uint nInputs, [MarshalAs(UnmanagedType.LPArray), In] InputEx[] pInputs, int cbSize);
 
     [DllImport("user32.dll", SetLastError = false)]
     public static extern nuint GetMessageExtraInfo();
