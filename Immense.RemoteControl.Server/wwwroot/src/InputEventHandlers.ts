@@ -16,7 +16,7 @@ import {
     BlockInputButton,
     InviteButton,
     KeyboardButton,
-    TouchKeyboardTextArea,
+    TouchKeyboardInput,
     MenuFrame,
     MenuButton,
     ScreenViewerWrapper,
@@ -307,11 +307,13 @@ export function ApplyInputHandlers() {
     });
     KeyboardButton.addEventListener("click", (ev) => {
         CloseAllPopupMenus(null);
-        TouchKeyboardTextArea.focus();
-        TouchKeyboardTextArea.setSelectionRange(
-            TouchKeyboardTextArea.value.length,
-            TouchKeyboardTextArea.value.length
-        );
+        KeyboardButton.classList.toggle("toggled");
+        if (KeyboardButton.classList.contains("toggled")) {
+            TouchKeyboardInput.focus();
+        }
+        else {
+            TouchKeyboardInput.blur();
+        }
     });
     MenuButton.addEventListener("click", (ev) => {
         MenuFrame.classList.toggle("open");
@@ -688,22 +690,27 @@ export function ApplyInputHandlers() {
         await ViewerApp.MessageSender.SendMouseWheel(e.deltaX, e.deltaY);
     });
 
-    TouchKeyboardTextArea.addEventListener("keydown", async (ev) => {
+    TouchKeyboardInput.addEventListener("keydown", async (ev) => {
         if (ev.key === "Enter" || ev.key === "Backspace") {
-            alert(ev.key);
             await ViewerApp.MessageSender.SendKeyPress(ev.key);
         }
     });
 
-    TouchKeyboardTextArea.addEventListener("input", async (ev) => {
+    TouchKeyboardInput.addEventListener("input", async (ev) => {
         if (ViewerApp.ViewOnlyMode) {
             return;
         }
 
-        const text = TouchKeyboardTextArea.value;
-        TouchKeyboardTextArea.value = "";
+        const text = TouchKeyboardInput.value;
+        TouchKeyboardInput.value = "";
 
         await ViewerApp.MessageSender.SendTextTransfer(text, true);
+    });
+
+    TouchKeyboardInput.addEventListener("blur", () => {
+        if (KeyboardButton.classList.contains("toggled")) {
+            TouchKeyboardInput.focus();
+        }
     });
 
     WindowsSessionMenuButton.addEventListener("click", (ev) => {
