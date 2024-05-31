@@ -5,7 +5,6 @@ using Immense.RemoteControl.Desktop.Shared.Services;
 using Immense.RemoteControl.Desktop.UI.Services;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -14,21 +13,14 @@ using static Immense.RemoteControl.Desktop.Shared.Native.Windows.User32;
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
 [SupportedOSPlatform("windows")]
-public class KeyboardMouseInputWin : IKeyboardMouseInput
+public class KeyboardMouseInputWin(
+    IUiDispatcher _dispatcher,
+    ILogger<KeyboardMouseInputWin> _logger) : IKeyboardMouseInput
 {
-    private readonly IUiDispatcher _dispatcher;
     private readonly ConcurrentQueue<Action> _inputActions = new();
-    private readonly ILogger<KeyboardMouseInputWin> _logger;
+    private readonly AutoResetEvent _inputReadySignal = new(false);
     private volatile bool _inputBlocked;
     private Thread? _inputProcessingThread;
-
-    public KeyboardMouseInputWin(
-        IUiDispatcher dispatcher,
-        ILogger<KeyboardMouseInputWin> logger)
-    {
-        _dispatcher = dispatcher;
-        _logger = logger;
-    }
 
     [Flags]
     private enum ShiftState : byte
@@ -42,20 +34,6 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         Reserved2 = 1 << 5,
     }
 
-    public Tuple<double, double> GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer capturer)
-    {
-        var absoluteX = capturer.CurrentScreenBounds.Width * percentX + capturer.CurrentScreenBounds.Left - capturer.GetVirtualScreenBounds().Left;
-        var absoluteY = capturer.CurrentScreenBounds.Height * percentY + capturer.CurrentScreenBounds.Top - capturer.GetVirtualScreenBounds().Top;
-        return new Tuple<double, double>(absoluteX / capturer.GetVirtualScreenBounds().Width, absoluteY / capturer.GetVirtualScreenBounds().Height);
-    }
-
-    public Tuple<double, double> GetAbsolutePointFromRelativePercent(double percentX, double percentY, IScreenCapturer capturer)
-    {
-        var absoluteX = capturer.CurrentScreenBounds.Width * percentX + capturer.CurrentScreenBounds.Left;
-        var absoluteY = capturer.CurrentScreenBounds.Height * percentY + capturer.CurrentScreenBounds.Top;
-        return new Tuple<double, double>(absoluteX, absoluteY);
-    }
-
     public void Init()
     {
         StartInputProcessingThread();
@@ -67,34 +45,29 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (key.Length == 1)
+                try
                 {
-                    var character = Convert.ToChar(key);
+                    if (!ConvertJavaScriptKeyToVirtualKey(key, out var vk))
+                    {
+                        _logger.LogWarning("Unable to simulate key input {key}.", key);
+                        return;
+                    };
 
-                    // If a modifier key is pressed, we need to send the virtual key
-                    // so the command will execute.  For example, without this,
-                    // Ctrl+A would result in simply typing "a".
-                    if (IsModKeyPressed())
+
+                    var input = CreateKeyboardInput(vk.Value, true);
+                    var sent = SendInput(1, [input], INPUT.Size);
+                    if (sent == 0)
                     {
-                        var vkey = (VirtualKey)VkKeyScan(character);
-                        var input = CreateKeyboardInput(vkey);
-                        _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                        _logger.LogWarning(
+                            "Failed to send input for key {Key}.  Last Win32 Error: {Win32Error}",
+                            key,
+                            Marshal.GetLastPInvokeError());
                     }
-                    else
-                    {
-                        var keyCode = Convert.ToUInt16(character);
-                        var inputEx = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE);
-                        _ = SendInput(1, new InputEx[] { inputEx }, InputEx.Size);
-                    }
+
                 }
-                else if (ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
+                catch (Exception ex)
                 {
-                    var input = CreateKeyboardInput(keyCode.Value, KEYEVENTF.EXTENDEDKEY);
-                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
-                }
-                else
-                {
-                    _logger.LogWarning("Unable to simulate key input {key}.", key);
+                    _logger.LogError(ex, "Error while sending key up.");
                 }
             }
             catch (Exception ex)
@@ -110,39 +83,28 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (key.Length == 1)
-                {
-                    var character = Convert.ToChar(key);
-
-                    if (IsModKeyPressed())
-                    {
-                        var vkey = (VirtualKey)VkKeyScan(character);
-                        var input = CreateKeyboardInput(vkey, KEYEVENTF.KEYUP);
-                        _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
-                    }
-                    else
-                    {
-                        var keyCode = Convert.ToUInt16(character);
-                        var inputEx = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE | KEYEVENTF.KEYUP);
-                        _ = SendInput(1, new InputEx[] { inputEx }, InputEx.Size);
-                    }
-
-                }
-                else if (ConvertJavaScriptKeyToVirtualKey(key, out var keyCode))
-                {
-                    var input = CreateKeyboardInput(keyCode.Value, KEYEVENTF.KEYUP | KEYEVENTF.EXTENDEDKEY);
-                    _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
-                }
-                else
+                if (!ConvertJavaScriptKeyToVirtualKey(key, out var vk))
                 {
                     _logger.LogWarning("Unable to simulate key input {key}.", key);
+                    return;
+                };
+
+
+                var input = CreateKeyboardInput(vk.Value, false);
+                var sent = SendInput(1, [input], INPUT.Size);
+                if (sent == 0)
+                {
+                    _logger.LogWarning(
+                        "Failed to send input for key {Key}.  Last Win32 Error: {Win32Error}",
+                        key,
+                        Marshal.GetLastPInvokeError());
                 }
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while sending key up.");
             }
-
         });
     }
 
@@ -201,9 +163,27 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
                 // Coordinates must be normalized.  The bottom-right coordinate is mapped to 65535.
                 var normalizedX = xyPercent.Item1 * 65535D;
                 var normalizedY = xyPercent.Item2 * 65535D;
-                var union = new InputUnion() { mi = new MOUSEINPUT() { dwFlags = MOUSEEVENTF.ABSOLUTE | mouseEvent | MOUSEEVENTF.VIRTUALDESK, dx = (int)normalizedX, dy = (int)normalizedY, time = 0, mouseData = 0, dwExtraInfo = GetMessageExtraInfo() } };
+                var union = new InputUnion()
+                {
+                    mi = new MOUSEINPUT()
+                    {
+                        dwFlags = MOUSEEVENTF.ABSOLUTE | mouseEvent | MOUSEEVENTF.VIRTUALDESK,
+                        dx = (int)normalizedX,
+                        dy = (int)normalizedY,
+                        time = 0,
+                        mouseData = 0,
+                        dwExtraInfo = GetMessageExtraInfo()
+                    }
+                };
                 var input = new INPUT() { type = InputType.MOUSE, U = union };
-                _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                var sent = SendInput(1, [input], INPUT.Size);
+                if (sent == 0)
+                {
+                    _logger.LogWarning(
+                        "Failed to send input for button {Button}.  Last Win32 Error: {Win32Error}",
+                        button,
+                        Marshal.GetLastPInvokeError());
+                }
             }
             catch (Exception ex)
             {
@@ -218,13 +198,23 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
+                if (!Win32Interop.SwitchToInputDesktop())
+                {
+                    _logger.LogWarning("Desktop switch failed during mouse move.");
+                }
                 var xyPercent = GetAbsolutePercentFromRelativePercent(percentX, percentY, viewer.Capturer);
                 // Coordinates must be normalized.  The bottom-right coordinate is mapped to 65535.
                 var normalizedX = xyPercent.Item1 * 65535D;
                 var normalizedY = xyPercent.Item2 * 65535D;
                 var union = new InputUnion() { mi = new MOUSEINPUT() { dwFlags = MOUSEEVENTF.ABSOLUTE | MOUSEEVENTF.MOVE | MOUSEEVENTF.VIRTUALDESK, dx = (int)normalizedX, dy = (int)normalizedY, time = 0, mouseData = 0, dwExtraInfo = GetMessageExtraInfo() } };
                 var input = new INPUT() { type = InputType.MOUSE, U = union };
-                _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                var sent = SendInput(1, [input], INPUT.Size);
+                if (sent == 0)
+                {
+                    _logger.LogWarning(
+                        "Failed to send mouse move.  Last Win32 Error: {Win32Error}",
+                        Marshal.GetLastPInvokeError());
+                }
             }
             catch (Exception ex)
             {
@@ -249,7 +239,13 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
                 }
                 var union = new InputUnion() { mi = new MOUSEINPUT() { dwFlags = MOUSEEVENTF.WHEEL, dx = 0, dy = 0, time = 0, mouseData = deltaY, dwExtraInfo = GetMessageExtraInfo() } };
                 var input = new INPUT() { type = InputType.MOUSE, U = union };
-                _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
+                var sent = SendInput(1, [input], INPUT.Size);
+                if (sent == 0)
+                {
+                    _logger.LogWarning(
+                        "Failed to send mouse wheel.  Last Win32 Error: {Win32Error}",
+                        Marshal.GetLastPInvokeError());
+                }
             }
             catch (Exception ex)
             {
@@ -264,28 +260,31 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-
-                var inputs = new List<InputEx>();
-
                 foreach (var character in transferText)
                 {
                     var keyCode = Convert.ToUInt16(character);
-                    var keyDown = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE);
-                    var keyUp = CreateKeyboardInput(keyCode, KEYEVENTF.UNICODE | KEYEVENTF.KEYUP);
-                    inputs.Add(keyDown);
-                    inputs.Add(keyUp);
-                }
 
-                var result = SendInput((uint)inputs.Count, inputs.ToArray(), InputEx.Size);
-                Debug.Assert(result == inputs.Count);
+                    var keyDown = CreateKeyboardInput(keyCode, true);
+                    var result = SendInput(1, [keyDown], INPUT.Size);
+                    if (result != 1)
+                    {
+                        _logger.LogWarning(
+                            "Send text failed. Failed to simulate input for character {Character}.",
+                            character);
+                        break;
+                    }
 
-                if (result != inputs.Count)
-                {
-                    _logger.LogWarning(
-                        "Input simulation failed.  Expected inputs: {count}.  " +
-                        "Actual inputs sent: {result}.",
-                        inputs.Count,
-                        result);
+                    var keyUp = CreateKeyboardInput(keyCode, false);
+                    result = SendInput(1, [keyUp], INPUT.Size);
+                    if (result != 1)
+                    {
+                        _logger.LogWarning(
+                            "Send text failed. Failed to simulate input for character {Character}.",
+                            character);
+                        break;
+                    }
+
+                    Thread.Sleep(1);
                 }
             }
             catch (Exception ex)
@@ -299,30 +298,46 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
     {
         TryOnInputDesktop(() =>
         {
-            var thread = new Thread(() =>
+            foreach (VirtualKey key in Enum.GetValues(typeof(VirtualKey)))
             {
-                foreach (VirtualKey key in Enum.GetValues(typeof(VirtualKey)))
+                try
                 {
-                    try
+                    // Skip mouse buttons and toggleable keys.
+                    switch (key)
                     {
-                        var state = GetKeyState(key);
-                        if (state == -127)
-                        {
-                            var input = CreateKeyboardInput(key, KEYEVENTF.KEYUP);
-                            _ = SendInput(1, new INPUT[] { input }, INPUT.Size);
-                        }
+                        case VirtualKey.LBUTTON:
+                        case VirtualKey.RBUTTON:
+                        case VirtualKey.MBUTTON:
+                        case VirtualKey.NUMLOCK:
+                        case VirtualKey.CAPITAL:
+                        case VirtualKey.SCROLL:
+                            continue;
+                        default:
+                            break;
                     }
-                    catch { }
+                    var (isPressed, isToggled) = GetKeyPressState(key);
+                    if (isPressed || isToggled)
+                    {
+                        var input = CreateKeyboardInput(key, false);
+                        var sent = SendInput(1, [input], INPUT.Size);
+                        if (sent == 0)
+                        {
+                            _logger.LogWarning(
+                                "Failed to set key up for key {Key}.  Last Win32 Error: {Win32Error}",
+                                key,
+                                Marshal.GetLastPInvokeError());
+                        }
+                        Thread.Sleep(1);
+                    }
                 }
-            });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
+                catch { }
+            }
         });
     }
 
     public void ToggleBlockInput(bool toggleOn)
     {
-        _inputActions.Enqueue(() =>
+        TryOnInputDesktop(() =>
         {
             _inputBlocked = toggleOn;
             var result = BlockInput(toggleOn);
@@ -330,48 +345,112 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         });
     }
 
-    private void AddShiftInput(List<INPUT> inputs, ShiftState shiftState, KEYEVENTF keyEvent = default)
+    private static INPUT CreateKeyboardInput(
+        VirtualKey virtualKey,
+        bool isPressed)
     {
-        if (shiftState.HasFlag(ShiftState.ShiftPressed))
+        KEYEVENTF flags = 0;
+
+        if (IsExtendedKey(virtualKey))
         {
-            inputs.Add(CreateKeyboardInput(VirtualKey.SHIFT, keyEvent));
+            flags |= KEYEVENTF.EXTENDEDKEY;
         }
 
-        if (shiftState.HasFlag(ShiftState.CtrlPressed))
+        if (!isPressed)
         {
-            inputs.Add(CreateKeyboardInput(VirtualKey.CONTROL, keyEvent));
+            flags |= KEYEVENTF.KEYUP;
         }
 
-        if (shiftState.HasFlag(ShiftState.AltPressed))
+        return new INPUT()
         {
-            inputs.Add(CreateKeyboardInput(VirtualKey.MENU, keyEvent));
-        }
-    }
-
-    private void CheckQueue(CancellationToken cancelToken)
-    {
-        while (!cancelToken.IsCancellationRequested)
-        {
-            try
+            type = InputType.KEYBOARD,
+            U = new InputUnion()
             {
-                if (_inputActions.TryDequeue(out var action))
+                ki = new KEYBDINPUT()
                 {
-                    action();
+                    wVk = virtualKey,
+                    wScan = (ushort)MapVirtualKeyEx((uint)virtualKey, VkMapType.MAPVK_VK_TO_VSC_EX, GetKeyboardLayout((uint)Environment.CurrentManagedThreadId)),
+                    dwExtraInfo = GetMessageExtraInfo(),
+                    dwFlags = flags,
+                    time = 0
                 }
             }
-            finally
-            {
-                Thread.Sleep(1);
-            }
+        };
+    }
+
+    private static INPUT CreateKeyboardInput(ushort unicodeKey, bool isPressed)
+    {
+        var flags = KEYEVENTF.UNICODE;
+        if (!isPressed)
+        {
+            flags |= KEYEVENTF.KEYUP;
         }
 
-        _logger.LogInformation("Stopping input processing on thread {threadId}.", Environment.CurrentManagedThreadId);
+        return new INPUT()
+        {
+            type = InputType.KEYBOARD,
+            U = new InputUnion()
+            {
+                ki = new KEYBDINPUT()
+                {
+                    wVk = 0,
+                    wScan = unicodeKey,
+                    dwFlags = flags,
+                    dwExtraInfo = GetMessageExtraInfo()
+                }
+            }
+        };
+    }
+
+    private static Tuple<double, double> GetAbsolutePercentFromRelativePercent(double percentX, double percentY, IScreenCapturer capturer)
+    {
+        var absoluteX = capturer.CurrentScreenBounds.Width * percentX + capturer.CurrentScreenBounds.Left - capturer.GetVirtualScreenBounds().Left;
+        var absoluteY = capturer.CurrentScreenBounds.Height * percentY + capturer.CurrentScreenBounds.Top - capturer.GetVirtualScreenBounds().Top;
+        return new Tuple<double, double>(absoluteX / capturer.GetVirtualScreenBounds().Width, absoluteY / capturer.GetVirtualScreenBounds().Height);
+    }
+
+    private static (bool Pressed, bool Toggled) GetKeyPressState(VirtualKey vkey)
+    {
+        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate#return-value
+        var state = GetKeyState(vkey);
+        var pressed = state < 0;
+        var toggled = (state & 1) != 0;
+        return (pressed, toggled);
+    }
+
+    private static bool IsExtendedKey(VirtualKey virtualKey)
+    {
+        return virtualKey switch
+        {
+            VirtualKey.SHIFT or
+            VirtualKey.CONTROL or
+            VirtualKey.MENU or
+            VirtualKey.RCONTROL or
+            VirtualKey.RMENU or
+            VirtualKey.INSERT or
+            VirtualKey.DELETE or
+            VirtualKey.HOME or
+            VirtualKey.END or
+            VirtualKey.PRIOR or
+            VirtualKey.NEXT or
+            VirtualKey.LEFT or
+            VirtualKey.RIGHT or
+            VirtualKey.UP or
+            VirtualKey.DOWN or
+            VirtualKey.NUMLOCK or
+            VirtualKey.CANCEL or
+            VirtualKey.DIVIDE or
+            VirtualKey.SNAPSHOT or
+            VirtualKey.RETURN => true,
+            _ => false
+        };
     }
 
     private bool ConvertJavaScriptKeyToVirtualKey(string key, [NotNullWhen(true)] out VirtualKey? result)
     {
         result = key switch
         {
+            " " => VirtualKey.SPACE,
             "Down" or "ArrowDown" => VirtualKey.DOWN,
             "Up" or "ArrowUp" => VirtualKey.UP,
             "Left" or "ArrowLeft" => VirtualKey.LEFT,
@@ -421,65 +500,26 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         return true;
     }
 
-    private INPUT CreateKeyboardInput(
-        VirtualKey virtualKey,
-        KEYEVENTF keyEvent = default)
+    private void ProcessQueue(CancellationToken cancelToken)
     {
-        return new INPUT()
+        while (!cancelToken.IsCancellationRequested)
         {
-            type = InputType.KEYBOARD,
-            U = new InputUnion()
+            try
             {
-                ki = new KEYBDINPUT()
+                _inputReadySignal.WaitOne();
+                while (_inputActions.TryDequeue(out var action))
                 {
-                    wVk = virtualKey,
-                    wScan = (ScanCodeShort)MapVirtualKeyEx((uint)virtualKey, VkMapType.MAPVK_VSC_TO_VK_EX, GetKeyboardLayout((uint)Environment.CurrentManagedThreadId)),
-                    dwFlags = keyEvent,
-                    dwExtraInfo = GetMessageExtraInfo()
+                    action();
+                    Thread.Sleep(1);
                 }
             }
-        };
-    }
-
-    private InputEx CreateKeyboardInput(
-      ushort unicodeKey,
-      KEYEVENTF keyEvent = KEYEVENTF.UNICODE)
-    {
-        return new InputEx()
-        {
-            type = InputType.KEYBOARD,
-            U = new InputUnionEx()
+            catch (Exception ex)
             {
-                ki = new KeybdInputEx()
-                {
-                    wVk = 0,
-                    wScan = unicodeKey,
-                    dwFlags = keyEvent,
-                    dwExtraInfo = GetMessageExtraInfo()
-                }
+                _logger.LogError(ex, "Error during input queue processing.");
             }
-        };
-    }
+        }
 
-    private (bool Pressed, bool Toggled) GetKeyPressState(VirtualKey vkey)
-    {
-        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate#return-value
-        var state = GetKeyState(vkey);
-        var pressed = state < 0;
-        var toggled = (state & 1) != 0;
-        return (pressed, toggled);
-    }
-
-    private bool IsModKeyPressed()
-    {
-        var (ctrlPressed, _) = GetKeyPressState(VirtualKey.CONTROL);
-        var (altPressed, _) = GetKeyPressState(VirtualKey.MENU);
-
-        // I'm not sure we'll be able to get these to work with a browser front-end.
-        //var (lwinPressed, _) = GetKeyPressState(VirtualKey.LWIN);
-        //var (rwinPressed, _) = GetKeyPressState(VirtualKey.RWIN);
-
-        return ctrlPressed || altPressed;
+        _logger.LogInformation("Stopping input processing on thread.");
     }
     private void StartInputProcessingThread()
     {
@@ -490,14 +530,14 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             _logger.LogInformation("New input processing thread started on thread {threadId}.", Environment.CurrentManagedThreadId);
 
-            if (_inputBlocked)
+            if (_inputBlocked && !BlockInput(true))
             {
-                ToggleBlockInput(true);
+                _logger.LogWarning("Failed to block input on input processing start.");
             }
-            CheckQueue(_dispatcher.ApplicationExitingToken);
+            ProcessQueue(_dispatcher.ApplicationExitingToken);
         });
 
-        _inputProcessingThread.SetApartmentState(ApartmentState.STA);
+        _inputProcessingThread.SetApartmentState(ApartmentState.MTA);
         _inputProcessingThread.Start();
     }
 
@@ -507,7 +547,12 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
         {
             try
             {
-                if (!Win32Interop.SwitchToInputDesktop())
+                var switchResult = Win32Interop.SwitchToInputDesktop();
+
+                // Try to perform the dequeued action whether or not the switch was successful.
+                inputAction();
+
+                if (!switchResult)
                 {
                     _logger.LogWarning("Desktop switch failed during input processing.");
 
@@ -516,25 +561,20 @@ public class KeyboardMouseInputWin : IKeyboardMouseInput
                     StartInputProcessingThread();
                     return;
                 }
-                inputAction();
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during input queue processing.");
             }
         });
+        _inputReadySignal.Set();
     }
-
     [StructLayout(LayoutKind.Explicit)]
-    private struct ShortHelper
+    private struct ShortHelper(short value)
     {
-        public ShortHelper(short value)
-        {
-            Value = value;
-        }
-
         [FieldOffset(0)]
-        public short Value;
+        public short Value = value;
         [FieldOffset(0)]
         public byte Low;
         [FieldOffset(1)]

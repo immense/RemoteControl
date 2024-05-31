@@ -3,7 +3,7 @@
 namespace Immense.RemoteControl.Shared.Models.Dtos;
 
 [DataContract]
-public class ClipboardTransferDto
+public class TextTransferDto
 {
 
     [DataMember(Name = "Text")]

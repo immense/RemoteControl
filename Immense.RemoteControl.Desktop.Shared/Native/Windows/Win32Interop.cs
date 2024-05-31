@@ -2,6 +2,7 @@ using Immense.RemoteControl.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,8 +14,6 @@ namespace Immense.RemoteControl.Desktop.Shared.Native.Windows;
 // TODO: Use https://github.com/microsoft/CsWin32 for all p/invokes.
 public class Win32Interop
 {
-    private static nint _lastInputDesktop;
-
     public static List<WindowsSession> GetActiveSessions()
     {
         var sessions = new List<WindowsSession>();
@@ -67,26 +66,26 @@ public class Win32Interop
         return Marshal.PtrToStringAuto(commandLinePtr) ?? string.Empty;
     }
 
-    public static bool GetCurrentDesktop(out string desktopName)
+    public static bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
     {
+        desktopName = null;
         var inputDesktop = OpenInputDesktop();
         try
         {
-            byte[] deskBytes = new byte[256];
-            if (!GetUserObjectInformationW(inputDesktop, UOI_NAME, deskBytes, 256, out uint lenNeeded))
+            if (TryGetDesktopName(inputDesktop, out desktopName))
             {
-                desktopName = string.Empty;
-                return false;
+                return true;
             }
 
-            desktopName = Encoding.Unicode.GetString(deskBytes.Take((int)lenNeeded).ToArray()).Replace("\0", "");
-            return true;
+            return false;
         }
         finally
         {
             CloseDesktop(inputDesktop);
         }
     }
+
+
 
     public static string GetUsernameFromSessionId(uint sessionId)
     {
@@ -229,17 +228,21 @@ public class Win32Interop
     {
         try
         {
-            CloseDesktop(_lastInputDesktop);
             var inputDesktop = OpenInputDesktop();
 
-            if (inputDesktop == nint.Zero)
+            try
             {
-                return false;
-            }
+                if (inputDesktop == nint.Zero)
+                {
+                    return false;
+                }
 
-            var result = SetThreadDesktop(inputDesktop) && SwitchDesktop(inputDesktop);
-            _lastInputDesktop = inputDesktop;
-            return result;
+                return SetThreadDesktop(inputDesktop);
+            }
+            finally
+            {
+                CloseDesktop(inputDesktop);
+            }
         }
         catch
         {
@@ -261,5 +264,21 @@ public class Win32Interop
         }
 
         Kernel32.CloseHandle(handle);
+    }
+
+    public static bool TryGetDesktopName(nint desktopHandle, [NotNullWhen(true)] out string? desktopName)
+    {
+        var deskBytes = new byte[256];
+        if (!GetUserObjectInformationW(desktopHandle, UOI_NAME, deskBytes, 256, out uint lenNeeded))
+        {
+            desktopName = string.Empty;
+            return false;
+        }
+
+        desktopName = Encoding.Unicode
+            .GetString(deskBytes.Take((int)lenNeeded).ToArray())
+            .Replace("\0", "");
+
+        return true;
     }
 }

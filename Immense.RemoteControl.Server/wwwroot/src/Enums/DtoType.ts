@@ -15,7 +15,7 @@
     CtrlAltDel = 15,
     ToggleAudio = 17,
     ToggleBlockInput = 18,
-    ClipboardTransfer = 19,
+    TextTransfer = 19,
     KeyPress = 20,
     File = 22,
     WindowsSessions = 23,

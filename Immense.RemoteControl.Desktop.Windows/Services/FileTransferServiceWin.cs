@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using Immense.RemoteControl.Shared.Extensions;
 
 namespace Immense.RemoteControl.Desktop.Windows.Services;
 
@@ -125,10 +126,14 @@ public class FileTransferServiceWin : IFileTransferService
         finally
         {
             _writeLock.Release();
-            if (endOfFile)
-            {
-                await ShowTransferComplete();
-            }
+        }
+
+        if (endOfFile)
+        {
+            // We're currently in the context of an RPC call from the
+            // SignalR hub.  We don't want to block it, which will prevent
+            // subsequent messages from being received.
+            ShowTransferComplete().Forget();
         }
     }
 

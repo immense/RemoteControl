@@ -429,7 +429,7 @@ button {
         margin-left: 10px;
     }
 
-#touchKeyboardTextArea {
+#touchKeyboardInput {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
