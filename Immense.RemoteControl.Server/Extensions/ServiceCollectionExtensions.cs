@@ -24,11 +24,7 @@ public static class ServiceCollectionExtensions
         builder.Validate();
 
         services
-            .AddSignalR(options =>
-            {
-                options.MaximumReceiveMessageSize = 64_000;
-                options.MaximumParallelInvocationsPerClient = 5;
-            })
+            .AddSignalR()
             .AddMessagePackProtocol();
 
         services.AddHostedService<RemoteControlSessionCleaner>();
